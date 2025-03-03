@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<search>
+  <entry>
+    <title>电子扫盲｜写在前面</title>
+    <url>/2025/02/13/%E5%89%8D%E8%A8%80/</url>
+    <content><![CDATA[<p>《FEEFEE电子扫盲》是为那些对电脑<strong>完全一窍不通</strong>的人群而撰写的，所以许多细节之处有所省略。</p>
+<h1 id="为什么想到写这样一个系列"><a href="#为什么想到写这样一个系列" class="headerlink" title="为什么想到写这样一个系列"></a>为什么想到写这样一个系列</h1><p>当我在机房看到20岁的同班同学打开了Chrome浏览器，直接在Google上搜索却没有反应，还举手说电脑坏了时，我沉默了。。。</p>
+<p>当我听到有人Windows系统卡死，抱怨道“安卓系统真垃圾”时，我沉默了。。。</p>
+<p>当有人给我发来一个.exe文件，问我这个文件怎么在他的mac上打不开时，我沉默了。。。</p>
+<p>当长辈问我明明有一个电脑（指显示器）为什么还买个笔记本时，我沉默了。。。</p>
+<p>随着手机的逐渐普及，越来越多人已经逐渐抛弃了电脑，甚至有人妄言：电脑已经没用了，手机能解决一切。如此的后果就是越来越多的年轻人正逐渐称为「赛博文盲」。</p>
+<p><a href="https://zhuanlan.zhihu.com/p/706499217">https://zhuanlan.zhihu.com/p/706499217</a></p>
+<h1 id="后面的内容还没想好，过几天写"><a href="#后面的内容还没想好，过几天写" class="headerlink" title="后面的内容还没想好，过几天写"></a>后面的内容还没想好，过几天写</h1>]]></content>
+      <categories>
+        <category>FeeFee电子扫盲</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>电子扫盲｜操作系统</title>
+    <url>/2025/02/20/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%EF%BC%9AWindows,%20Linux,%20macOS,%20Android,%20iOS%E7%AD%89/</url>
+    <content><![CDATA[<p>电脑、手机都有操作系统（Operating System，简称OS），常见的电脑操作系统有<strong>Windows，Linux和macOS</strong>，常见的手机操作系统有<strong>安卓（Android）和iOS</strong>。<br>不同的操作系统之间是不能互通的！比如，当你发现老师发来的软件是.exe格式，而你正在使用macOS，那你就该知道这个软件我装不了，因为.exe是windows上才有的格式。</p>
+<p>先来说说电脑系统：<br>1、Windows是最常见的电脑操作系统，它是微软公司（Microsoft）开发的，<strong>跟安卓系统半毛钱关系没有！！</strong> 总有人会有类似这样的发言：“你的电脑是安卓还是苹果？”这是严重的笑话。<br>2、macOS是苹果的电脑系统，不要叫它iOS！！iOS指的是苹果的<strong>手机</strong>系统。<br>3、Linux是著名的开源系统（开源的意思是源代码公开），一般只有程序员会使用。<br>4、其他系统，如ChromeOS、Unix等，不需要了解。</p>
+]]></content>
+      <categories>
+        <category>FeeFee电子扫盲</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>电子扫盲｜显示器</title>
+    <url>/2025/02/12/%E6%98%BE%E7%A4%BA%E5%99%A8%EF%BC%9AOLED,%20miniLED,%20LCD,%20microLED/</url>
+    <content><![CDATA[<p>先讲讲LCD显示器的基本原理。首先是一层液晶材料用来显示图像，但由于液晶材料本身不发光，所以再在它的底部加上一层背光板（发光的板子），这就构成了LCD屏。</p>
+<p>LCD的优点是延迟很低，价格也很便宜，很适合打fps游戏（first player shooting，第一人称射击游戏），因此大部分游戏笔记本都采用LCD屏。但是LCD屏有个缺点，就是对比度（明暗差异，对比度越高，色彩表现越好，画面越真实）很低。什么意思呢？比如你在LCD屏上打开一张纯黑的图片，然后你再把房间里的灯关掉，你就会发现屏幕居然在发光！这是因为LCD屏在打开的时候，下面的背光板是一直亮着的，所以即便黑色依然会发光。由此我们也可以推断出LCD屏会很耗电。<em>就我个人而言，我见过的对比度控制的比较好的LCD屏是iPad Pro 2020。</em> 而且LCD屏还有个缺点就是屏幕边缘会漏光。（如下图）</p>
+<p><img src="/image/2.jpg" alt="一张图片" title="LCD漏光现象"></p>
+<p>这时候有人就诞生了一个想法，如果说我把LCD的背光板切成很多小份，这些背光板上方如果显示的是黑色，我就把这个背光板关掉；如果显示的不是黑色，那就把背光板打开。这样不就实现了高对比度吗？这种<strong>分区背光</strong>的LCD屏就叫做<strong>miniLED</strong>，miniLED本质上讲依旧属于LCD屏，但显示效果要远远好于LCD。而且，miniLED的显示效果跟分区数（即背光板被切成的份数）是正相关的，分区数量越多，那明暗的差异自然越大，显示效果自然越好。</p>
+<p>但miniLED也有缺点。首先是光晕现象。比如一张纯黑的图片，正中间有一个杯子（如下图），那么杯子的周围就会形成一圈光晕。当然，如果分区数量够多，那光晕现象自然也会减小。</p>
+<p><img src="/image/1.png" alt="一张图片" title="miniLED光晕现象"></p>
+]]></content>
+      <categories>
+        <category>FeeFee电子扫盲</category>
+      </categories>
+  </entry>
+</search>
