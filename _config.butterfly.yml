@@ -1,6 +1,26 @@
 nav:
   fixed: true
 
+menu:
+  首页: / || fas fas fa-home
+  分类: /categories/ || fas fa-folder-open
+  列表||fas fa-list||hide:
+    音乐: /music/ || fas fa-music
+    视频: /movies/ || fas fa-video
+  时间轴: /archives/ || fas fa-archive
+  标签: /tags/ || fas fa-tags
+  链接: /link/ || fas fa-link
+  关于: /about/ || fas fa-heart
+
+social:
+  fab fa-bilibili: https://space.bilibili.com/3493130162669961 || Bilibili || '#08a0d6'
+  fas fa-envelope: mailto:noonyjufee@gmail.com || Email || '#4a7dbe'
+  fas fa-music: https://music.163.com/#/user?id=1387620746 || 网易云 || '#f34038'
+
+avatar:
+  img: /image/2.jpg
+  effect: true
+
 index_img: "linear-gradient(135deg, #07111f 0%, #0d1c33 48%, #08111d 100%)"
 default_top_img: "linear-gradient(135deg, #07111f 0%, #0d1c33 48%, #08111d 100%)"
 footer_img: false
@@ -15,7 +35,13 @@ subtitle:
 
 aside:
   card_author:
+    enable: true
     description: 记录技术、生活与折腾灵感
+    button:
+      enable: true
+      icon: fab fa-github
+      text: luanyufei的GitHub
+      link: https://github.com/luanyufei
   card_announcement:
     content: 电子扫盲、收藏导航、系统折腾与日常笔记
 
