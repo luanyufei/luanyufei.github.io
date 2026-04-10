@@ -129,9 +129,10 @@ body::after {
   display: flex;
   justify-content: center;
   align-items: center;
-  width: min(calc(100% - 32px), var(--content-max));
+  width: fit-content;
+  max-width: calc(100% - 32px);
   margin: 20px auto 0;
-  padding: 0 18px;
+  padding: 0 22px;
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 999px;
   background: rgba(7, 14, 28, 0.72) !important;
