@@ -51,6 +51,7 @@ inject:
     - <link rel="stylesheet" href="/css/cyber-background.css">
   bottom:
     - <script src="/js/cyber-background.js" defer></script>
+    - <script src="/js/site-ui.js" defer></script>
 
 activate_power_mode:
   enable: false

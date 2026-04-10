@@ -2,8 +2,8 @@ hexo.extend.filter.register('after_render:html', (html) => {
   let output = html;
 
   output = output.replace(
-    /<div id="sidebar">[\s\S]*?<\/div><div class="page" id="body-wrap">/,
-    '<div class="page" id="body-wrap">'
+    /<div id="sidebar">[\s\S]*?(<div class="page[^"]*" id="body-wrap">)/,
+    '$1'
   );
 
   output = output.replace(
