@@ -18,7 +18,7 @@ social:
   fas fa-music: https://music.163.com/#/user?id=1387620746 || 网易云 || '#f34038'
 
 avatar:
-  img: /image/2.jpg
+  img: /img/touxiang.png
   effect: true
 
 index_img: "linear-gradient(135deg, #07111f 0%, #0d1c33 48%, #08111d 100%)"
