@@ -126,6 +126,9 @@ body::after {
 #nav {
   position: sticky;
   top: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
   width: min(calc(100% - 32px), var(--content-max));
   margin: 20px auto 0;
   padding: 0 18px;
@@ -141,7 +144,11 @@ body::after {
 }
 
 #nav #menus {
-  margin: 0 auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex: 0 1 auto;
+  margin: 0;
 }
 
 #nav a,
