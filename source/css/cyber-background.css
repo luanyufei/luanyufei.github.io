@@ -136,6 +136,14 @@ body::after {
   backdrop-filter: blur(22px);
 }
 
+#nav #blog-info {
+  display: none !important;
+}
+
+#nav #menus {
+  margin: 0 auto;
+}
+
 #nav a,
 #nav span,
 #nav i,
