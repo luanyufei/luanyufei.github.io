@@ -97,7 +97,7 @@
     const nextCanvas = document.createElement('canvas');
     nextCanvas.id = CANVAS_ID;
     nextCanvas.setAttribute('aria-hidden', 'true');
-    document.body.appendChild(nextCanvas);
+    document.body.prepend(nextCanvas);
     return nextCanvas;
   };
 
@@ -113,6 +113,20 @@
     resizeCanvas();
     animateParticles();
   };
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      if (animationFrame) {
+        window.cancelAnimationFrame(animationFrame);
+        animationFrame = null;
+      }
+      return;
+    }
+
+    if (!animationFrame && ctx) {
+      animateParticles();
+    }
+  });
 
   window.addEventListener('resize', () => {
     window.clearTimeout(resizeTimer);
