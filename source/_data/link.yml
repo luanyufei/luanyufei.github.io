@@ -1,0 +1,123 @@
+- class_name: 最常访问
+  class_desc: Most Frequently Accessed
+  link_list:
+    - name: 百度
+      link: https://baidu.com/
+      avatar: https://pic.616pic.com/ys_bnew_img/00/36/11/56ymAo293m.jpg
+      descr: 虽然是史，但确实是最大中文搜索引擎
+    - name: Google
+      link: https://google.com/
+      avatar: https://parsefiles.back4app.com/JPaQcFfEEQ1ePBxbf6wvzkPMEqKYHhPYv8boI1Rc/e4b833fe3459b4df265aaa9481a6df3c_low_res_Google.png
+      descr: 谷歌
+    - name: YouTube
+      link: https://youtube.com/
+      avatar: https://parsefiles.back4app.com/JPaQcFfEEQ1ePBxbf6wvzkPMEqKYHhPYv8boI1Rc/02003870f9e69a1c765864a6798e204a_low_res_YouTube.png
+      descr: 油管
+    - name: Wikipedia
+      link: https://wikipedia.com/
+      avatar: https://parsefiles.back4app.com/JPaQcFfEEQ1ePBxbf6wvzkPMEqKYHhPYv8boI1Rc/87f9462b63d6779ccfe43d4265a348ab_P5B0cTGEUw.png
+      descr: 维基百科，自由♂的百科全书
+
+- class_name: 学习 & 知识
+  class_desc: Learning & Knowledge
+  link_list:
+    - name: GitHub
+      link: https://github.com/
+      avatar: https://parsefiles.back4app.com/JPaQcFfEEQ1ePBxbf6wvzkPMEqKYHhPYv8boI1Rc/dac70f04a87a118fae956904f5c8e5ca_low_res_GitHub.png
+      descr: 代码托管平台
+    - name: 知乎
+      link: https://zhihu.com/
+      avatar: https://parsefiles.back4app.com/JPaQcFfEEQ1ePBxbf6wvzkPMEqKYHhPYv8boI1Rc/f0af9a2f35371b8b8f0e957b2c18d06e_sNO5tK9pZd.png
+      descr: 移动端没法看，全是广告
+    - name: edX
+      link: https://www.edx.org/
+      avatar: https://parsefiles.back4app.com/JPaQcFfEEQ1ePBxbf6wvzkPMEqKYHhPYv8boI1Rc/a1f878a12c902ef341a398eaa878df54_low_res_edX.png
+      descr: 有很多课程
+    - name: Merriam-Webster Dictionary
+      link: https://www.merriam-webster.com/
+      avatar: https://seeklogo.com/images/M/merriam-webster-logo-B1C51EF7DB-seeklogo.com.png
+      descr: 英语词典
+
+- class_name: 视频
+  class_desc: Videos & Movies
+  link_list:
+    - name: Family Guy
+      link: https://pan.mdsub.top/%E6%81%B6%E6%90%9E%E4%B9%8B%E5%AE%B6
+      avatar: https://i0.hdslb.com/bfs/article/8e5e9700d916e69f69c79cdb5f525d67ee9a3f0d.jpg
+      descr: 漫迪字幕组整理的Family Guy资源
+    - name: HBO Max
+      link: https://www.max.com/
+      avatar: https://parsefiles.back4app.com/JPaQcFfEEQ1ePBxbf6wvzkPMEqKYHhPYv8boI1Rc/732b82e3d3776dee04f7eb85b95f87d9_low_res_Max.png
+      descr: 一个流媒体平台
+    - name: Netflix
+      link: https://netflix.com/
+      avatar: https://parsefiles.back4app.com/JPaQcFfEEQ1ePBxbf6wvzkPMEqKYHhPYv8boI1Rc/9873d3f0f309c2b01a53dde3d859ce47_low_res_Netflix.png
+      descr: 另一个流媒体平台
+    
+- class_name: 游戏
+  class_desc: Games
+  link_list:
+    - name: Modrinth
+      link: https://modrinth.com/
+      avatar: https://parsefiles.back4app.com/JPaQcFfEEQ1ePBxbf6wvzkPMEqKYHhPYv8boI1Rc/37dc48fa078a90ac41c4500ef2230bff_low_res_Modrinth_Dark__Complex_.png
+      descr: byd瓦尔基里模组究竟什么时候更新
+    - name: MC Mod Wiki
+      link: https://mcmod.cn
+      avatar: https://parsefiles.back4app.com/JPaQcFfEEQ1ePBxbf6wvzkPMEqKYHhPYv8boI1Rc/cc5050b4c40881b19cd5da0343a98e11_low_res_Minecraft_Education_Edition.png
+      descr: MC模组中文百科
+
+- class_name: 社交媒体
+  class_desc: Social Meida
+  link_list:
+    - name: GitHub
+      link: https://github.com/luanyufei
+      avatar: https://github.githubassets.com/favicons/favicon.png
+      descr: 代码仓库和项目主页
+    - name: Bilibili
+      link: https://space.bilibili.com/3493130162669961
+      avatar: https://www.bilibili.com/favicon.ico
+      descr: 日常更新与视频收藏
+    - name: 网易云音乐
+      link: https://music.163.com/#/user?id=1387620746
+      avatar: https://s1.music.126.net/style/favicon.ico
+      descr: 常听歌单和喜欢的音乐
+
+- class_name: 学校 & 生活
+  class_desc: Life & Campus
+  link_list:
+    - name: HBU mail
+      link: http://stumail.hbu.edu.cn/
+      avatar: https://bkimg.cdn.bcebos.com/pic/a5c27d1ed21b0ef427eb2283d4c451da80cb3eef?x-bce-process=image/format,f_auto/watermark,image_d2F0ZXIvYmFpa2UyNzI,g_7,xp_5,yp_5,P_20/resize,m_lfit,limit_1,h_1080
+      descr: 河北大学学生邮箱
+    - name: HBU webVPN
+      link: https://v.hbu.cn/
+      avatar: https://bkimg.cdn.bcebos.com/pic/a5c27d1ed21b0ef427eb2283d4c451da80cb3eef?x-bce-process=image/format,f_auto/watermark,image_d2F0ZXIvYmFpa2UyNzI,g_7,xp_5,yp_5,P_20/resize,m_lfit,limit_1,h_1080
+      descr: 河北大学后台
+
+- class_name: 实用工具
+  class_desc: Tools & Utilities
+  link_list:
+    - name: macOS icons
+      link: https://macosicons.com/
+      avatar: /img/favicon.ico
+      descr: macOS 风格图标资源站
+    - name: Appstorrent
+      link: https://appstorrent.ru/
+      avatar: https://parsefiles.back4app.com/JPaQcFfEEQ1ePBxbf6wvzkPMEqKYHhPYv8boI1Rc/ea81e6f47fe8af2788af9676b84f171b_low_res_Appstorrent.png
+      descr: macOS apps
+    - name: MacKed
+      link: https://macked.app/
+      avatar: /img/favicon.ico
+      descr: macOS apps
+    - name: Digit77
+      link: https://www.digit77.com/
+      avatar: /img/favicon.ico
+      descr: 在线工具与效率资源
+    - name: Greasy Fork
+      link: https://greasyfork.org/zh-CN
+      avatar: https://greasyfork.org/vite/assets/blacklogo96-CxYTSM_T.png
+      descr: Temper Monkey的脚本
+    - name: Butterfly
+      link: https://butterfly.js.org/
+      avatar: https://butterfly.js.org/img/butterfly-icon.png
+      descr: butterfly主题的官网

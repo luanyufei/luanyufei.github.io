@@ -1,0 +1,35 @@
+nav:
+  fixed: true
+
+index_img: "linear-gradient(135deg, #07111f 0%, #0d1c33 48%, #08111d 100%)"
+default_top_img: "linear-gradient(135deg, #07111f 0%, #0d1c33 48%, #08111d 100%)"
+footer_img: false
+index_top_img_height: 76vh
+
+subtitle:
+  enable: true
+  effect: true
+  sub:
+    - 乱与狒的数字花园
+    - Notes, tools, links and experiments
+
+aside:
+  card_author:
+    description: 记录技术、生活与折腾灵感
+  card_announcement:
+    content: 电子扫盲、收藏导航、系统折腾与日常笔记
+
+inject:
+  head:
+    - <link rel="stylesheet" href="/css/cyber-background.css">
+  bottom:
+    - <script src="/js/cyber-background.js" defer></script>
+
+activate_power_mode:
+  enable: false
+
+canvas_ribbon:
+  enable: false
+
+fireworks:
+  enable: false
