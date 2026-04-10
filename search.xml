@@ -9,30 +9,6 @@
       </categories>
   </entry>
   <entry>
-    <title>红米研究记3｜刷欧盟版（EEA）澎湃系统</title>
-    <url>/2025/08/07/EEA/</url>
-    <content><![CDATA[]]></content>
-      <categories>
-        <category>各种经验</category>
-      </categories>
-  </entry>
-  <entry>
-    <title>红米研究记1｜adb卸载系统自带软件</title>
-    <url>/2025/08/07/adb/</url>
-    <content><![CDATA[]]></content>
-      <categories>
-        <category>各种经验</category>
-      </categories>
-  </entry>
-  <entry>
-    <title>红米研究记4｜Root，Magisk与Xposed</title>
-    <url>/2025/08/07/root/</url>
-    <content><![CDATA[]]></content>
-      <categories>
-        <category>各种经验</category>
-      </categories>
-  </entry>
-  <entry>
     <title>电子扫盲｜写在前面</title>
     <url>/2025/02/13/%E5%89%8D%E8%A8%80/</url>
     <content><![CDATA[<p>《FEEFEE电子扫盲》是为那些对电脑<strong>完全一窍不通</strong>的人群而撰写的，所以许多细节之处有所省略。</p>
@@ -45,6 +21,14 @@
 <h1 id="后面的内容还没想好，过几天写"><a href="#后面的内容还没想好，过几天写" class="headerlink" title="后面的内容还没想好，过几天写"></a>后面的内容还没想好，过几天写</h1>]]></content>
       <categories>
         <category>FeeFee电子扫盲</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>红米研究记4｜Root，Magisk与Xposed</title>
+    <url>/2025/08/07/root/</url>
+    <content><![CDATA[]]></content>
+      <categories>
+        <category>各种经验</category>
       </categories>
   </entry>
   <entry>
@@ -83,6 +67,22 @@
 ]]></content>
       <categories>
         <category>FeeFee电子扫盲</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>红米研究记1｜adb卸载系统自带软件</title>
+    <url>/2025/08/07/adb/</url>
+    <content><![CDATA[]]></content>
+      <categories>
+        <category>各种经验</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>红米研究记3｜刷欧盟版（EEA）澎湃系统</title>
+    <url>/2025/08/07/EEA/</url>
+    <content><![CDATA[]]></content>
+      <categories>
+        <category>各种经验</category>
       </categories>
   </entry>
 </search>
