@@ -52,16 +52,13 @@ body::before {
 
 body::after {
   z-index: 0;
-  inset: 12% 8% auto;
-  height: 50vh;
-  border-radius: 999px;
-  background: radial-gradient(
-    circle,
-    rgba(100, 255, 218, 0.12) 0%,
-    rgba(100, 255, 218, 0.03) 36%,
-    transparent 70%
-  );
-  filter: blur(60px);
+  inset: -12vh -12vw 0;
+  background:
+    radial-gradient(circle at 16% 36%, rgba(100, 255, 218, 0.14), transparent 24%),
+    radial-gradient(circle at 82% 12%, rgba(96, 119, 255, 0.16), transparent 22%),
+    radial-gradient(circle at 70% 78%, rgba(88, 212, 255, 0.08), transparent 26%);
+  filter: blur(72px);
+  opacity: 0.95;
 }
 
 #particles-canvas {
@@ -90,42 +87,40 @@ body::after {
 
 #page-header,
 #footer {
+  background: transparent !important;
   background-image: none !important;
-  background:
-    radial-gradient(circle at 20% 24%, rgba(100, 255, 218, 0.16), transparent 24%),
-    radial-gradient(circle at 80% 18%, rgba(105, 120, 255, 0.2), transparent 22%),
-    linear-gradient(135deg, rgba(8, 16, 30, 0.92) 0%, rgba(8, 19, 35, 0.86) 45%, rgba(5, 10, 19, 0.94) 100%) !important;
 }
 
 #page-header::before,
 #footer::before {
-  background: linear-gradient(180deg, rgba(3, 8, 18, 0.12), rgba(3, 8, 18, 0.36)) !important;
+  background: transparent !important;
 }
 
 #page-header {
-  overflow: hidden;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  overflow: visible;
+  border-bottom: 0;
 }
 
 #page-header::after {
   content: "";
   position: absolute;
-  inset: auto -10% -18rem;
-  height: 24rem;
+  inset: 4rem -8% auto;
+  height: 20rem;
   background:
-    radial-gradient(circle at 30% 50%, rgba(122, 247, 255, 0.2), transparent 26%),
-    radial-gradient(circle at 66% 42%, rgba(105, 120, 255, 0.16), transparent 24%);
-  filter: blur(38px);
+    radial-gradient(circle at 28% 50%, rgba(122, 247, 255, 0.14), transparent 24%),
+    radial-gradient(circle at 72% 42%, rgba(105, 120, 255, 0.12), transparent 22%);
+  filter: blur(48px);
   pointer-events: none;
+  opacity: 0.9;
 }
 
 #page-header.full_page {
-  min-height: 76vh;
+  min-height: 70vh;
 }
 
 #page-header.not-home-page,
 #page-header.post-bg {
-  min-height: 32vh;
+  min-height: 24vh;
 }
 
 #nav {
@@ -180,12 +175,12 @@ body::after {
 }
 
 #site-info {
-  padding: 10rem 0 8rem;
+  padding: 9rem 0 5rem;
 }
 
 #page-site-info,
 #post-info {
-  padding: 8rem 0 3.5rem;
+  padding: 7rem 0 2.4rem;
 }
 
 #site-title,
@@ -236,7 +231,7 @@ body::after {
 
 #content-inner {
   width: min(calc(100% - 32px), var(--content-max));
-  margin: -5.5rem auto 0;
+  margin: -1.2rem auto 0;
   padding: 0 0 5rem;
 }
 
@@ -541,17 +536,17 @@ body::after {
   }
 
   #site-info {
-    padding: 8rem 0 6rem;
+    padding: 7rem 0 4.2rem;
   }
 
   #page-site-info,
   #post-info {
-    padding: 7rem 0 2.6rem;
+    padding: 6rem 0 1.8rem;
   }
 
   #content-inner {
     width: calc(100% - 20px);
-    margin-top: -2.4rem;
+    margin-top: -0.6rem;
   }
 
   #page,
