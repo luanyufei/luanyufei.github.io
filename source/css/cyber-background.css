@@ -260,16 +260,10 @@ body::after {
   transform: rotate(180deg);
 }
 
-@media (hover: hover) and (pointer: fine) {
-  #nav .menus_item:hover > .menus_item_child {
-    opacity: 1;
-    pointer-events: auto;
-    transform: translateX(-50%) translateY(0);
-  }
-
-  #nav .menus_item:hover > .site-page.group > i:last-child {
-    transform: rotate(180deg);
-  }
+#nav .menus_item:not(.is-open) > .menus_item_child {
+  opacity: 0 !important;
+  pointer-events: none !important;
+  transform: translateX(-50%) translateY(8px) !important;
 }
 
 #nav .menus_item_child li,
