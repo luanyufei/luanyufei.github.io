@@ -7,7 +7,13 @@
     if (!items.length) return;
 
     const closeAll = () => {
-      items.forEach((item) => item.classList.remove('is-open'));
+      items.forEach((item) => {
+        item.classList.remove('is-open');
+        const trigger = item.querySelector('.site-page.group');
+        if (trigger) {
+          trigger.setAttribute('aria-expanded', 'false');
+        }
+      });
     };
 
     items.forEach((item) => {
