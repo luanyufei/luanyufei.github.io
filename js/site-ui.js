@@ -1,4 +1,116 @@
 (() => {
+  const PASSWORD_GATE_CONFIG = {
+    enabled: true,
+    password: 'AlanNOON2026',
+    storageKey: 'feespace-password-pass-day',
+    skipHosts: ['localhost', '127.0.0.1'],
+    title: '进入 Fee Space',
+    hint: '请输入访问密码',
+    helper: '验证通过后，这台设备在今天之内不需要再次输入。',
+  };
+
+  const getTodayStamp = () => {
+    const now = new Date();
+    return [
+      now.getFullYear(),
+      String(now.getMonth() + 1).padStart(2, '0'),
+      String(now.getDate()).padStart(2, '0'),
+    ].join('-');
+  };
+
+  const shouldSkipPasswordGate = () =>
+    PASSWORD_GATE_CONFIG.skipHosts.includes(window.location.hostname);
+
+  const hasPasswordAccess = () => {
+    if (!PASSWORD_GATE_CONFIG.enabled || shouldSkipPasswordGate()) return true;
+
+    try {
+      return localStorage.getItem(PASSWORD_GATE_CONFIG.storageKey) === getTodayStamp();
+    } catch (error) {
+      return false;
+    }
+  };
+
+  const markPasswordAccess = () => {
+    try {
+      localStorage.setItem(PASSWORD_GATE_CONFIG.storageKey, getTodayStamp());
+    } catch (error) {
+      return false;
+    }
+
+    return true;
+  };
+
+  const unlockSite = () => {
+    document.documentElement.classList.remove('site-locked');
+    document.documentElement.classList.add('site-unlocked');
+    document.body.classList.remove('password-gate-active');
+    document.body.classList.add('password-gate-passed');
+    document.querySelector('.site-password-gate')?.remove();
+  };
+
+  const initPasswordGate = () => {
+    if (hasPasswordAccess()) {
+      unlockSite();
+      return;
+    }
+
+    document.documentElement.classList.remove('site-unlocked');
+    document.documentElement.classList.add('site-locked');
+    document.body.classList.add('password-gate-active');
+
+    if (document.querySelector('.site-password-gate')) return;
+
+    const gate = document.createElement('div');
+    gate.className = 'site-password-gate';
+    gate.innerHTML = `
+      <div class="site-password-gate__shell">
+        <div class="site-password-gate__kicker">Fee Space Access</div>
+        <h1 class="site-password-gate__title">${PASSWORD_GATE_CONFIG.title}</h1>
+        <p class="site-password-gate__copy">这是一个前端密码门禁页，用来挡住随手点进来的访客。</p>
+        <form class="site-password-gate__form" novalidate>
+          <label class="site-password-gate__label" for="site-password-input">${PASSWORD_GATE_CONFIG.hint}</label>
+          <input id="site-password-input" class="site-password-gate__input" type="password" autocomplete="current-password" placeholder="Password" />
+          <button class="site-password-gate__button" type="submit">进入主页</button>
+          <p class="site-password-gate__helper">${PASSWORD_GATE_CONFIG.helper}</p>
+          <p class="site-password-gate__error" aria-live="polite"></p>
+        </form>
+      </div>
+    `;
+
+    document.body.appendChild(gate);
+
+    const form = gate.querySelector('.site-password-gate__form');
+    const input = gate.querySelector('.site-password-gate__input');
+    const error = gate.querySelector('.site-password-gate__error');
+
+    if (!(form instanceof HTMLFormElement) || !(input instanceof HTMLInputElement) || !error) {
+      return;
+    }
+
+    window.requestAnimationFrame(() => input.focus());
+
+    form.addEventListener('submit', (event) => {
+      event.preventDefault();
+
+      if (input.value === PASSWORD_GATE_CONFIG.password) {
+        markPasswordAccess();
+        unlockSite();
+        return;
+      }
+
+      error.textContent = '密码不对，再试一次。';
+      gate.classList.remove('is-shaking');
+      void gate.offsetWidth;
+      gate.classList.add('is-shaking');
+      input.select();
+    });
+
+    gate.addEventListener('animationend', () => {
+      gate.classList.remove('is-shaking');
+    });
+  };
+
   const initNavDropdown = () => {
     const items = Array.from(document.querySelectorAll('#nav .menus_item')).filter(
       (item) => item.querySelector('.site-page.group') && item.querySelector('.menus_item_child')
@@ -127,6 +239,7 @@
   };
 
   const start = () => {
+    initPasswordGate();
     initNavDropdown();
     initLinkHero();
   };

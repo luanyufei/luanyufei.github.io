@@ -1,8 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
-    <title>红米研究记2｜解锁BootLoader</title>
-    <url>/2025/08/07/BL%E9%94%81/</url>
+    <title>红米研究记1｜adb卸载系统自带软件</title>
+    <url>/2025/08/07/adb/</url>
+    <content><![CDATA[]]></content>
+      <categories>
+        <category>各种经验</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>红米研究记3｜刷欧盟版（EEA）澎湃系统</title>
+    <url>/2025/08/07/EEA/</url>
+    <content><![CDATA[]]></content>
+      <categories>
+        <category>各种经验</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>红米研究记4｜Root，Magisk与Xposed</title>
+    <url>/2025/08/07/root/</url>
     <content><![CDATA[]]></content>
       <categories>
         <category>各种经验</category>
@@ -24,8 +40,8 @@
       </categories>
   </entry>
   <entry>
-    <title>红米研究记4｜Root，Magisk与Xposed</title>
-    <url>/2025/08/07/root/</url>
+    <title>红米研究记2｜解锁BootLoader</title>
+    <url>/2025/08/07/BL%E9%94%81/</url>
     <content><![CDATA[]]></content>
       <categories>
         <category>各种经验</category>
@@ -67,22 +83,6 @@
 ]]></content>
       <categories>
         <category>FeeFee电子扫盲</category>
-      </categories>
-  </entry>
-  <entry>
-    <title>红米研究记1｜adb卸载系统自带软件</title>
-    <url>/2025/08/07/adb/</url>
-    <content><![CDATA[]]></content>
-      <categories>
-        <category>各种经验</category>
-      </categories>
-  </entry>
-  <entry>
-    <title>红米研究记3｜刷欧盟版（EEA）澎湃系统</title>
-    <url>/2025/08/07/EEA/</url>
-    <content><![CDATA[]]></content>
-      <categories>
-        <category>各种经验</category>
       </categories>
   </entry>
 </search>
