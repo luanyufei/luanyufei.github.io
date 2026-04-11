@@ -46,6 +46,8 @@
   - Hexo 在生成 HTML 后的重写逻辑
 - [`source/_data/link.yml`](/Users/luanyufei/NOON's%20Documents/FeeSpace/source/_data/link.yml)
   - link 页链接数据
+- [`GUIDANCE.md`](/Users/luanyufei/NOON's%20Documents/FeeSpace/GUIDANCE.md)
+  - 这份维护说明
 
 ## 3. 本地开发
 
@@ -285,7 +287,68 @@ npm run server
 - 降低连线阈值
 - 降低重绘频率
 
-## 10. 如果构建出来和你想的不一样
+## 10. 修改全站密码锁
+
+现在这个站已经接了一个“纯前端密码门禁”。
+
+作用：
+
+- 第一次打开站点会先弹密码框
+- 输入正确后，这台设备当天不再重复输入
+- `localhost` 和 `127.0.0.1` 会自动跳过，方便你本地调试
+
+密码逻辑在：
+
+[`source/js/site-ui.js`](/Users/luanyufei/NOON's%20Documents/FeeSpace/source/js/site-ui.js)
+
+你要找的是最上面的：
+
+```js
+const PASSWORD_GATE_CONFIG = {
+  enabled: true,
+  password: 'AlanNOON2026',
+  ...
+}
+```
+
+### 改密码
+
+直接把这里的 `password` 改掉，然后重新部署：
+
+```bash
+npm run clean
+npm run build
+git add .
+git commit -m "change password"
+git push origin main
+npm run deploy
+```
+
+### 临时关闭密码锁
+
+把：
+
+```js
+enabled: true
+```
+
+改成：
+
+```js
+enabled: false
+```
+
+然后重新部署。
+
+### 清掉“今天已通过”的本地记录
+
+如果你自己测试时想重新看到密码框，可以在浏览器控制台执行：
+
+```js
+localStorage.removeItem('feespace-password-pass-day')
+```
+
+## 11. 如果构建出来和你想的不一样
 
 按这个顺序排查：
 
@@ -318,7 +381,7 @@ sed -n '1,200p' public/link/index.html
 Cmd + Shift + R
 ```
 
-## 11. 一套你未来最常用的命令
+## 12. 一套你未来最常用的命令
 
 ### 只本地预览
 
@@ -353,7 +416,7 @@ npm run deploy
 git -C .deploy_git push https://github.com/luanyufei/luanyufei.github.io.git HEAD:gh-pages
 ```
 
-## 12. 最后一句
+## 13. 最后一句
 
 未来你如果只记得一句话，就记这个：
 

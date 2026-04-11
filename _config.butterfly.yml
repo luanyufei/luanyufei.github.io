@@ -49,6 +49,8 @@ aside:
 inject:
   head:
     - <link rel="stylesheet" href="/css/cyber-background.css">
+    - >-
+      <script>(function(){try{var key='feespace-password-pass-day';var host=window.location.hostname;var skip=host==='localhost'||host==='127.0.0.1';var now=new Date();var day=[now.getFullYear(),String(now.getMonth()+1).padStart(2,'0'),String(now.getDate()).padStart(2,'0')].join('-');document.documentElement.classList.add(skip||localStorage.getItem(key)===day?'site-unlocked':'site-locked')}catch(e){document.documentElement.classList.add('site-locked')}})();</script>
   bottom:
     - <script src="/js/cyber-background.js" defer></script>
     - <script src="/js/site-ui.js" defer></script>
