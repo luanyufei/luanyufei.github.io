@@ -5,6 +5,7 @@
     );
 
     if (!items.length) return;
+    const isHoverMode = () => window.matchMedia('(hover: hover) and (pointer: fine)').matches;
 
     const closeAll = () => {
       items.forEach((item) => {
@@ -32,7 +33,21 @@
         trigger.setAttribute('aria-expanded', String(nextState));
       };
 
+      item.addEventListener('pointerenter', () => {
+        if (!isHoverMode()) return;
+        closeAll();
+        item.classList.add('is-open');
+        trigger.setAttribute('aria-expanded', 'true');
+      });
+
+      item.addEventListener('pointerleave', () => {
+        if (!isHoverMode()) return;
+        item.classList.remove('is-open');
+        trigger.setAttribute('aria-expanded', 'false');
+      });
+
       trigger.addEventListener('click', (event) => {
+        if (isHoverMode()) return;
         event.preventDefault();
         event.stopPropagation();
         toggle();
