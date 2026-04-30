@@ -20,7 +20,7 @@ social:
 
 avatar:
   img: /img/touxiang.png
-  effect: true
+  effect: false
 
 index_img: "linear-gradient(135deg, #07111f 0%, #0d1c33 48%, #08111d 100%)"
 default_top_img: "linear-gradient(135deg, #07111f 0%, #0d1c33 48%, #08111d 100%)"
@@ -45,6 +45,14 @@ aside:
       link: https://github.com/luanyufei
   card_announcement:
     content: 电子扫盲、收藏导航、系统折腾与日常笔记
+
+preloader:
+  enable: false
+
+enter_transitions: false
+
+search:
+  use:
 
 inject:
   head:

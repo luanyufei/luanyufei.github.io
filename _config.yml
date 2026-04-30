@@ -93,6 +93,8 @@ pagination_dir: page
 include:
 exclude:
 ignore:
+  - '**/IMG_0167.jpeg'
+  - '**/js/search/**'
 
 # Extensions
 ## Plugins: https://hexo.io/plugins/
