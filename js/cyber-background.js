@@ -1,10 +1,16 @@
 (() => {
   const CANVAS_ID = 'particles-canvas';
+  const MIN_WIDTH = 720;
+  const FRAME_INTERVAL = 1000 / 30;
+  const MAX_DPR = 1.25;
+  const CONNECTION_DISTANCE = 150;
+  const reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
   let canvas;
   let ctx;
   let particles = [];
   let animationFrame = null;
   let resizeTimer = null;
+  let lastFrameTime = 0;
 
   class Particle {
     constructor(width, height) {
@@ -32,16 +38,25 @@
     }
   }
 
-  const connectParticles = (width, height) => {
+  const isUnlocked = () => document.documentElement.classList.contains('site-unlocked');
+
+  const shouldAnimate = () =>
+    isUnlocked() &&
+    !document.hidden &&
+    !reducedMotionQuery.matches &&
+    window.innerWidth >= MIN_WIDTH;
+
+  const connectParticles = () => {
+    const threshold = CONNECTION_DISTANCE * CONNECTION_DISTANCE;
+
     for (let a = 0; a < particles.length; a += 1) {
-      for (let b = a; b < particles.length; b += 1) {
+      for (let b = a + 1; b < particles.length; b += 1) {
         const dx = particles[a].x - particles[b].x;
         const dy = particles[a].y - particles[b].y;
         const distance = dx * dx + dy * dy;
-        const threshold = (width / 7) * (height / 7);
 
         if (distance < threshold) {
-          const opacityValue = Math.max(0, 1 - distance / 20000);
+          const opacityValue = Math.max(0, 1 - distance / threshold);
           ctx.strokeStyle = `rgba(100, 255, 218, ${opacityValue * 0.2})`;
           ctx.lineWidth = 1;
           ctx.beginPath();
@@ -56,7 +71,7 @@
   const initParticles = () => {
     const width = window.innerWidth;
     const height = window.innerHeight;
-    const amount = Math.max(24, Math.floor((width * height) / 15000));
+    const amount = Math.min(52, Math.max(18, Math.floor((width * height) / 60000)));
     particles = [];
 
     for (let i = 0; i < amount; i += 1) {
@@ -65,9 +80,9 @@
   };
 
   const resizeCanvas = () => {
-    if (!canvas) return;
+    if (!canvas || !ctx) return;
 
-    const ratio = Math.min(window.devicePixelRatio || 1, 2);
+    const ratio = Math.min(window.devicePixelRatio || 1, MAX_DPR);
     canvas.width = Math.floor(window.innerWidth * ratio);
     canvas.height = Math.floor(window.innerHeight * ratio);
     canvas.style.width = `${window.innerWidth}px`;
@@ -76,7 +91,36 @@
     initParticles();
   };
 
-  const animateParticles = () => {
+  const stop = () => {
+    if (!animationFrame) return;
+    window.cancelAnimationFrame(animationFrame);
+    animationFrame = null;
+    lastFrameTime = 0;
+  };
+
+  const destroyCanvas = () => {
+    stop();
+    particles = [];
+    if (canvas) {
+      canvas.remove();
+    }
+    canvas = null;
+    ctx = null;
+  };
+
+  const animateParticles = (timestamp = 0) => {
+    if (!shouldAnimate()) {
+      stop();
+      return;
+    }
+
+    animationFrame = window.requestAnimationFrame(animateParticles);
+
+    if (timestamp - lastFrameTime < FRAME_INTERVAL) {
+      return;
+    }
+
+    lastFrameTime = timestamp;
     const width = window.innerWidth;
     const height = window.innerHeight;
 
@@ -86,8 +130,7 @@
       particles[i].update(width, height);
     }
 
-    connectParticles(width, height);
-    animationFrame = window.requestAnimationFrame(animateParticles);
+    connectParticles();
   };
 
   const ensureCanvas = () => {
@@ -102,6 +145,11 @@
   };
 
   const start = () => {
+    if (!shouldAnimate()) {
+      destroyCanvas();
+      return;
+    }
+
     canvas = ensureCanvas();
     ctx = canvas.getContext('2d');
     if (!ctx) return;
@@ -114,23 +162,42 @@
     animateParticles();
   };
 
-  document.addEventListener('visibilitychange', () => {
-    if (document.hidden) {
-      if (animationFrame) {
-        window.cancelAnimationFrame(animationFrame);
-        animationFrame = null;
-      }
+  const sync = () => {
+    if (shouldAnimate()) {
+      if (!animationFrame) start();
       return;
     }
 
-    if (!animationFrame && ctx) {
-      animateParticles();
-    }
+    destroyCanvas();
+  };
+
+  document.addEventListener('visibilitychange', () => {
+    sync();
   });
 
   window.addEventListener('resize', () => {
     window.clearTimeout(resizeTimer);
-    resizeTimer = window.setTimeout(resizeCanvas, 120);
+    resizeTimer = window.setTimeout(() => {
+      if (!shouldAnimate()) {
+        destroyCanvas();
+        return;
+      }
+
+      if (!canvas) {
+        start();
+        return;
+      }
+
+      resizeCanvas();
+    }, 160);
+  });
+
+  reducedMotionQuery.addEventListener?.('change', sync);
+
+  const classObserver = new MutationObserver(sync);
+  classObserver.observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ['class'],
   });
 
   if (document.readyState === 'loading') {
