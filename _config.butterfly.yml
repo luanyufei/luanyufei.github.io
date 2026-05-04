@@ -22,8 +22,8 @@ avatar:
   img: /img/touxiang.png
   effect: false
 
-index_img: "linear-gradient(135deg, #07111f 0%, #0d1c33 48%, #08111d 100%)"
-default_top_img: "linear-gradient(135deg, #07111f 0%, #0d1c33 48%, #08111d 100%)"
+index_img: "linear-gradient(135deg, #060910 0%, #0b111b 52%, #071017 100%)"
+default_top_img: "linear-gradient(135deg, #060910 0%, #0b111b 52%, #071017 100%)"
 footer_img: false
 index_top_img_height: 76vh
 
