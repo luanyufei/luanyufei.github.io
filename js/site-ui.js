@@ -9,6 +9,126 @@
     helper: '验证通过后，这台设备在今天之内不需要再次输入。',
   };
 
+  const THEME_CONFIG = {
+    storageKey: 'theme',
+    ttlDays: 2,
+  };
+
+  const normalizeTheme = (theme) => (theme === 'light' || theme === 'dark' ? theme : undefined);
+
+  const readStoredTheme = () => {
+    try {
+      const butterflyTheme = normalizeTheme(window.btf?.saveToLocal?.get?.(THEME_CONFIG.storageKey));
+      if (butterflyTheme) return butterflyTheme;
+
+      const rawTheme = localStorage.getItem(THEME_CONFIG.storageKey);
+      if (!rawTheme) return undefined;
+
+      try {
+        const parsedTheme = JSON.parse(rawTheme);
+        if (parsedTheme.expiry && Date.now() > parsedTheme.expiry) {
+          localStorage.removeItem(THEME_CONFIG.storageKey);
+          return undefined;
+        }
+        return normalizeTheme(parsedTheme.value);
+      } catch (error) {
+        return normalizeTheme(rawTheme);
+      }
+    } catch (error) {
+      return undefined;
+    }
+  };
+
+  const saveTheme = (theme) => {
+    try {
+      if (window.btf?.saveToLocal?.set) {
+        window.btf.saveToLocal.set(THEME_CONFIG.storageKey, theme, THEME_CONFIG.ttlDays);
+        return;
+      }
+
+      localStorage.setItem(
+        THEME_CONFIG.storageKey,
+        JSON.stringify({
+          value: theme,
+          expiry: Date.now() + THEME_CONFIG.ttlDays * 86400000,
+        })
+      );
+    } catch (error) {
+      // Theme still applies for the current page even when storage is unavailable.
+    }
+  };
+
+  const getPreferredTheme = () =>
+    readStoredTheme() ||
+    normalizeTheme(document.documentElement.getAttribute('data-theme')) ||
+    (window.matchMedia?.('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+
+  const updateThemeToggle = (button, theme) => {
+    if (!button) return;
+
+    const isLight = theme === 'light';
+    const nextTheme = isLight ? 'dark' : 'light';
+    const nextThemeLabel = isLight ? '深色' : '浅色';
+
+    button.dataset.theme = theme;
+    button.setAttribute('aria-label', `切换到${nextThemeLabel}模式`);
+    button.setAttribute('title', `切换到${nextThemeLabel}模式`);
+    button.setAttribute('aria-pressed', String(isLight));
+    button.innerHTML = `
+      <i class="fas ${isLight ? 'fa-moon' : 'fa-sun'}" aria-hidden="true"></i>
+      <span class="site-theme-toggle__text">${nextThemeLabel}模式</span>
+    `;
+    button.dataset.nextTheme = nextTheme;
+  };
+
+  const applyTheme = (theme, options = {}) => {
+    const nextTheme = normalizeTheme(theme) || 'dark';
+
+    if (nextTheme === 'dark' && window.btf?.activateDarkMode) {
+      window.btf.activateDarkMode();
+    } else if (nextTheme === 'light' && window.btf?.activateLightMode) {
+      window.btf.activateLightMode();
+    } else {
+      document.documentElement.setAttribute('data-theme', nextTheme);
+    }
+
+    if (options.persist) saveTheme(nextTheme);
+    updateThemeToggle(document.querySelector('.site-theme-toggle'), nextTheme);
+  };
+
+  const initThemeToggle = () => {
+    let button = document.querySelector('.site-theme-toggle');
+
+    if (!button) {
+      button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'site-theme-toggle';
+      document.body.appendChild(button);
+    }
+
+    if (button.dataset.bound !== 'true') {
+      button.dataset.bound = 'true';
+      button.addEventListener('click', () => {
+        const currentTheme = normalizeTheme(document.documentElement.getAttribute('data-theme')) || getPreferredTheme();
+        applyTheme(currentTheme === 'dark' ? 'light' : 'dark', { persist: true });
+      });
+    }
+
+    applyTheme(getPreferredTheme(), { persist: false });
+
+    const observer = new MutationObserver(() => {
+      updateThemeToggle(button, normalizeTheme(document.documentElement.getAttribute('data-theme')) || 'dark');
+    });
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
+    const themeMedia = window.matchMedia?.('(prefers-color-scheme: dark)');
+    themeMedia?.addEventListener?.('change', (event) => {
+      if (!readStoredTheme()) {
+        applyTheme(event.matches ? 'dark' : 'light', { persist: false });
+      }
+    });
+  };
+
   const getTodayStamp = () => {
     const now = new Date();
     return [
@@ -239,6 +359,7 @@
   };
 
   const start = () => {
+    initThemeToggle();
     initPasswordGate();
     initNavDropdown();
     initLinkHero();
