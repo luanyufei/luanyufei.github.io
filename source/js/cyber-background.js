@@ -3,28 +3,19 @@
   const MIN_WIDTH = 720;
   const TARGET_FPS = 30;
   const FRAME_INTERVAL = 1000 / TARGET_FPS;
-  const MAX_DPR = 1;
-  const CONNECTION_DIST = 140;
-  const CONNECTION_DIST_SQ = CONNECTION_DIST * CONNECTION_DIST;
-  const CELL_SIZE = CONNECTION_DIST;
-  const PARTICLE_COLOR = '100, 255, 218';
-  const PARTICLE_ALPHA = 0.45;
-  const LINE_ALPHA_MAX = 0.18;
-  const OPACITY_BUCKETS = 4;
+  const MAX_DPR = 1.5; // Slightly higher DPR for smooth orbs, they are cheap to render
 
   const reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
 
   let canvas = null;
   let ctx = null;
   let particles = [];
-  let grid = new Map();
   let animationFrame = null;
   let resizeTimer = null;
   let lastFrameTime = 0;
   let canvasW = 0;
   let canvasH = 0;
-  let gridCols = 0;
-  let gridRows = 0;
+  let themeColor = '125, 211, 199'; // Default dark mode glow
 
   /* ── Helpers ──────────────────────────────────── */
 
@@ -39,49 +30,41 @@
   const getMaxParticles = () => {
     const mem = navigator.deviceMemory || 4;
     const area = window.innerWidth * window.innerHeight;
-    let base = Math.floor(area / 65000);
+    let base = Math.floor(area / 18000); // More particles since they have no lines
     if (mem <= 2) base = Math.floor(base * 0.5);
-    else if (mem <= 4) base = Math.floor(base * 0.75);
-    return Math.max(14, Math.min(42, base));
+    else if (mem <= 4) base = Math.floor(base * 0.8);
+    return Math.max(30, Math.min(80, base));
   };
 
-  /* ── Spatial Grid ─────────────────────────────── */
-
-  const cellKey = (cx, cy) => (cy << 16) | cx;
-
-  const buildGrid = () => {
-    grid.clear();
-    for (let i = 0; i < particles.length; i++) {
-      const p = particles[i];
-      const cx = (p.x / CELL_SIZE) | 0;
-      const cy = (p.y / CELL_SIZE) | 0;
-      const key = cellKey(cx, cy);
-      let bucket = grid.get(key);
-      if (!bucket) {
-        bucket = [];
-        grid.set(key, bucket);
-      }
-      bucket.push(i);
-    }
+  const updateThemeColor = () => {
+    const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+    // Light mode: dark teal, Dark mode: glowing cyan
+    themeColor = isLight ? '0, 127, 114' : '125, 211, 199';
   };
 
-  /* ── Particles ────────────────────────────────── */
+  /* ── Particles (Bokeh Orbs) ───────────────────── */
 
   const initParticles = () => {
+    updateThemeColor();
     canvasW = window.innerWidth;
     canvasH = window.innerHeight;
-    gridCols = Math.ceil(canvasW / CELL_SIZE);
-    gridRows = Math.ceil(canvasH / CELL_SIZE);
     const count = getMaxParticles();
     particles = new Array(count);
     for (let i = 0; i < count; i++) {
-      const size = Math.random() * 1.8 + 0.8;
+      // Varying sizes for parallax feel (depth)
+      const isForeground = Math.random() > 0.8;
+      const size = isForeground ? Math.random() * 4 + 3 : Math.random() * 2 + 1;
+      const speedMult = isForeground ? 1.5 : 0.6;
+      
       particles[i] = {
-        x: Math.random() * (canvasW - size * 4) + size * 2,
-        y: Math.random() * (canvasH - size * 4) + size * 2,
-        dx: (Math.random() - 0.5) * 0.8,
-        dy: (Math.random() - 0.5) * 0.8,
+        x: Math.random() * canvasW,
+        y: Math.random() * canvasH,
+        vx: (Math.random() - 0.5) * 0.6 * speedMult,
+        vy: (Math.random() - 0.5) * 0.6 * speedMult - 0.2, // slight upward drift
         r: size,
+        baseAlpha: isForeground ? (Math.random() * 0.4 + 0.3) : (Math.random() * 0.3 + 0.1),
+        phase: Math.random() * Math.PI * 2,
+        phaseSpeed: Math.random() * 0.02 + 0.01,
       };
     }
   };
@@ -89,86 +72,37 @@
   const updateParticles = () => {
     for (let i = 0; i < particles.length; i++) {
       const p = particles[i];
-      if (p.x > canvasW || p.x < 0) p.dx = -p.dx;
-      if (p.y > canvasH || p.y < 0) p.dy = -p.dy;
-      p.x += p.dx;
-      p.y += p.dy;
+      p.x += p.vx;
+      p.y += p.vy;
+      p.phase += p.phaseSpeed;
+
+      // Wrap around edges softly
+      if (p.x < -p.r * 2) p.x = canvasW + p.r;
+      else if (p.x > canvasW + p.r * 2) p.x = -p.r;
+      
+      if (p.y < -p.r * 2) p.y = canvasH + p.r;
+      else if (p.y > canvasH + p.r * 2) p.y = -p.r;
     }
   };
 
   /* ── Rendering ────────────────────────────────── */
 
   const drawParticles = () => {
-    ctx.fillStyle = `rgba(${PARTICLE_COLOR}, ${PARTICLE_ALPHA})`;
-    ctx.beginPath();
+    // Draw all particles with standard filled arcs
+    ctx.fillStyle = `rgba(${themeColor}, 1)`;
+    
     for (let i = 0; i < particles.length; i++) {
       const p = particles[i];
-      ctx.moveTo(p.x + p.r, p.y);
-      ctx.arc(p.x, p.y, p.r, 0, 6.2832);
-    }
-    ctx.fill();
-  };
-
-  const drawConnections = () => {
-    // Batch lines by opacity bucket for minimal draw calls
-    const bucketPaths = new Array(OPACITY_BUCKETS);
-    for (let b = 0; b < OPACITY_BUCKETS; b++) {
-      bucketPaths[b] = [];
-    }
-
-    buildGrid();
-
-    for (let i = 0; i < particles.length; i++) {
-      const pa = particles[i];
-      const cx = (pa.x / CELL_SIZE) | 0;
-      const cy = (pa.y / CELL_SIZE) | 0;
-
-      // Check only current cell and 4 neighbors (right, bottom-left, bottom, bottom-right)
-      // to avoid double-checking pairs
-      for (let dcy = 0; dcy <= 1; dcy++) {
-        const startDcx = dcy === 0 ? 0 : -1;
-        for (let dcx = startDcx; dcx <= 1; dcx++) {
-          const nx = cx + dcx;
-          const ny = cy + dcy;
-          if (nx < 0 || ny < 0 || nx >= gridCols || ny >= gridRows) continue;
-
-          const bucket = grid.get(cellKey(nx, ny));
-          if (!bucket) continue;
-
-          for (let k = 0; k < bucket.length; k++) {
-            const j = bucket[k];
-            if (j <= i) continue; // avoid duplicate pairs
-
-            const pb = particles[j];
-            const ddx = pa.x - pb.x;
-            const ddy = pa.y - pb.y;
-            const distSq = ddx * ddx + ddy * ddy;
-
-            if (distSq < CONNECTION_DIST_SQ) {
-              const ratio = 1 - distSq / CONNECTION_DIST_SQ;
-              const bucketIdx = Math.min((ratio * OPACITY_BUCKETS) | 0, OPACITY_BUCKETS - 1);
-              bucketPaths[bucketIdx].push(pa.x, pa.y, pb.x, pb.y);
-            }
-          }
-        }
-      }
-    }
-
-    // Draw each bucket with a single stroke call
-    ctx.lineWidth = 1;
-    for (let b = 0; b < OPACITY_BUCKETS; b++) {
-      const coords = bucketPaths[b];
-      if (coords.length === 0) continue;
-
-      const alpha = ((b + 0.5) / OPACITY_BUCKETS) * LINE_ALPHA_MAX;
-      ctx.strokeStyle = `rgba(${PARTICLE_COLOR}, ${alpha.toFixed(3)})`;
+      // Twinkle effect using sine wave on phase
+      const alphaMult = 0.7 + Math.sin(p.phase) * 0.3;
+      ctx.globalAlpha = p.baseAlpha * alphaMult;
+      
       ctx.beginPath();
-      for (let c = 0; c < coords.length; c += 4) {
-        ctx.moveTo(coords[c], coords[c + 1]);
-        ctx.lineTo(coords[c + 2], coords[c + 3]);
-      }
-      ctx.stroke();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fill();
     }
+    
+    ctx.globalAlpha = 1.0;
   };
 
   /* ── Animation Loop ───────────────────────────── */
@@ -188,7 +122,6 @@
     ctx.clearRect(0, 0, canvasW, canvasH);
     updateParticles();
     drawParticles();
-    drawConnections();
   };
 
   /* ── Lifecycle ────────────────────────────────── */
@@ -203,7 +136,6 @@
   const destroyCanvas = () => {
     stop();
     particles = [];
-    grid.clear();
     if (canvas) canvas.remove();
     canvas = null;
     ctx = null;
@@ -238,7 +170,7 @@
       return;
     }
     canvas = ensureCanvas();
-    ctx = canvas.getContext('2d');
+    ctx = canvas.getContext('2d', { alpha: true });
     if (!ctx) return;
     if (animationFrame) cancelAnimationFrame(animationFrame);
     resizeCanvas();
@@ -268,6 +200,16 @@
 
   reducedMotionQuery.addEventListener?.('change', sync);
 
+  // Re-init particles on theme change to instantly update colors
+  const themeObserver = new MutationObserver(() => {
+    updateThemeColor();
+  });
+  themeObserver.observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ['data-theme'],
+  });
+
+  // Also sync on general class changes (for password gate unlocking)
   const classObserver = new MutationObserver(sync);
   classObserver.observe(document.documentElement, {
     attributes: true,

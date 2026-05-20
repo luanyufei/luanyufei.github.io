@@ -372,17 +372,6 @@ html[data-theme="light"] body::after {
   border-bottom: 0;
 }
 
-#page-header::after {
-  content: "";
-  position: absolute;
-  inset: 4rem -8% auto;
-  height: 20rem;
-  background:
-    radial-gradient(circle at 28% 50%, rgba(var(--glow-rgb), 0.11), transparent 24%),
-    radial-gradient(circle at 72% 42%, rgba(var(--accent-violet-rgb), 0.1), transparent 22%);
-  pointer-events: none;
-  opacity: 0.5;
-}
 
 #page-header.full_page {
   min-height: 78vh;
