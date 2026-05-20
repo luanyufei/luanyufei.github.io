@@ -173,40 +173,32 @@ npm run deploy
 
 ### 这台机器上的特殊情况
 
-这台机器目前有过一个问题：
+这台机器 GitHub SSH 推送一直有问题（密钥需要 passphrase，且 SSH 通道可能被拦）。
 
-- GitHub SSH 推送可能失败
-- 报错类似：
+**统一使用 HTTPS + PAT 方式推送。**
+
+GitHub Personal Access Token 存放在项目根目录的本地文件中（已加入 `.gitignore`，不会被提交）：
 
 ```text
-Connection closed by ... port 22
-fatal: Could not read from remote repository.
+.github-token
 ```
 
-这不是 Hexo 配置错了，是 SSH 通道被拦了。
+Remote 已配置为带 PAT 的 HTTPS 地址。如果 remote 丢了，重新设置：
 
-### SSH 失败时的手动补救
+```bash
+git remote set-url origin "https://luanyufei:$(cat .github-token)@github.com/luanyufei/luanyufei.github.io.git"
+```
 
-先照常生成并部署：
+### 推 gh-pages 的正确方式
+
+`npm run deploy` 的 SSH 会失败，但 `.deploy_git` 会生成好。之后用 HTTPS 推：
 
 ```bash
 npm run deploy
+git -C .deploy_git push "https://luanyufei:$(cat .github-token)@github.com/luanyufei/luanyufei.github.io.git" HEAD:gh-pages --force
 ```
 
-即使最后 SSH 推送失败，`.deploy_git` 往往已经生成好了。
-
-然后进入 `.deploy_git`，手动用 HTTPS 推到 `gh-pages`：
-
-```bash
-git -C .deploy_git push https://github.com/luanyufei/luanyufei.github.io.git HEAD:gh-pages
-```
-
-如果 GitHub 要你认证，就用：
-
-- GitHub PAT
-- 或者你本机已经登录过的 Git 凭据
-
-### 最稳妥的 GitHub Pages 发布顺序
+### 最稳妥的完整发布顺序
 
 ```bash
 npm run clean
@@ -215,12 +207,7 @@ git add .
 git commit -m "update source"
 git push origin main
 npm run deploy
-```
-
-如果最后一步 SSH 报错，再补：
-
-```bash
-git -C .deploy_git push https://github.com/luanyufei/luanyufei.github.io.git HEAD:gh-pages
+git -C .deploy_git push "https://luanyufei:$(cat .github-token)@github.com/luanyufei/luanyufei.github.io.git" HEAD:gh-pages --force
 ```
 
 ## 7. 修改 link 页
