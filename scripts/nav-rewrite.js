@@ -60,7 +60,7 @@ hexo.extend.filter.register('after_render:html', (html) => {
   output = output.replace(/<div id="search-button">[\s\S]*?<\/div>/, '');
   output = output.replace(/<div id="toggle-menu">[\s\S]*?<\/div>/, '');
 
-  if (output.includes('<header class="full_page fixed" id="page-header">')) {
+  if (output.includes('<header class="full_page fixed" id="page-header"')) {
     output = output.replace(
       /<div id="site-info">[\s\S]*?<div id="scroll-down">[\s\S]*?<\/div>/,
       HOME_HERO
