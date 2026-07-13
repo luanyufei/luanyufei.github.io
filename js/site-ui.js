@@ -1,42 +1,28 @@
 (() => {
-  const PASSWORD_GATE_CONFIG = {
-    enabled: true,
-    password: 'AlanNOON2026',
-    storageKey: 'feespace-password-pass-day',
-    skipHosts: ['localhost', '127.0.0.1'],
-    title: '进入 Fee Space',
-    hint: '请输入访问密码',
-    helper: '验证通过后，这台设备在今天之内不需要再次输入。',
-  };
+  const THEME_KEY = 'theme';
+  const THEME_TTL_DAYS = 365;
 
-  const THEME_CONFIG = {
-    storageKey: 'theme',
-    ttlDays: 2,
-  };
+  const normalizeTheme = (value) => (value === 'light' || value === 'dark' ? value : undefined);
 
-  /* ── Theme ────────────────────────────────────── */
-
-  const normalizeTheme = (theme) => (theme === 'light' || theme === 'dark' ? theme : undefined);
-
-  const readStoredTheme = () => {
+  const readTheme = () => {
     try {
-      const butterflyTheme = normalizeTheme(window.btf?.saveToLocal?.get?.(THEME_CONFIG.storageKey));
-      if (butterflyTheme) return butterflyTheme;
+      const butterflyValue = normalizeTheme(window.btf?.saveToLocal?.get?.(THEME_KEY));
+      if (butterflyValue) return butterflyValue;
 
-      const rawTheme = localStorage.getItem(THEME_CONFIG.storageKey);
-      if (!rawTheme) return undefined;
+      const raw = localStorage.getItem(THEME_KEY);
+      if (!raw) return undefined;
 
       try {
-        const parsedTheme = JSON.parse(rawTheme);
-        if (parsedTheme.expiry && Date.now() > parsedTheme.expiry) {
-          localStorage.removeItem(THEME_CONFIG.storageKey);
+        const parsed = JSON.parse(raw);
+        if (parsed.expiry && Date.now() > parsed.expiry) {
+          localStorage.removeItem(THEME_KEY);
           return undefined;
         }
-        return normalizeTheme(parsedTheme.value);
-      } catch (_) {
-        return normalizeTheme(rawTheme);
+        return normalizeTheme(parsed.value);
+      } catch (error) {
+        return normalizeTheme(raw);
       }
-    } catch (_) {
+    } catch (error) {
       return undefined;
     }
   };
@@ -44,369 +30,313 @@
   const saveTheme = (theme) => {
     try {
       if (window.btf?.saveToLocal?.set) {
-        window.btf.saveToLocal.set(THEME_CONFIG.storageKey, theme, THEME_CONFIG.ttlDays);
+        window.btf.saveToLocal.set(THEME_KEY, theme, THEME_TTL_DAYS);
         return;
       }
+
       localStorage.setItem(
-        THEME_CONFIG.storageKey,
+        THEME_KEY,
         JSON.stringify({
           value: theme,
-          expiry: Date.now() + THEME_CONFIG.ttlDays * 86400000,
+          expiry: Date.now() + THEME_TTL_DAYS * 86400000,
         })
       );
-    } catch (_) {
-      // Theme still applies for the current page even when storage is unavailable.
+    } catch (error) {
+      // The selected theme still applies to this page when storage is blocked.
     }
   };
 
-  const getPreferredTheme = () =>
-    readStoredTheme() ||
-    normalizeTheme(document.documentElement.getAttribute('data-theme')) ||
-    (window.matchMedia?.('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+  const preferredTheme = () =>
+    readTheme() ||
+    normalizeTheme(document.documentElement.dataset.theme) ||
+    (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
 
-  const updateThemeToggle = (button, theme) => {
+  const updateThemeButton = (button, theme) => {
     if (!button) return;
-    const isLight = theme === 'light';
-    const nextTheme = isLight ? 'dark' : 'light';
-    const nextLabel = isLight ? '深色' : '浅色';
-
+    const nextTheme = theme === 'dark' ? '浅色' : '深色';
     button.dataset.theme = theme;
-    button.dataset.nextTheme = nextTheme;
-    button.setAttribute('aria-label', `切换到${nextLabel}模式`);
-    button.setAttribute('title', `切换到${nextLabel}模式`);
-    button.setAttribute('aria-pressed', String(isLight));
-    button.innerHTML = `<i class="fas ${isLight ? 'fa-moon' : 'fa-sun'}" aria-hidden="true"></i><span class="site-theme-toggle__text">${nextLabel}模式</span>`;
+    button.setAttribute('aria-label', `切换到${nextTheme}模式`);
+    button.setAttribute('title', `切换到${nextTheme}模式`);
+    button.innerHTML = `<i class="fas ${theme === 'dark' ? 'fa-sun' : 'fa-moon'}" aria-hidden="true"></i>`;
   };
 
-  const applyTheme = (theme, options = {}) => {
-    const next = normalizeTheme(theme) || 'dark';
+  const applyTheme = (theme, persist = false) => {
+    const nextTheme = normalizeTheme(theme) || 'light';
 
-    if (next === 'dark' && window.btf?.activateDarkMode) {
+    if (nextTheme === 'dark' && window.btf?.activateDarkMode) {
       window.btf.activateDarkMode();
-    } else if (next === 'light' && window.btf?.activateLightMode) {
+    } else if (nextTheme === 'light' && window.btf?.activateLightMode) {
       window.btf.activateLightMode();
     } else {
-      document.documentElement.setAttribute('data-theme', next);
+      document.documentElement.dataset.theme = nextTheme;
     }
 
-    if (options.persist) saveTheme(next);
-    updateThemeToggle(document.querySelector('.site-theme-toggle'), next);
+    if (persist) saveTheme(nextTheme);
+    updateThemeButton(document.querySelector('.site-theme-toggle'), nextTheme);
   };
 
-  let themeObserver = null;
+  const initTheme = () => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'site-theme-toggle';
+    document.body.appendChild(button);
 
-  const initThemeToggle = () => {
-    let button = document.querySelector('.site-theme-toggle');
+    applyTheme(preferredTheme());
 
-    if (!button) {
-      button = document.createElement('button');
-      button.type = 'button';
-      button.className = 'site-theme-toggle';
-      document.body.appendChild(button);
-    }
-
-    if (button.dataset.bound !== 'true') {
-      button.dataset.bound = 'true';
-      button.addEventListener('click', () => {
-        const cur = normalizeTheme(document.documentElement.getAttribute('data-theme')) || getPreferredTheme();
-        applyTheme(cur === 'dark' ? 'light' : 'dark', { persist: true });
-      });
-    }
-
-    applyTheme(getPreferredTheme(), { persist: false });
-
-    // Clean up any previous observer before creating a new one
-    if (themeObserver) themeObserver.disconnect();
-    themeObserver = new MutationObserver(() => {
-      updateThemeToggle(button, normalizeTheme(document.documentElement.getAttribute('data-theme')) || 'dark');
+    button.addEventListener('click', () => {
+      const current = normalizeTheme(document.documentElement.dataset.theme) || preferredTheme();
+      applyTheme(current === 'dark' ? 'light' : 'dark', true);
     });
-    themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
 
-    const themeMedia = window.matchMedia?.('(prefers-color-scheme: dark)');
-    themeMedia?.addEventListener?.('change', (event) => {
-      if (!readStoredTheme()) {
-        applyTheme(event.matches ? 'dark' : 'light', { persist: false });
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (event) => {
+      if (!readTheme()) applyTheme(event.matches ? 'dark' : 'light');
+    });
+  };
+
+  const updateClock = (clock) => {
+    clock.textContent = `CN ${new Intl.DateTimeFormat('zh-CN', {
+      timeZone: 'Asia/Shanghai',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+    }).format(new Date())}`;
+  };
+
+  const initNav = () => {
+    const nav = document.getElementById('nav');
+    const menus = document.getElementById('menus');
+    if (!nav || !menus) return;
+
+    const actions = document.createElement('div');
+    actions.className = 'nav-actions';
+    actions.innerHTML = `
+      <span class="site-clock" aria-label="中国标准时间"></span>
+      <button class="site-search-toggle" type="button" aria-label="搜索" title="搜索">
+        <i class="fas fa-search" aria-hidden="true"></i>
+      </button>
+      <button class="site-menu-toggle" type="button" aria-label="打开导航" title="导航" aria-expanded="false">
+        <i class="fas fa-bars" aria-hidden="true"></i>
+      </button>
+    `;
+    nav.appendChild(actions);
+
+    const clock = actions.querySelector('.site-clock');
+    updateClock(clock);
+    window.setInterval(() => updateClock(clock), 60000);
+
+    const menuButton = actions.querySelector('.site-menu-toggle');
+    menuButton.addEventListener('click', () => {
+      const isOpen = nav.classList.toggle('menu-open');
+      menuButton.setAttribute('aria-expanded', String(isOpen));
+      menuButton.setAttribute('aria-label', isOpen ? '关闭导航' : '打开导航');
+      menuButton.innerHTML = `<i class="fas ${isOpen ? 'fa-times' : 'fa-bars'}" aria-hidden="true"></i>`;
+    });
+
+    menus.addEventListener('click', (event) => {
+      if (event.target.closest('a')) {
+        nav.classList.remove('menu-open');
+        menuButton.setAttribute('aria-expanded', 'false');
+        menuButton.setAttribute('aria-label', '打开导航');
+        menuButton.innerHTML = '<i class="fas fa-bars" aria-hidden="true"></i>';
       }
     });
+
+    const currentPath = window.location.pathname.replace(/\/$/, '') || '/';
+    menus.querySelectorAll('a.site-page').forEach((link) => {
+      const linkPath = new URL(link.href, window.location.origin).pathname.replace(/\/$/, '') || '/';
+      if (linkPath === currentPath || (linkPath !== '/' && currentPath.startsWith(`${linkPath}/`))) {
+        link.classList.add('is-active');
+        link.setAttribute('aria-current', 'page');
+      }
+    });
+
+    const onScroll = () => nav.classList.toggle('is-scrolled', window.scrollY > 24);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
   };
 
-  /* ── Password Gate ────────────────────────────── */
-
-  const getTodayStamp = () => {
-    const now = new Date();
-    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+  const stripHtml = (html) => {
+    const element = document.createElement('div');
+    element.innerHTML = html;
+    return (element.textContent || '').replace(/\s+/g, ' ').trim();
   };
 
-  const shouldSkipPasswordGate = () =>
-    PASSWORD_GATE_CONFIG.skipHosts.includes(window.location.hostname);
+  const initSearch = () => {
+    const toggle = document.querySelector('.site-search-toggle');
+    if (!toggle) return;
 
-  const hasPasswordAccess = () => {
-    if (!PASSWORD_GATE_CONFIG.enabled || shouldSkipPasswordGate()) return true;
-    try {
-      return localStorage.getItem(PASSWORD_GATE_CONFIG.storageKey) === getTodayStamp();
-    } catch (_) {
-      return false;
-    }
-  };
-
-  const markPasswordAccess = () => {
-    try {
-      localStorage.setItem(PASSWORD_GATE_CONFIG.storageKey, getTodayStamp());
-    } catch (_) {
-      return false;
-    }
-    return true;
-  };
-
-  const unlockSite = () => {
-    const root = document.documentElement;
-    root.classList.remove('site-locked');
-    root.classList.add('site-unlocked');
-    document.body.classList.remove('password-gate-active');
-    document.body.classList.add('password-gate-passed');
-    const gate = document.querySelector('.site-password-gate');
-    if (gate) {
-      gate.classList.add('is-leaving');
-      gate.addEventListener('animationend', () => gate.remove(), { once: true });
-      // Fallback in case animation doesn't fire
-      setTimeout(() => { if (gate.parentNode) gate.remove(); }, 500);
-    }
-  };
-
-  const initPasswordGate = () => {
-    if (hasPasswordAccess()) {
-      unlockSite();
-      return;
-    }
-
-    document.documentElement.classList.remove('site-unlocked');
-    document.documentElement.classList.add('site-locked');
-    document.body.classList.add('password-gate-active');
-
-    if (document.querySelector('.site-password-gate')) return;
-
-    const gate = document.createElement('div');
-    gate.className = 'site-password-gate';
-    gate.innerHTML = `
-      <div class="site-password-gate__shell">
-        <div class="site-password-gate__kicker">Fee Space Access</div>
-        <h1 class="site-password-gate__title">${PASSWORD_GATE_CONFIG.title}</h1>
-        <p class="site-password-gate__copy">这是一个前端密码门禁页，用来挡住随手点进来的访客。</p>
-        <form class="site-password-gate__form" novalidate>
-          <label class="site-password-gate__label" for="site-password-input">${PASSWORD_GATE_CONFIG.hint}</label>
-          <input id="site-password-input" class="site-password-gate__input" type="password" autocomplete="current-password" placeholder="Password" />
-          <button class="site-password-gate__button" type="submit">进入主页</button>
-          <p class="site-password-gate__helper">${PASSWORD_GATE_CONFIG.helper}</p>
-          <p class="site-password-gate__error" aria-live="polite"></p>
-        </form>
+    const dialog = document.createElement('dialog');
+    dialog.className = 'site-search-dialog';
+    dialog.innerHTML = `
+      <div class="search-shell">
+        <header class="search-head">
+          <label for="site-search-input">搜索</label>
+          <button class="search-close" type="button" aria-label="关闭搜索" title="关闭">
+            <i class="fas fa-times" aria-hidden="true"></i>
+          </button>
+        </header>
+        <input id="site-search-input" class="search-input" type="search" placeholder="搜索文章" autocomplete="off">
+        <div class="search-status" aria-live="polite"></div>
+        <ol class="search-results"></ol>
       </div>
     `;
+    document.body.appendChild(dialog);
 
-    document.body.appendChild(gate);
+    const input = dialog.querySelector('.search-input');
+    const results = dialog.querySelector('.search-results');
+    const status = dialog.querySelector('.search-status');
+    let entries = null;
+    let loadingPromise = null;
 
-    const form = gate.querySelector('.site-password-gate__form');
-    const input = gate.querySelector('.site-password-gate__input');
-    const error = gate.querySelector('.site-password-gate__error');
+    const loadEntries = () => {
+      if (entries) return Promise.resolve(entries);
+      if (loadingPromise) return loadingPromise;
 
-    if (!(form instanceof HTMLFormElement) || !(input instanceof HTMLInputElement) || !error) return;
+      status.textContent = '正在读取索引…';
+      loadingPromise = fetch('/search.xml')
+        .then((response) => {
+          if (!response.ok) throw new Error(`Search index failed: ${response.status}`);
+          return response.text();
+        })
+        .then((xmlText) => {
+          const xml = new DOMParser().parseFromString(xmlText, 'text/xml');
+          entries = Array.from(xml.querySelectorAll('entry')).map((entry) => ({
+            title: entry.querySelector('title')?.textContent?.trim() || '未命名',
+            url: entry.querySelector('url')?.textContent?.trim() || '/',
+            content: stripHtml(entry.querySelector('content')?.textContent || ''),
+          }));
+          status.textContent = '';
+          return entries;
+        })
+        .catch(() => {
+          status.textContent = '搜索索引暂时不可用';
+          entries = [];
+          return entries;
+        });
 
-    requestAnimationFrame(() => input.focus());
-
-    form.addEventListener('submit', (event) => {
-      event.preventDefault();
-      if (input.value === PASSWORD_GATE_CONFIG.password) {
-        markPasswordAccess();
-        unlockSite();
-        return;
-      }
-      error.textContent = '密码不对，再试一次。';
-      gate.classList.remove('is-shaking');
-      void gate.offsetWidth; // force reflow
-      gate.classList.add('is-shaking');
-      input.select();
-    });
-
-    gate.addEventListener('animationend', () => {
-      gate.classList.remove('is-shaking');
-    });
-  };
-
-  /* ── Nav Dropdown (Event Delegation) ──────────── */
-
-  const initNavDropdown = () => {
-    const nav = document.getElementById('nav');
-    if (!nav || nav.dataset.delegated === 'true') return;
-    nav.dataset.delegated = 'true';
-
-    const isHoverMode = () => window.matchMedia('(hover: hover) and (pointer: fine)').matches;
-
-    const getDropdownItem = (el) => {
-      const item = el.closest('#nav .menus_item');
-      if (!item) return null;
-      if (!item.querySelector('.site-page.group') || !item.querySelector('.menus_item_child')) return null;
-      return item;
+      return loadingPromise;
     };
 
-    const closeAll = () => {
-      nav.querySelectorAll('.menus_item.is-open').forEach((item) => {
-        item.classList.remove('is-open');
-        const trigger = item.querySelector('.site-page.group');
-        if (trigger) trigger.setAttribute('aria-expanded', 'false');
+    const renderResults = (query) => {
+      const normalizedQuery = query.trim().toLocaleLowerCase();
+      results.replaceChildren();
+      if (!normalizedQuery || !entries) {
+        status.textContent = '';
+        return;
+      }
+
+      const terms = normalizedQuery.split(/\s+/).filter(Boolean);
+      const matches = entries
+        .filter((entry) => {
+          const haystack = `${entry.title} ${entry.content}`.toLocaleLowerCase();
+          return terms.every((term) => haystack.includes(term));
+        })
+        .slice(0, 8);
+
+      status.textContent = matches.length ? `${matches.length} 条结果` : '没有找到相关内容';
+
+      matches.forEach((entry, index) => {
+        const item = document.createElement('li');
+        const link = document.createElement('a');
+        const number = document.createElement('span');
+        const copy = document.createElement('span');
+        const title = document.createElement('strong');
+        const excerpt = document.createElement('small');
+
+        link.href = entry.url;
+        number.className = 'search-result-number';
+        number.textContent = String(index + 1).padStart(2, '0');
+        copy.className = 'search-result-copy';
+        title.textContent = entry.title;
+        excerpt.textContent = entry.content.slice(0, 96);
+        copy.append(title, excerpt);
+        link.append(number, copy);
+        item.appendChild(link);
+        results.appendChild(item);
       });
     };
 
-    const openItem = (item) => {
-      closeAll();
-      item.classList.add('is-open');
-      const trigger = item.querySelector('.site-page.group');
-      if (trigger) trigger.setAttribute('aria-expanded', 'true');
+    const openSearch = () => {
+      if (!dialog.open) dialog.showModal();
+      document.documentElement.classList.add('search-open');
+      loadEntries().then(() => renderResults(input.value));
+      window.requestAnimationFrame(() => input.focus());
     };
 
-    // Set initial ARIA attributes
-    nav.querySelectorAll('.menus_item').forEach((item) => {
-      const trigger = item.querySelector('.site-page.group');
-      if (trigger && item.querySelector('.menus_item_child')) {
-        trigger.setAttribute('role', 'button');
-        trigger.setAttribute('tabindex', '0');
-        trigger.setAttribute('aria-expanded', 'false');
+    const closeSearch = () => {
+      if (dialog.open) dialog.close();
+      document.documentElement.classList.remove('search-open');
+    };
+
+    toggle.addEventListener('click', openSearch);
+    dialog.querySelector('.search-close').addEventListener('click', closeSearch);
+    dialog.addEventListener('click', (event) => {
+      if (event.target === dialog) closeSearch();
+    });
+    dialog.addEventListener('close', () => document.documentElement.classList.remove('search-open'));
+    input.addEventListener('input', () => renderResults(input.value));
+
+    document.addEventListener('keydown', (event) => {
+      const target = event.target;
+      const isTyping = target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement || target?.isContentEditable;
+      if (event.key === '/' && !isTyping && !dialog.open) {
+        event.preventDefault();
+        openSearch();
       }
-    });
-
-    // Pointer delegation on nav
-    nav.addEventListener('pointerenter', (e) => {
-      if (!isHoverMode()) return;
-      const item = getDropdownItem(e.target);
-      if (item) openItem(item);
-    }, true);
-
-    nav.addEventListener('pointerleave', (e) => {
-      if (!isHoverMode()) return;
-      const item = getDropdownItem(e.target);
-      if (item) {
-        item.classList.remove('is-open');
-        const trigger = item.querySelector('.site-page.group');
-        if (trigger) trigger.setAttribute('aria-expanded', 'false');
-      }
-    }, true);
-
-    // Click delegation
-    nav.addEventListener('click', (e) => {
-      const trigger = e.target.closest('.site-page.group');
-      if (!trigger) return;
-      if (isHoverMode()) return;
-      e.preventDefault();
-      e.stopPropagation();
-
-      const item = trigger.closest('.menus_item');
-      if (!item) return;
-      const isOpen = item.classList.contains('is-open');
-      closeAll();
-      if (!isOpen) openItem(item);
-    });
-
-    // Keyboard delegation
-    nav.addEventListener('keydown', (e) => {
-      if (e.key !== 'Enter' && e.key !== ' ') return;
-      const trigger = e.target.closest('.site-page.group');
-      if (!trigger) return;
-      e.preventDefault();
-
-      const item = trigger.closest('.menus_item');
-      if (!item) return;
-      const isOpen = item.classList.contains('is-open');
-      closeAll();
-      if (!isOpen) openItem(item);
-    });
-
-    // Close on outside click / Escape
-    document.addEventListener('click', (e) => {
-      if (!e.target.closest('#nav .menus_item')) closeAll();
-    });
-
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') closeAll();
     });
   };
 
-  /* ── Link Hero (rAF Typewriter) ───────────────── */
+  const initReadingProgress = () => {
+    const article = document.getElementById('article-container');
+    const post = document.getElementById('post');
+    if (!article || !post) return;
+
+    const progress = document.createElement('div');
+    progress.className = 'reading-progress';
+    progress.setAttribute('aria-hidden', 'true');
+    document.body.appendChild(progress);
+
+    let scheduled = false;
+    const update = () => {
+      const postTop = post.getBoundingClientRect().top + window.scrollY;
+      const distance = post.offsetHeight - window.innerHeight * 0.35;
+      const value = distance > 0 ? Math.min(1, Math.max(0, (window.scrollY - postTop) / distance)) : 1;
+      progress.style.transform = `scaleX(${value})`;
+      scheduled = false;
+    };
+
+    window.addEventListener('scroll', () => {
+      if (!scheduled) {
+        scheduled = true;
+        window.requestAnimationFrame(update);
+      }
+    }, { passive: true });
+    window.addEventListener('resize', update, { passive: true });
+    update();
+  };
 
   const initLinkHero = () => {
     const linkPage = document.querySelector('#body-wrap.type-link');
-    const hero = document.querySelector('#page-site-info');
-    if (!linkPage || !hero || hero.dataset.enhanced === 'true') return;
+    const hero = document.getElementById('page-site-info');
+    if (!linkPage || !hero) return;
 
-    hero.dataset.enhanced = 'true';
     document.body.classList.add('is-link-page');
     hero.innerHTML = `
       <div class="link-hero">
-        <div class="link-hero-kicker">你好，我是</div>
-        <h1 class="link-hero-name">Alan NOON.</h1>
-        <div class="link-hero-role">
-          我是一名 <span class="link-hero-typed" id="link-hero-typed"></span><span class="link-hero-cursor">|</span>
-        </div>
-        <div class="link-hero-meta">狒狒导航 · Feevigation · Tools, links and collected sparks</div>
+        <p>LINK DIRECTORY / CURATED</p>
+        <h1>狒狒导航</h1>
+        <div><span>工具</span><span>灵感</span><span>长期收藏</span></div>
       </div>
     `;
-
-    const words = ['数字拾荒者', '工具收藏家', '软硬件折腾爱好者', '链接整理控'];
-    const target = hero.querySelector('#link-hero-typed');
-    if (!target) return;
-
-    let wordIdx = 0;
-    let charIdx = 0;
-    let deleting = false;
-    let lastTick = 0;
-    let delay = 0;
-
-    const getDelay = () => {
-      if (!deleting) {
-        return charIdx === words[wordIdx].length ? 1600 : 110;
-      }
-      return charIdx === 0 ? 420 : 55;
-    };
-
-    const tick = (timestamp) => {
-      if (timestamp - lastTick < delay) {
-        requestAnimationFrame(tick);
-        return;
-      }
-      lastTick = timestamp;
-      const current = words[wordIdx];
-
-      if (!deleting) {
-        if (charIdx < current.length) {
-          charIdx++;
-          target.textContent = current.slice(0, charIdx);
-          delay = charIdx === current.length ? 1600 : 110;
-        } else {
-          deleting = true;
-          delay = 0;
-        }
-      } else {
-        if (charIdx > 0) {
-          charIdx--;
-          target.textContent = current.slice(0, charIdx);
-          delay = charIdx === 0 ? 420 : 55;
-        } else {
-          deleting = false;
-          wordIdx = (wordIdx + 1) % words.length;
-          delay = 0;
-        }
-      }
-
-      requestAnimationFrame(tick);
-    };
-
-    requestAnimationFrame(tick);
   };
 
-  /* ── Init ─────────────────────────────────────── */
-
   const start = () => {
-    initThemeToggle();
-    initPasswordGate();
-    initNavDropdown();
+    initTheme();
+    initNav();
+    initSearch();
+    initReadingProgress();
     initLinkHero();
+    window.requestAnimationFrame(() => document.documentElement.classList.add('site-ready'));
   };
 
   if (document.readyState === 'loading') {
