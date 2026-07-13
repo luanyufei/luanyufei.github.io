@@ -2,16 +2,15 @@ nav:
   fixed: true
   display_title: false
 
+favicon: /img/favicon.ico
+
 menu:
-  首页: / || fas fas fa-home
+  首页: / || fas fa-home
+  文章: /archives/ || fas fa-layer-group
   分类: /categories/ || fas fa-folder-open
-  列表||fas fa-list||hide:
-    音乐: /music/ || fas fa-music
-    视频: /movies/ || fas fa-video
-  时间轴: /archives/ || fas fa-archive
-  标签: /tags/ || fas fa-tags
-  链接: /link/ || fas fa-link
-  关于: /about/ || fas fa-heart
+  标签: /tags/ || fas fa-tag
+  链接: /link/ || fas fa-compass
+  关于: /about/ || fas fa-user
 
 social:
   fab fa-bilibili: https://space.bilibili.com/3493130162669961 || Bilibili || '#08a0d6'
@@ -22,29 +21,32 @@ avatar:
   img: /img/touxiang.png
   effect: false
 
-index_img: "linear-gradient(135deg, #060910 0%, #0b111b 52%, #071017 100%)"
-default_top_img: "linear-gradient(135deg, #060910 0%, #0b111b 52%, #071017 100%)"
+index_img: "#f3f6f2"
+default_top_img: "#f3f6f2"
 footer_img: false
-index_top_img_height: 76vh
+index_top_img_height: 88vh
 
 subtitle:
-  enable: true
-  effect: true
-  sub:
-    - 乱与狒的数字花园
-    - Notes, tools, links and experiments
+  enable: false
 
 aside:
+  enable: true
+  mobile: false
+  button: false
   card_author:
-    enable: true
-    description: 记录技术、生活与折腾灵感
-    button:
-      enable: true
-      icon: fab fa-github
-      text: luanyufei的GitHub
-      link: https://github.com/luanyufei
+    enable: false
   card_announcement:
-    content: 电子扫盲、收藏导航、系统折腾与日常笔记
+    enable: false
+  card_recent_post:
+    enable: false
+  card_categories:
+    enable: false
+  card_tags:
+    enable: false
+  card_archives:
+    enable: false
+  card_webinfo:
+    enable: false
 
 preloader:
   enable: false
@@ -57,14 +59,20 @@ search:
 inject:
   head:
     - >-
-      <script>(function(){try{var raw=localStorage.getItem('theme');var saved;if(raw){try{var parsed=JSON.parse(raw);if(!parsed.expiry||Date.now()<=parsed.expiry)saved=parsed.value}catch(e){saved=raw}}var mode=saved==='light'||saved==='dark'?saved:(window.matchMedia&&window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark');document.documentElement.setAttribute('data-theme',mode);var key='feespace-password-pass-day';var host=window.location.hostname;var skip=host==='localhost'||host==='127.0.0.1';var now=new Date();var day=[now.getFullYear(),String(now.getMonth()+1).padStart(2,'0'),String(now.getDate()).padStart(2,'0')].join('-');document.documentElement.classList.add(skip||localStorage.getItem(key)===day?'site-unlocked':'site-locked')}catch(e){document.documentElement.setAttribute('data-theme','dark');document.documentElement.classList.add('site-locked')}})();</script>
-    - <link rel="preconnect" href="https://fonts.googleapis.com">
-    - <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    - <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+      <script>(function(){try{var raw=localStorage.getItem('theme');var saved;if(raw){try{var parsed=JSON.parse(raw);if(!parsed.expiry||Date.now()<=parsed.expiry)saved=parsed.value}catch(e){saved=raw}}var mode=saved==='light'||saved==='dark'?saved:(window.matchMedia&&window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',mode);document.documentElement.classList.add('js')}catch(e){document.documentElement.setAttribute('data-theme','light')}})();</script>
     - <link rel="stylesheet" href="/css/cyber-background.css">
   bottom:
-    - <script src="/js/cyber-background.js" defer></script>
     - <script src="/js/site-ui.js" defer></script>
+
+translate:
+  enable: false
+
+darkmode:
+  enable: true
+  button: false
+  autoChangeMode: 1
+
+rightside_scroll_percent: true
 
 activate_power_mode:
   enable: false
