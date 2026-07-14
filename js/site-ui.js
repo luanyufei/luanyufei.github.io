@@ -315,6 +315,59 @@
     update();
   };
 
+  const initKineticTitle = () => {
+    const hero = document.querySelector('.feespace-hero');
+    const title = hero?.querySelector('.kinetic-title');
+    if (!hero || !title || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    const coordinates = title.querySelector('[data-kinetic-coordinates]');
+    const supportsFinePointer = window.matchMedia('(pointer: fine)').matches;
+    let frame = 0;
+    let pointerX = 0.5;
+    let pointerY = 0.5;
+    let pulseTimer = 0;
+
+    const render = () => {
+      const x = pointerX - 0.5;
+      const y = pointerY - 0.5;
+      title.style.setProperty('--kinetic-tilt-x', `${(-y * 9).toFixed(2)}deg`);
+      title.style.setProperty('--kinetic-tilt-y', `${(x * 11).toFixed(2)}deg`);
+      title.style.setProperty('--kinetic-echo-x', `${(x * 18).toFixed(2)}px`);
+      title.style.setProperty('--kinetic-echo-y', `${(y * 12).toFixed(2)}px`);
+      title.style.setProperty('--kinetic-scan', `${(pointerY * 76 + 12).toFixed(2)}%`);
+      if (coordinates) {
+        const xValue = String(Math.round(pointerX * 99)).padStart(2, '0');
+        const yValue = String(Math.round(pointerY * 99)).padStart(2, '0');
+        coordinates.textContent = `X ${xValue} / Y ${yValue}`;
+      }
+      frame = 0;
+    };
+
+    const pulse = () => {
+      window.clearTimeout(pulseTimer);
+      title.classList.remove('is-pulsing');
+      window.requestAnimationFrame(() => title.classList.add('is-pulsing'));
+      pulseTimer = window.setTimeout(() => title.classList.remove('is-pulsing'), 620);
+    };
+
+    if (supportsFinePointer) {
+      hero.addEventListener('pointermove', (event) => {
+        const rect = hero.getBoundingClientRect();
+        pointerX = Math.min(1, Math.max(0, (event.clientX - rect.left) / rect.width));
+        pointerY = Math.min(1, Math.max(0, (event.clientY - rect.top) / rect.height));
+        if (!frame) frame = window.requestAnimationFrame(render);
+      }, { passive: true });
+
+      hero.addEventListener('pointerleave', () => {
+        pointerX = 0.5;
+        pointerY = 0.5;
+        if (!frame) frame = window.requestAnimationFrame(render);
+      }, { passive: true });
+
+      title.addEventListener('pointerenter', pulse, { passive: true });
+    }
+  };
+
   const initLinkHero = () => {
     const linkPage = document.querySelector('#body-wrap.type-link');
     const hero = document.getElementById('page-site-info');
@@ -335,6 +388,7 @@
     initNav();
     initSearch();
     initReadingProgress();
+    initKineticTitle();
     initLinkHero();
     window.requestAnimationFrame(() => document.documentElement.classList.add('site-ready'));
   };
