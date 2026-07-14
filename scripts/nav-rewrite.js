@@ -6,7 +6,15 @@ const HOME_HERO = `
   </div>
   <div class="hero-grid">
     <p class="hero-intro">电子扫盲、系统折腾<br>以及值得留下的经验</p>
-    <h1 id="site-title"><span>Fee</span><span>Space</span></h1>
+    <h1 id="site-title" class="kinetic-title" aria-label="Fee Space">
+      <span class="kinetic-word kinetic-word-fee" data-word="FEE" aria-hidden="true"><span class="kinetic-face">FEE</span></span>
+      <span class="kinetic-word kinetic-word-space" data-word="SPACE" aria-hidden="true"><span class="kinetic-face">SPACE</span></span>
+      <span class="kinetic-axis kinetic-axis-x" aria-hidden="true"></span>
+      <span class="kinetic-axis kinetic-axis-y" aria-hidden="true"></span>
+      <span class="kinetic-corner kinetic-corner-tl" aria-hidden="true"></span>
+      <span class="kinetic-corner kinetic-corner-br" aria-hidden="true"></span>
+      <span class="kinetic-hud" aria-hidden="true"><span>TYPE.SYS / FS-01</span><span data-kinetic-coordinates>X 50 / Y 50</span></span>
+    </h1>
     <p class="hero-statement">把复杂的技术讲清楚<br>把真实的折腾写下来</p>
   </div>
   <div class="hero-footer">
