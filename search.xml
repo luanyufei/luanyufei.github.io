@@ -1,14 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
-    <title>红米研究记3｜刷欧盟版（EEA）澎湃系统</title>
-    <url>/2025/08/07/EEA/</url>
-    <content><![CDATA[]]></content>
-      <categories>
-        <category>各种经验</category>
-      </categories>
-  </entry>
-  <entry>
     <title>红米研究记2｜解锁BootLoader</title>
     <url>/2025/08/07/BL%E9%94%81/</url>
     <content><![CDATA[]]></content>
@@ -17,8 +9,40 @@
       </categories>
   </entry>
   <entry>
+    <title>红米研究记3｜刷欧盟版（EEA）澎湃系统</title>
+    <url>/2025/08/07/EEA/</url>
+    <content><![CDATA[]]></content>
+      <categories>
+        <category>各种经验</category>
+      </categories>
+  </entry>
+  <entry>
     <title>红米研究记1｜adb卸载系统自带软件</title>
     <url>/2025/08/07/adb/</url>
+    <content><![CDATA[]]></content>
+      <categories>
+        <category>各种经验</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>Brave 浏览器去除无用功能 (macOS)</title>
+    <url>/2026/07/18/Brave%E6%B5%8F%E8%A7%88%E5%99%A8%E5%8E%BB%E9%99%A4%E6%97%A0%E7%94%A8%E5%8A%9F%E8%83%BD/</url>
+    <content><![CDATA[<p>由于 Chrome 浏览器对去广告插件有反制机制——检测到去广告扩展后会让 YouTube 变得卡顿——所以我决定转用 Brave。然而 Brave 也自带了不少臃肿功能，比如 AI、钱包、VPN 等等。下面这个方法可以通过 macOS 配置描述文件把这些功能一次性全部禁用。</p>
+<h2 id="Step-1：生成配置描述文件"><a href="#Step-1：生成配置描述文件" class="headerlink" title="Step 1：生成配置描述文件"></a>Step 1：生成配置描述文件</h2><p>把下面这段命令<strong>整段</strong>粘贴到终端里执行：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">cat</span> &lt;&lt; <span class="string">&#x27;EOF&#x27;</span> &gt; ~/Desktop/BraveDebloat.mobileconfig</span><br><span class="line">&lt;?xml version=<span class="string">&quot;1.0&quot;</span> encoding=<span class="string">&quot;UTF-8&quot;</span>?&gt;</span><br><span class="line">&lt;!DOCTYPE plist PUBLIC <span class="string">&quot;-//Apple//DTD PLIST 1.0//EN&quot;</span> <span class="string">&quot;http://www.apple.com/DTDs/PropertyList-1.0.dtd&quot;</span>&gt;</span><br><span class="line">&lt;plist version=<span class="string">&quot;1.0&quot;</span>&gt;</span><br><span class="line">&lt;dict&gt;</span><br><span class="line">    &lt;key&gt;PayloadContent&lt;/key&gt;</span><br><span class="line">    &lt;array&gt;</span><br><span class="line">        &lt;dict&gt;</span><br><span class="line">            &lt;key&gt;PayloadContent&lt;/key&gt;</span><br><span class="line">            &lt;dict&gt;</span><br><span class="line">                &lt;key&gt;com.brave.Browser&lt;/key&gt;</span><br><span class="line">                &lt;dict&gt;</span><br><span class="line">                    &lt;key&gt;Forced&lt;/key&gt;</span><br><span class="line">                    &lt;array&gt;</span><br><span class="line">                        &lt;dict&gt;</span><br><span class="line">                            &lt;key&gt;mcx_preference_settings&lt;/key&gt;</span><br><span class="line">                            &lt;dict&gt;</span><br><span class="line">                                &lt;key&gt;BraveWalletDisabled&lt;/key&gt;</span><br><span class="line">                                &lt;<span class="literal">true</span>/&gt;</span><br><span class="line">                                &lt;key&gt;BraveAIChatEnabled&lt;/key&gt;</span><br><span class="line">                                &lt;<span class="literal">false</span>/&gt;</span><br><span class="line">                                &lt;key&gt;BraveVPNDisabled&lt;/key&gt;</span><br><span class="line">                                &lt;<span class="literal">true</span>/&gt;</span><br><span class="line">                                &lt;key&gt;BraveRewardsDisabled&lt;/key&gt;</span><br><span class="line">                                &lt;<span class="literal">true</span>/&gt;</span><br><span class="line">                                &lt;key&gt;BraveNewsDisabled&lt;/key&gt;</span><br><span class="line">                                &lt;<span class="literal">true</span>/&gt;</span><br><span class="line">                                &lt;key&gt;BraveP3AEnabled&lt;/key&gt;</span><br><span class="line">                                &lt;<span class="literal">false</span>/&gt;</span><br><span class="line">                                &lt;key&gt;BraveStatsPingEnabled&lt;/key&gt;</span><br><span class="line">                                &lt;<span class="literal">false</span>/&gt;</span><br><span class="line">                                &lt;key&gt;MetricsReportingEnabled&lt;/key&gt;</span><br><span class="line">                                &lt;<span class="literal">false</span>/&gt;</span><br><span class="line">                                &lt;key&gt;BraveWebDiscoveryEnabled&lt;/key&gt;</span><br><span class="line">                                &lt;<span class="literal">false</span>/&gt;</span><br><span class="line">                                &lt;key&gt;UrlKeyedAnonymizedDataCollectionEnabled&lt;/key&gt;</span><br><span class="line">                                &lt;<span class="literal">false</span>/&gt;</span><br><span class="line">                                &lt;key&gt;UserFeedbackAllowed&lt;/key&gt;</span><br><span class="line">                                &lt;<span class="literal">false</span>/&gt;</span><br><span class="line">                            &lt;/dict&gt;</span><br><span class="line">                        &lt;/dict&gt;</span><br><span class="line">                    &lt;/array&gt;</span><br><span class="line">                &lt;/dict&gt;</span><br><span class="line">            &lt;/dict&gt;</span><br><span class="line">            &lt;key&gt;PayloadEnabled&lt;/key&gt;</span><br><span class="line">            &lt;<span class="literal">true</span>/&gt;</span><br><span class="line">            &lt;key&gt;PayloadIdentifier&lt;/key&gt;</span><br><span class="line">            &lt;string&gt;com.apple.ManagedClient.preferences.Brave&lt;/string&gt;</span><br><span class="line">            &lt;key&gt;PayloadType&lt;/key&gt;</span><br><span class="line">            &lt;string&gt;com.apple.ManagedClient.preferences&lt;/string&gt;</span><br><span class="line">            &lt;key&gt;PayloadUUID&lt;/key&gt;</span><br><span class="line">            &lt;string&gt;98765432-ABCD-EF01-2345-6789ABCDEF01&lt;/string&gt;</span><br><span class="line">            &lt;key&gt;PayloadVersion&lt;/key&gt;</span><br><span class="line">            &lt;<span class="built_in">integer</span>&gt;1&lt;/integer&gt;</span><br><span class="line">        &lt;/dict&gt;</span><br><span class="line">    &lt;/array&gt;</span><br><span class="line">    &lt;key&gt;PayloadDescription&lt;/key&gt;</span><br><span class="line">    &lt;string&gt;Brave Debloat&lt;/string&gt;</span><br><span class="line">    &lt;key&gt;PayloadDisplayName&lt;/key&gt;</span><br><span class="line">    &lt;string&gt;Brave Debloat&lt;/string&gt;</span><br><span class="line">    &lt;key&gt;PayloadIdentifier&lt;/key&gt;</span><br><span class="line">    &lt;string&gt;com.brave.debloat.profile&lt;/string&gt;</span><br><span class="line">    &lt;key&gt;PayloadOrganization&lt;/key&gt;</span><br><span class="line">    &lt;string&gt;LocalAdmin&lt;/string&gt;</span><br><span class="line">    &lt;key&gt;PayloadRemovalDisallowed&lt;/key&gt;</span><br><span class="line">    &lt;<span class="literal">false</span>/&gt;</span><br><span class="line">    &lt;key&gt;PayloadScope&lt;/key&gt;</span><br><span class="line">    &lt;string&gt;System&lt;/string&gt;</span><br><span class="line">    &lt;key&gt;PayloadType&lt;/key&gt;</span><br><span class="line">    &lt;string&gt;Configuration&lt;/string&gt;</span><br><span class="line">    &lt;key&gt;PayloadUUID&lt;/key&gt;</span><br><span class="line">    &lt;string&gt;12345678-ABCD-EF01-2345-6789ABCDEF01&lt;/string&gt;</span><br><span class="line">    &lt;key&gt;PayloadVersion&lt;/key&gt;</span><br><span class="line">    &lt;<span class="built_in">integer</span>&gt;1&lt;/integer&gt;</span><br><span class="line">&lt;/dict&gt;</span><br><span class="line">&lt;/plist&gt;</span><br><span class="line">EOF</span><br></pre></td></tr></table></figure>
+
+<h2 id="Step-2：安装配置描述文件"><a href="#Step-2：安装配置描述文件" class="headerlink" title="Step 2：安装配置描述文件"></a>Step 2：安装配置描述文件</h2><p>执行完成后，桌面会生成一个名为 <code>BraveDebloat.mobileconfig</code> 的文件。<strong>双击它</strong>，弹窗不用管，点 OK 即可。</p>
+<h2 id="Step-3：在系统设置中确认安装"><a href="#Step-3：在系统设置中确认安装" class="headerlink" title="Step 3：在系统设置中确认安装"></a>Step 3：在系统设置中确认安装</h2><p>打开 <strong>系统设置</strong>，搜索 <code>profiles</code>，进入 <strong>Device Management</strong> 界面。双击 <strong>Brave Debloat</strong>，然后点 <strong>Install</strong> 安装。</p>
+<p><img src="/image/brave-debloat-profiles.png" alt="系统设置中的 Brave Debloat 描述文件" title="在 Device Management 中安装 Brave Debloat 描述文件"></p>
+<h2 id="Step-4：重启-Brave"><a href="#Step-4：重启-Brave" class="headerlink" title="Step 4：重启 Brave"></a>Step 4：重启 Brave</h2><p>重启 Brave 浏览器，此时那些没用的功能就全部消失了。</p>
+]]></content>
+      <categories>
+        <category>实用技巧</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>红米研究记4｜Root，Magisk与Xposed</title>
+    <url>/2025/08/07/root/</url>
     <content><![CDATA[]]></content>
       <categories>
         <category>各种经验</category>
@@ -50,25 +74,17 @@
       </categories>
   </entry>
   <entry>
-    <title>电子扫盲｜显示器</title>
-    <url>/2025/02/12/%E6%98%BE%E7%A4%BA%E5%99%A8%EF%BC%9AOLED,%20miniLED,%20LCD,%20microLED/</url>
-    <content><![CDATA[<p>先讲讲LCD显示器的基本原理。首先是一层液晶材料用来显示图像，但由于液晶材料本身不发光，所以再在它的底部加上一层背光板（发光的板子），这就构成了LCD屏。</p>
-<p>LCD的优点是延迟很低，价格也很便宜，很适合打fps游戏（first player shooting，第一人称射击游戏），因此大部分游戏笔记本都采用LCD屏。但是LCD屏有个缺点，就是对比度（明暗差异，对比度越高，色彩表现越好，画面越真实）很低。什么意思呢？比如你在LCD屏上打开一张纯黑的图片，然后你再把房间里的灯关掉，你就会发现屏幕居然在发光！这是因为LCD屏在打开的时候，下面的背光板是一直亮着的，所以即便黑色依然会发光。由此我们也可以推断出LCD屏会很耗电。<em>就我个人而言，我见过的对比度控制的比较好的LCD屏是iPad Pro 2020。</em> 而且LCD屏还有个缺点就是屏幕边缘会漏光。（如下图）</p>
-<p><img src="/image/2.jpg" alt="一张图片" title="LCD漏光现象"></p>
-<p>这时候有人就诞生了一个想法，如果说我把LCD的背光板切成很多小份，这些背光板上方如果显示的是黑色，我就把这个背光板关掉；如果显示的不是黑色，那就把背光板打开。这样不就实现了高对比度吗？这种<strong>分区背光</strong>的LCD屏就叫做<strong>miniLED</strong>，miniLED本质上讲依旧属于LCD屏，但显示效果要远远好于LCD。而且，miniLED的显示效果跟分区数（即背光板被切成的份数）是正相关的，分区数量越多，那明暗的差异自然越大，显示效果自然越好。</p>
-<p>但miniLED也有缺点。首先是光晕现象。比如一张纯黑的图片，正中间有一个杯子（如下图），那么杯子的周围就会形成一圈光晕。当然，如果分区数量够多，那光晕现象自然也会减小。</p>
-<p><img src="/image/1.webp" alt="一张图片" title="miniLED光晕现象"></p>
+    <title>电子扫盲｜超分与补帧</title>
+    <url>/2025/03/13/%E8%B6%85%E5%88%86%E4%B8%8E%E8%A1%A5%E5%B8%A7%EF%BC%9ADLSS,%20FSR,%20TSR,%20XeSS,%20MetalFX/</url>
+    <content><![CDATA[<p>我们在[[分辨率]]这篇文章里提到过，如果我们玩游戏时想获得清晰的画面，就要拉高分辨率，而拉高分辨率的后果就是帧数降低。那有没有什么办法，能让我们在<strong>不手动拉高分辨率</strong>的情况下，画面也能变清晰呢？</p>
+<p>答案是有的。这就是<strong>超分辨率技术（super resolution）</strong>，俗称超分。超分就是利用一定的算法或者是AI技术，来将原本低分辨率的画面变成高分辨率的画面。比如你用DLSS将1K的画面超分到4K，此时你看到的是4K的画面，但是电脑实际上只渲染的是1K，所以压力大大减小，帧数因此也就提高了。</p>
+<p>另外一种技术是补帧，也叫<strong>帧生成（frame generation）</strong>，或者叫插帧也行。从名字来看就很好理解，就是用算法或者ai来添加额外的帧，从而使画面变得流畅。但是由于插帧一般的原理是<strong>根据两个帧补出它们中间的帧</strong>，所以需要等待下一帧出现才能补出上一帧，从而造成了延迟。原始帧越低，那么补帧延迟越高，效果越差。比如你将30帧补成120帧就没有将60帧补成120帧的效果好。</p>
+<p>在游戏画面越来越爆炸的今天，显卡的性能已经逐渐跟不上游戏的发展，因此超分与补帧几乎成为了刚需。各家都有各自的超分与补帧技术。下面简单的介绍一下。</p>
+<p><strong>DLSS（Deep Learning Super Sampling，深度学习超级采样）</strong>，俗称“大力水手”，是n卡（英伟达的显卡）才有的功能，包含了超分和插帧（插帧只有DLSS3才有，而DLSS3只有40系n卡才能开）。目前最新版本是DLSS4。</p>
+<p><strong>FSR（FidelityFX Super Resolution）</strong></p>
 ]]></content>
       <categories>
         <category>FeeFee电子扫盲</category>
-      </categories>
-  </entry>
-  <entry>
-    <title>红米研究记4｜Root，Magisk与Xposed</title>
-    <url>/2025/08/07/root/</url>
-    <content><![CDATA[]]></content>
-      <categories>
-        <category>各种经验</category>
       </categories>
   </entry>
   <entry>
@@ -187,14 +203,14 @@
       </tags>
   </entry>
   <entry>
-    <title>电子扫盲｜超分与补帧</title>
-    <url>/2025/03/13/%E8%B6%85%E5%88%86%E4%B8%8E%E8%A1%A5%E5%B8%A7%EF%BC%9ADLSS,%20FSR,%20TSR,%20XeSS,%20MetalFX/</url>
-    <content><![CDATA[<p>我们在[[分辨率]]这篇文章里提到过，如果我们玩游戏时想获得清晰的画面，就要拉高分辨率，而拉高分辨率的后果就是帧数降低。那有没有什么办法，能让我们在<strong>不手动拉高分辨率</strong>的情况下，画面也能变清晰呢？</p>
-<p>答案是有的。这就是<strong>超分辨率技术（super resolution）</strong>，俗称超分。超分就是利用一定的算法或者是AI技术，来将原本低分辨率的画面变成高分辨率的画面。比如你用DLSS将1K的画面超分到4K，此时你看到的是4K的画面，但是电脑实际上只渲染的是1K，所以压力大大减小，帧数因此也就提高了。</p>
-<p>另外一种技术是补帧，也叫<strong>帧生成（frame generation）</strong>，或者叫插帧也行。从名字来看就很好理解，就是用算法或者ai来添加额外的帧，从而使画面变得流畅。但是由于插帧一般的原理是<strong>根据两个帧补出它们中间的帧</strong>，所以需要等待下一帧出现才能补出上一帧，从而造成了延迟。原始帧越低，那么补帧延迟越高，效果越差。比如你将30帧补成120帧就没有将60帧补成120帧的效果好。</p>
-<p>在游戏画面越来越爆炸的今天，显卡的性能已经逐渐跟不上游戏的发展，因此超分与补帧几乎成为了刚需。各家都有各自的超分与补帧技术。下面简单的介绍一下。</p>
-<p><strong>DLSS（Deep Learning Super Sampling，深度学习超级采样）</strong>，俗称“大力水手”，是n卡（英伟达的显卡）才有的功能，包含了超分和插帧（插帧只有DLSS3才有，而DLSS3只有40系n卡才能开）。目前最新版本是DLSS4。</p>
-<p><strong>FSR（FidelityFX Super Resolution）</strong></p>
+    <title>电子扫盲｜显示器</title>
+    <url>/2025/02/12/%E6%98%BE%E7%A4%BA%E5%99%A8%EF%BC%9AOLED,%20miniLED,%20LCD,%20microLED/</url>
+    <content><![CDATA[<p>先讲讲LCD显示器的基本原理。首先是一层液晶材料用来显示图像，但由于液晶材料本身不发光，所以再在它的底部加上一层背光板（发光的板子），这就构成了LCD屏。</p>
+<p>LCD的优点是延迟很低，价格也很便宜，很适合打fps游戏（first player shooting，第一人称射击游戏），因此大部分游戏笔记本都采用LCD屏。但是LCD屏有个缺点，就是对比度（明暗差异，对比度越高，色彩表现越好，画面越真实）很低。什么意思呢？比如你在LCD屏上打开一张纯黑的图片，然后你再把房间里的灯关掉，你就会发现屏幕居然在发光！这是因为LCD屏在打开的时候，下面的背光板是一直亮着的，所以即便黑色依然会发光。由此我们也可以推断出LCD屏会很耗电。<em>就我个人而言，我见过的对比度控制的比较好的LCD屏是iPad Pro 2020。</em> 而且LCD屏还有个缺点就是屏幕边缘会漏光。（如下图）</p>
+<p><img src="/image/2.jpg" alt="一张图片" title="LCD漏光现象"></p>
+<p>这时候有人就诞生了一个想法，如果说我把LCD的背光板切成很多小份，这些背光板上方如果显示的是黑色，我就把这个背光板关掉；如果显示的不是黑色，那就把背光板打开。这样不就实现了高对比度吗？这种<strong>分区背光</strong>的LCD屏就叫做<strong>miniLED</strong>，miniLED本质上讲依旧属于LCD屏，但显示效果要远远好于LCD。而且，miniLED的显示效果跟分区数（即背光板被切成的份数）是正相关的，分区数量越多，那明暗的差异自然越大，显示效果自然越好。</p>
+<p>但miniLED也有缺点。首先是光晕现象。比如一张纯黑的图片，正中间有一个杯子（如下图），那么杯子的周围就会形成一圈光晕。当然，如果分区数量够多，那光晕现象自然也会减小。</p>
+<p><img src="/image/1.webp" alt="一张图片" title="miniLED光晕现象"></p>
 ]]></content>
       <categories>
         <category>FeeFee电子扫盲</category>
