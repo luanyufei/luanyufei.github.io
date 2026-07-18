@@ -858,7 +858,7 @@ input:focus-visible {
 .layout:has(> #post) {
   display: grid !important;
   grid-template-columns: minmax(0, 1fr) 280px;
-  align-items: start;
+  align-items: stretch;
 }
 
 #post,
@@ -871,6 +871,7 @@ input:focus-visible {
   border-radius: 0 !important;
   background: transparent !important;
   box-shadow: none !important;
+  align-self: start;
 }
 
 #post .post-content,
@@ -986,7 +987,10 @@ input:focus-visible {
 }
 
 #aside-content .sticky_layout {
+  position: sticky !important;
   top: calc(var(--fs-nav-height) + 2rem) !important;
+  max-height: calc(100vh - var(--fs-nav-height) - 4rem);
+  overflow-y: auto;
 }
 
 #aside-content .card-widget {
