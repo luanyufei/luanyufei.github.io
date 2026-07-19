@@ -12,7 +12,7 @@ date: 2025-02-12 21:20:42
     <p class="about-kicker">ABOUT / PROFILE</p>
     <h2>乱与狒</h2>
     <p class="about-alias">Noon Yjufee / Feefee Noon</p>
-    <p>通信工程在读学生。这里记录电子扫盲、系统折腾，以及值得留下来的经验。</p>
+    <p>通信工程学士学位，考研二战中。这里记录电子扫盲、系统折腾，以及值得留下来的经验。</p>
     <p class="about-field">Communication Engineering</p>
     <a class="about-github" href="https://github.com/luanyufei" target="_blank" rel="noopener">
       <span><i class="fab fa-github" aria-hidden="true"></i> GitHub</span>
