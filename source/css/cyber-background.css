@@ -1161,9 +1161,11 @@ body.is-home-page #content-inner {
   text-transform: uppercase;
 }
 
-#aside-content .toc-content > * > .toc-item > .toc-link.active {
-  color: var(--fs-text) !important;
+#aside-content .toc-content .toc-link.active,
+#aside-content .toc-content .toc-link.active:hover {
+  color: #0b0d0b !important;
   font-weight: 650;
+  transition-property: background-color, padding-left;
 }
 
 #aside-content .toc-link {
@@ -1703,6 +1705,13 @@ html.search-open body {
 
 .search-input::placeholder {
   color: var(--fs-text-3);
+}
+
+.search-input:focus,
+.search-input:focus-visible {
+  outline: 0 !important;
+  border-bottom-color: var(--fs-line-strong);
+  box-shadow: inset 3px 0 0 var(--fs-accent);
 }
 
 .search-status {
