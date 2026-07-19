@@ -1,10 +1,12 @@
 ---
-title: Brave 浏览器去除无用功能 (macOS)
+title: Brave 浏览器去除无用功能
 date: 2026-07-18
 categories: 实用技巧
 ---
 
-由于 Chrome 浏览器对去广告插件有反制机制——检测到去广告扩展后会让 YouTube 变得卡顿——所以我决定转用 Brave。然而 Brave 也自带了不少臃肿功能，比如 AI、钱包、VPN 等等。下面这个方法可以通过 macOS 配置描述文件把这些功能一次性全部禁用。
+由于 Chrome 浏览器对去广告插件有反制机制——检测到去广告扩展后会让 YouTube 变得卡顿——所以我决定转用 Brave。然而 Brave 也自带了不少臃肿功能，比如 AI、钱包、VPN 等等。下面分别介绍 macOS 和 Windows 上的一键精简方法。
+
+## macOS
 
 ## Step 1：生成配置描述文件
 
@@ -103,3 +105,36 @@ EOF
 ## Step 4：重启 Brave
 
 重启 Brave 浏览器，此时那些没用的功能就全部消失了。
+
+---
+
+## Windows
+
+### Step 1：创建注册表文件
+
+在桌面新建一个**文本文档**，将以下内容粘贴进去：
+
+```reg
+Windows Registry Editor Version 5.00
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Policies\BraveSoftware\Brave]
+"BraveWalletDisabled"=dword:00000001
+"BraveAIChatEnabled"=dword:00000000
+"BraveVPNDisabled"=dword:00000001
+"BraveRewardsDisabled"=dword:00000001
+"BraveNewsDisabled"=dword:00000001
+"BraveP3AEnabled"=dword:00000000
+"BraveStatsPingEnabled"=dword:00000000
+"MetricsReportingEnabled"=dword:00000000
+"BraveWebDiscoveryEnabled"=dword:00000000
+"UrlKeyedAnonymizedDataCollectionEnabled"=dword:00000000
+"UserFeedbackAllowed"=dword:00000000
+```
+
+### Step 2：修改后缀名并运行
+
+保存文件后，将后缀名从 `.txt` 改为 `.reg`（例如 `BraveDebloat.reg`）。**双击运行**，弹出的提示一路点「是」，允许写入注册表。
+
+### Step 3：重启 Brave
+
+重启 Brave 浏览器，完成瘦身。
