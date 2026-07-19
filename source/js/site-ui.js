@@ -433,60 +433,122 @@
     const finePointer = window.matchMedia('(pointer: fine)').matches;
     if (reduceMotion || !finePointer) return;
 
-    const layer = document.createElement('div');
-    layer.className = 'pixel-trail-layer';
-    layer.setAttribute('aria-hidden', 'true');
-    document.body.appendChild(layer);
+    const CELL_SIZE = 16;
+    const CELL_INSET = 1;
+    const MAX_CELLS = 14;
+    const FADE_RATE = 2;
+    const MIN_STRENGTH = 0.025;
 
-    const squares = Array.from({ length: 28 }, (_, index) => {
-      const square = document.createElement('i');
-      square.className = 'pixel-trail-square';
-      square.dataset.tone = String(index % 7 === 0 ? 1 : 0);
-      layer.appendChild(square);
-      return square;
-    });
+    const canvas = document.createElement('canvas');
+    const context = canvas.getContext('2d', { alpha: true });
+    if (!context) return;
 
-    let squareIndex = 0;
-    let lastX;
-    let lastY;
+    canvas.className = 'pixel-grid-trail';
+    canvas.setAttribute('aria-hidden', 'true');
+    document.body.appendChild(canvas);
 
-    const paint = (x, y) => {
-      const square = squares[squareIndex % squares.length];
-      squareIndex += 1;
-      square.getAnimations().forEach((animation) => animation.cancel());
-      square.style.left = `${Math.round(x)}px`;
-      square.style.top = `${Math.round(y)}px`;
-      square.animate(
-        [
-          { opacity: 0.92, transform: 'translate3d(-50%, -50%, 0) scale(1)' },
-          { opacity: 0.82, offset: 0.52 },
-          { opacity: 0, transform: 'translate3d(-50%, -50%, 0) scale(0.35)' },
-        ],
-        { duration: 720, easing: 'steps(7, end)', fill: 'forwards' }
+    const cells = [];
+    let lastCell = null;
+    let frame = 0;
+    let lastFrameTime = performance.now();
+    let devicePixelRatio = 1;
+
+    const resize = () => {
+      devicePixelRatio = Math.min(window.devicePixelRatio || 1, 2);
+      canvas.width = Math.ceil(window.innerWidth * devicePixelRatio);
+      canvas.height = Math.ceil(window.innerHeight * devicePixelRatio);
+      canvas.style.width = `${window.innerWidth}px`;
+      canvas.style.height = `${window.innerHeight}px`;
+      context.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
+    };
+
+    const addCell = (column, row) => {
+      const duplicateIndex = cells.findIndex(
+        (cell) => cell.column === column && cell.row === row
       );
+      if (duplicateIndex >= 0) cells.splice(duplicateIndex, 1);
+      cells.unshift({ column, row, strength: 1 });
+      if (cells.length > MAX_CELLS) cells.length = MAX_CELLS;
+    };
+
+    const addCrossedCells = (from, to) => {
+      const columnDistance = to.column - from.column;
+      const rowDistance = to.row - from.row;
+      const steps = Math.max(Math.abs(columnDistance), Math.abs(rowDistance));
+
+      for (let step = 1; step <= steps; step += 1) {
+        const ratio = step / steps;
+        const column = Math.round(from.column + columnDistance * ratio);
+        const row = Math.round(from.row + rowDistance * ratio);
+        const previous = cells[0];
+        if (!previous || previous.column !== column || previous.row !== row) {
+          addCell(column, row);
+        }
+      }
+    };
+
+    const render = (time) => {
+      const delta = Math.min((time - lastFrameTime) / 1000, 0.05);
+      lastFrameTime = time;
+      context.clearRect(0, 0, window.innerWidth, window.innerHeight);
+      context.fillStyle = '#c0fe04';
+
+      cells.forEach((cell) => {
+        cell.strength *= Math.exp(-FADE_RATE * delta);
+        context.globalAlpha = Math.min(0.96, cell.strength);
+        context.fillRect(
+          cell.column * CELL_SIZE + CELL_INSET,
+          cell.row * CELL_SIZE + CELL_INSET,
+          CELL_SIZE - CELL_INSET * 2,
+          CELL_SIZE - CELL_INSET * 2
+        );
+      });
+
+      context.globalAlpha = 1;
+      while (cells.at(-1)?.strength < MIN_STRENGTH) cells.pop();
+
+      if (cells.length) {
+        frame = window.requestAnimationFrame(render);
+      } else {
+        frame = 0;
+        lastCell = null;
+      }
+    };
+
+    const wake = () => {
+      if (frame) return;
+      lastFrameTime = performance.now();
+      frame = window.requestAnimationFrame(render);
     };
 
     document.addEventListener('pointermove', (event) => {
       if (!event.isPrimary) return;
-      if (lastX === undefined || lastY === undefined) {
-        lastX = event.clientX;
-        lastY = event.clientY;
-        return;
+      const currentCell = {
+        column: Math.floor(event.clientX / CELL_SIZE),
+        row: Math.floor(event.clientY / CELL_SIZE),
+      };
+
+      if (!lastCell) {
+        addCell(currentCell.column, currentCell.row);
+      } else if (
+        lastCell.column !== currentCell.column ||
+        lastCell.row !== currentCell.row
+      ) {
+        addCrossedCells(lastCell, currentCell);
       }
 
-      const deltaX = event.clientX - lastX;
-      const deltaY = event.clientY - lastY;
-      const distance = Math.hypot(deltaX, deltaY);
-      if (distance < 18) return;
-
-      const steps = Math.min(4, Math.floor(distance / 18));
-      for (let step = 1; step <= steps; step += 1) {
-        const ratio = step / steps;
-        paint(lastX + deltaX * ratio, lastY + deltaY * ratio);
-      }
-      lastX = event.clientX;
-      lastY = event.clientY;
+      lastCell = currentCell;
+      wake();
     }, { passive: true });
+
+    document.addEventListener('pointerleave', () => {
+      lastCell = null;
+    }, { passive: true });
+    window.addEventListener('blur', () => {
+      lastCell = null;
+    }, { passive: true });
+    window.addEventListener('resize', resize, { passive: true });
+    resize();
   };
 
   const initHomeTransition = () => {

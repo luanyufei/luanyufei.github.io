@@ -885,12 +885,13 @@ body.is-home-page #content-inner {
 
 #recent-posts .recent-post-item {
   position: relative;
+  isolation: isolate;
   display: grid;
   grid-template-columns: 4.5rem minmax(0, 1fr);
   min-height: 0;
   margin: 0;
   padding: 2.2rem 1rem 2.2rem 0;
-  overflow: visible;
+  overflow: hidden;
   border: 0 !important;
   border-top: 1px solid var(--fs-line) !important;
   border-radius: 0 !important;
@@ -909,21 +910,42 @@ body.is-home-page #content-inner {
 
 #recent-posts .recent-post-item::before {
   content: counter(notes, decimal-leading-zero);
+  position: relative;
+  z-index: 1;
   grid-column: 1;
   color: var(--fs-text-3);
   font-family: var(--fs-mono);
   font-size: 0.72rem;
 }
 
-#recent-posts .recent-post-item:hover {
+#recent-posts .recent-post-item::after {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  background: var(--fs-accent);
+  content: '';
+  transform: scaleX(0);
+  transform-origin: right center;
+  transition: transform 380ms var(--fs-ease);
+}
+
+#recent-posts .recent-post-item:hover,
+#recent-posts .recent-post-item:focus-within {
   padding-right: 1.25rem;
   padding-left: 1.25rem;
-  background: var(--fs-accent) !important;
   color: #0b0d0b;
   transform: none;
 }
 
+#recent-posts .recent-post-item:hover::after,
+#recent-posts .recent-post-item:focus-within::after {
+  transform: scaleX(1);
+  transform-origin: left center;
+}
+
 #recent-posts .recent-post-info {
+  position: relative;
+  z-index: 1;
   grid-column: 2;
   display: grid;
   grid-template-columns: minmax(0, 1.2fr) minmax(14rem, 0.8fr);
@@ -975,11 +997,11 @@ body.is-home-page #content-inner {
   -webkit-line-clamp: 2;
 }
 
-#recent-posts .recent-post-item:hover .article-title,
-#recent-posts .recent-post-item:hover .article-meta-wrap,
-#recent-posts .recent-post-item:hover .article-meta__categories,
-#recent-posts .recent-post-item:hover .content,
-#recent-posts .recent-post-item:hover::before {
+#recent-posts .recent-post-item:is(:hover, :focus-within) .article-title,
+#recent-posts .recent-post-item:is(:hover, :focus-within) .article-meta-wrap,
+#recent-posts .recent-post-item:is(:hover, :focus-within) .article-meta__categories,
+#recent-posts .recent-post-item:is(:hover, :focus-within) .content,
+#recent-posts .recent-post-item:is(:hover, :focus-within)::before {
   color: #0b0d0b !important;
 }
 
@@ -1387,29 +1409,15 @@ body.is-home-page #content-inner {
   font-size: 0.66rem;
 }
 
-/* Event-driven pixel cursor trail */
+/* Fixed 16px grid cursor trail, inspired by haoqi.design */
 
-.pixel-trail-layer {
+.pixel-grid-trail {
   position: fixed;
   inset: 0;
   z-index: 260;
-  overflow: hidden;
+  display: block;
   pointer-events: none;
-}
-
-.pixel-trail-square {
-  position: absolute;
-  width: 13px;
-  height: 13px;
-  background: var(--fs-accent);
-  opacity: 0;
-  will-change: transform, opacity;
-}
-
-.pixel-trail-square[data-tone="1"] {
-  width: 9px;
-  height: 9px;
-  background: var(--fs-blue);
+  image-rendering: pixelated;
 }
 
 /* Archive, categories and tags */
@@ -2391,7 +2399,7 @@ html.search-open body {
     transition-duration: 0.01ms !important;
   }
 
-  .pixel-trail-layer {
+  .pixel-grid-trail {
     display: none !important;
   }
 
