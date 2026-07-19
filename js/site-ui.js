@@ -141,12 +141,36 @@
       }
     });
 
+    const articleMenu = menus.querySelector('.menus_item-article');
+    const articleMenuTrigger = articleMenu?.querySelector(':scope > .site-page');
+    const setArticleMenu = (isOpen) => {
+      if (!articleMenu || !articleMenuTrigger) return;
+      articleMenu.classList.toggle('dropdown-open', isOpen);
+      articleMenuTrigger.setAttribute('aria-expanded', String(isOpen));
+    };
+
+    articleMenu?.addEventListener('pointerenter', () => setArticleMenu(true), { passive: true });
+    articleMenu?.addEventListener('pointerleave', () => setArticleMenu(false), { passive: true });
+    articleMenu?.addEventListener('focusin', () => setArticleMenu(true));
+    articleMenu?.addEventListener('focusout', (event) => {
+      if (!articleMenu.contains(event.relatedTarget)) setArticleMenu(false);
+    });
+    articleMenu?.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') {
+        setArticleMenu(false);
+        articleMenuTrigger?.focus();
+      }
+    });
+
     const currentPath = window.location.pathname.replace(/\/$/, '') || '/';
-    menus.querySelectorAll('a.site-page').forEach((link) => {
+    menus.querySelectorAll('a.site-page, a.menu-dropdown-link').forEach((link) => {
       const linkPath = new URL(link.href, window.location.origin).pathname.replace(/\/$/, '') || '/';
       if (linkPath === currentPath || (linkPath !== '/' && currentPath.startsWith(`${linkPath}/`))) {
         link.classList.add('is-active');
         link.setAttribute('aria-current', 'page');
+        if (link.classList.contains('menu-dropdown-link')) {
+          articleMenuTrigger?.classList.add('is-active');
+        }
       }
     });
 
@@ -315,6 +339,42 @@
     update();
   };
 
+  const initTocCollapsing = () => {
+    const toc = document.querySelector('#card-toc .toc-content');
+    if (!toc) return;
+
+    toc.classList.add('is-expand', 'is-user-collapsible');
+
+    toc.querySelectorAll('.toc-item').forEach((item, index) => {
+      const child = Array.from(item.children).find((element) => element.classList?.contains('toc-child'));
+      const link = Array.from(item.children).find((element) => element.classList?.contains('toc-link'));
+      if (!child || !link) return;
+
+      const childId = child.id || `toc-branch-${index + 1}`;
+      child.id = childId;
+      item.classList.add('has-children');
+
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'toc-branch-toggle';
+      button.setAttribute('aria-expanded', 'true');
+      button.setAttribute('aria-controls', childId);
+      button.setAttribute('aria-label', `收起 ${link.textContent.trim()}`);
+      button.setAttribute('title', '收起下级目录');
+
+      button.addEventListener('click', (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        const isCollapsed = item.classList.toggle('is-collapsed');
+        button.setAttribute('aria-expanded', String(!isCollapsed));
+        button.setAttribute('aria-label', `${isCollapsed ? '展开' : '收起'} ${link.textContent.trim()}`);
+        button.setAttribute('title', isCollapsed ? '展开下级目录' : '收起下级目录');
+      });
+
+      item.insertBefore(button, link.nextSibling);
+    });
+  };
+
   const initKineticTitle = () => {
     const hero = document.querySelector('.feespace-hero');
     const title = hero?.querySelector('.kinetic-title');
@@ -368,6 +428,113 @@
     }
   };
 
+  const initPixelTrail = () => {
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const finePointer = window.matchMedia('(pointer: fine)').matches;
+    if (reduceMotion || !finePointer) return;
+
+    const layer = document.createElement('div');
+    layer.className = 'pixel-trail-layer';
+    layer.setAttribute('aria-hidden', 'true');
+    document.body.appendChild(layer);
+
+    const squares = Array.from({ length: 28 }, (_, index) => {
+      const square = document.createElement('i');
+      square.className = 'pixel-trail-square';
+      square.dataset.tone = String(index % 7 === 0 ? 1 : 0);
+      layer.appendChild(square);
+      return square;
+    });
+
+    let squareIndex = 0;
+    let lastX;
+    let lastY;
+
+    const paint = (x, y) => {
+      const square = squares[squareIndex % squares.length];
+      squareIndex += 1;
+      square.getAnimations().forEach((animation) => animation.cancel());
+      square.style.left = `${Math.round(x)}px`;
+      square.style.top = `${Math.round(y)}px`;
+      square.animate(
+        [
+          { opacity: 0.92, transform: 'translate3d(-50%, -50%, 0) scale(1)' },
+          { opacity: 0.82, offset: 0.52 },
+          { opacity: 0, transform: 'translate3d(-50%, -50%, 0) scale(0.35)' },
+        ],
+        { duration: 720, easing: 'steps(7, end)', fill: 'forwards' }
+      );
+    };
+
+    document.addEventListener('pointermove', (event) => {
+      if (!event.isPrimary) return;
+      if (lastX === undefined || lastY === undefined) {
+        lastX = event.clientX;
+        lastY = event.clientY;
+        return;
+      }
+
+      const deltaX = event.clientX - lastX;
+      const deltaY = event.clientY - lastY;
+      const distance = Math.hypot(deltaX, deltaY);
+      if (distance < 18) return;
+
+      const steps = Math.min(4, Math.floor(distance / 18));
+      for (let step = 1; step <= steps; step += 1) {
+        const ratio = step / steps;
+        paint(lastX + deltaX * ratio, lastY + deltaY * ratio);
+      }
+      lastX = event.clientX;
+      lastY = event.clientY;
+    }, { passive: true });
+  };
+
+  const initHomeTransition = () => {
+    const heroHeader = document.querySelector('#page-header.full_page');
+    const collection = document.querySelector('#recent-posts .collection-head');
+    const content = document.getElementById('content-inner');
+    if (!heroHeader || !collection || !content) return;
+
+    document.body.classList.add('is-home-page');
+    document.documentElement.classList.add('home-snap');
+
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    document.getElementById('scroll-down')?.addEventListener('click', () => {
+      content.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' });
+    });
+
+    if (reduceMotion) {
+      document.body.classList.add('collection-is-visible');
+      return;
+    }
+
+    let frame = 0;
+    const render = () => {
+      const distance = Math.max(1, window.innerHeight * 0.82);
+      const progress = Math.min(1, Math.max(0, window.scrollY / distance));
+      document.documentElement.style.setProperty('--home-shift', `${(-progress * 54).toFixed(2)}px`);
+      document.documentElement.style.setProperty('--home-scale', (1 - progress * 0.045).toFixed(4));
+      document.documentElement.style.setProperty('--home-opacity', (1 - progress * 0.72).toFixed(3));
+      document.documentElement.style.setProperty('--home-wipe-scale', progress.toFixed(3));
+      if (progress > 0.68) document.body.classList.add('collection-is-visible');
+      frame = 0;
+    };
+
+    window.addEventListener('scroll', () => {
+      if (!frame) frame = window.requestAnimationFrame(render);
+    }, { passive: true });
+    window.addEventListener('resize', render, { passive: true });
+    render();
+
+    const observer = new IntersectionObserver((entries) => {
+      if (entries.some((entry) => entry.isIntersecting)) {
+        document.body.classList.add('collection-is-visible');
+        observer.disconnect();
+      }
+    }, { threshold: 0.18 });
+    observer.observe(collection);
+  };
+
   const initLinkHero = () => {
     const linkPage = document.querySelector('#body-wrap.type-link');
     const hero = document.getElementById('page-site-info');
@@ -383,13 +550,36 @@
     `;
   };
 
+  const initTrendPage = () => {
+    const trendPage = document.querySelector('#body-wrap.type-shuoshuo');
+    const container = trendPage?.querySelector('#article-container');
+    if (!trendPage || !container) return;
+
+    document.body.classList.add('is-trend-page');
+    if (container.children.length) return;
+
+    container.innerHTML = `
+      <section class="trend-empty">
+        <div class="trend-signal" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
+        <p>STATUS / READY</p>
+        <h2>还没长成文章的，<br>先在这里发生。</h2>
+        <div class="trend-empty-copy">短想法、临时发现和随手分享都会留在这里，像一块更安静的个人空间。</div>
+        <span>等待第一条动态</span>
+      </section>
+    `;
+  };
+
   const start = () => {
     initTheme();
     initNav();
     initSearch();
     initReadingProgress();
+    initTocCollapsing();
     initKineticTitle();
+    initPixelTrail();
+    initHomeTransition();
     initLinkHero();
+    initTrendPage();
     window.requestAnimationFrame(() => document.documentElement.classList.add('site-ready'));
   };
 

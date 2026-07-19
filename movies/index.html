@@ -163,9 +163,16 @@
   <div id="menus">
     <div class="menus_items">
       <div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span>首页</span></a></div>
-      <div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-layer-group"></i><span>文章</span></a></div>
-      <div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span>分类</span></a></div>
-      <div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tag"></i><span>标签</span></a></div>
+      <div class="menus_item menus_item-article">
+        <a class="site-page" href="/archives/" aria-haspopup="true" aria-expanded="false">
+          <i class="fa-fw fas fa-layer-group"></i><span>文章</span><i class="menu-caret fas fa-chevron-down" aria-hidden="true"></i>
+        </a>
+        <div class="menu-dropdown" role="menu" aria-label="文章导航">
+          <a class="menu-dropdown-link" href="/categories/" role="menuitem"><span>分类</span><small>Categories</small></a>
+          <a class="menu-dropdown-link" href="/tags/" role="menuitem"><span>标签</span><small>Tags</small></a>
+        </div>
+      </div>
+      <div class="menus_item"><a class="site-page" href="/trend/"><i class="fa-fw fas fa-bolt"></i><span>动态</span></a></div>
       <div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-compass"></i><span>链接</span></a></div>
       <div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-user"></i><span>关于</span></a></div>
     </div>
