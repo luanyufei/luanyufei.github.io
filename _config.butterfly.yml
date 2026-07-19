@@ -6,9 +6,11 @@ favicon: /img/favicon.ico
 
 menu:
   首页: / || fas fa-home
-  文章: /archives/ || fas fa-layer-group
-  分类: /categories/ || fas fa-folder-open
-  标签: /tags/ || fas fa-tag
+  文章:
+    全部文章: /archives/ || fas fa-layer-group
+    分类: /categories/ || fas fa-folder-open
+    标签: /tags/ || fas fa-tag
+  动态: /trend/ || fas fa-bolt
   链接: /link/ || fas fa-compass
   关于: /about/ || fas fa-user
 
@@ -24,7 +26,7 @@ avatar:
 index_img: "#f3f6f2"
 default_top_img: "#f3f6f2"
 footer_img: false
-index_top_img_height: 88vh
+index_top_img_height: 100vh
 
 subtitle:
   enable: false
@@ -47,6 +49,14 @@ aside:
     enable: false
   card_webinfo:
     enable: false
+
+toc:
+  post: true
+  page: false
+  number: true
+  expand: true
+  style_simple: false
+  scroll_percent: true
 
 preloader:
   enable: false

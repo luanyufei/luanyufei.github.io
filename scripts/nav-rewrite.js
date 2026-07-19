@@ -26,7 +26,9 @@ const HOME_HERO = `
     </div>
   </div>
 </div>
-<div id="scroll-down"><i class="fas fa-arrow-down" aria-hidden="true"></i></div>`;
+<button id="scroll-down" type="button" aria-label="滚动到最近文章">
+  <span>向下阅读</span><i class="fas fa-arrow-down" aria-hidden="true"></i>
+</button>`;
 
 const COLLECTION_HEAD = `
 <header class="collection-head">
@@ -42,9 +44,16 @@ const SITE_NAV = `
   <div id="menus">
     <div class="menus_items">
       <div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span>首页</span></a></div>
-      <div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-layer-group"></i><span>文章</span></a></div>
-      <div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span>分类</span></a></div>
-      <div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tag"></i><span>标签</span></a></div>
+      <div class="menus_item menus_item-article">
+        <a class="site-page" href="/archives/" aria-haspopup="true" aria-expanded="false">
+          <i class="fa-fw fas fa-layer-group"></i><span>文章</span><i class="menu-caret fas fa-chevron-down" aria-hidden="true"></i>
+        </a>
+        <div class="menu-dropdown" role="menu" aria-label="文章导航">
+          <a class="menu-dropdown-link" href="/categories/" role="menuitem"><span>分类</span><small>Categories</small></a>
+          <a class="menu-dropdown-link" href="/tags/" role="menuitem"><span>标签</span><small>Tags</small></a>
+        </div>
+      </div>
+      <div class="menus_item"><a class="site-page" href="/trend/"><i class="fa-fw fas fa-bolt"></i><span>动态</span></a></div>
       <div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-compass"></i><span>链接</span></a></div>
       <div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-user"></i><span>关于</span></a></div>
     </div>
@@ -59,7 +68,7 @@ hexo.extend.filter.register('after_render:html', (html) => {
   // Butterfly renders a full mobile sidebar before the page. The custom nav
   // handles mobile navigation, so remove the duplicate tree on every route.
   output = output.replace(
-    /<div id="sidebar">[\s\S]*?(?=<div class="(?:page|post)" id="body-wrap">)/,
+    /<div id="sidebar">[\s\S]*?(?=<div[^>]*id="body-wrap"[^>]*>)/,
     ''
   );
 

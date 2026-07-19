@@ -8,7 +8,7 @@ categories: 实用技巧
 
 ## macOS
 
-## Step 1：生成配置描述文件
+### Step 1：生成配置描述文件
 
 把下面这段命令**整段**粘贴到终端里执行：
 
@@ -92,17 +92,17 @@ cat << 'EOF' > ~/Desktop/BraveDebloat.mobileconfig
 EOF
 ```
 
-## Step 2：安装配置描述文件
+### Step 2：安装配置描述文件
 
 执行完成后，桌面会生成一个名为 `BraveDebloat.mobileconfig` 的文件。**双击它**，弹窗不用管，点 OK 即可。
 
-## Step 3：在系统设置中确认安装
+### Step 3：在系统设置中确认安装
 
 打开 **系统设置**，搜索 `profiles`，进入 **Device Management** 界面。双击 **Brave Debloat**，然后点 **Install** 安装。
 
 ![系统设置中的 Brave Debloat 描述文件](/image/brave-debloat-profiles.png "在 Device Management 中安装 Brave Debloat 描述文件")
 
-## Step 4：重启 Brave
+### Step 4：重启 Brave
 
 重启 Brave 浏览器，此时那些没用的功能就全部消失了。
 
