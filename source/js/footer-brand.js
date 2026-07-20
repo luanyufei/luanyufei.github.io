@@ -1,7 +1,7 @@
 /* ============================================================
    Footer Brand Injection Script
    Injects "FeeFeeNOON" text before the Butterfly footer
-   Adds AI credit below framework info
+   Adds AI credit inside framework-info right below Hexo|Butterfly
    ============================================================ */
 (() => {
   'use strict';
@@ -36,8 +36,8 @@
     if (frameworkInfo && !document.querySelector('.powered-by-ai')) {
       const aiInfo = document.createElement('div');
       aiInfo.className = 'powered-by-ai';
-      aiInfo.textContent = 'Powered by GPT-5.6 Sol / Gemini 3.5 Flash / Claude Opus 5.6';
-      frameworkInfo.parentNode.insertBefore(aiInfo, frameworkInfo.nextSibling);
+      aiInfo.textContent = 'Powered by GPT-5.6 Sol / Gemini 3.5 Flash / Claude Opus 4.6';
+      frameworkInfo.appendChild(aiInfo);
     }
   }
 
