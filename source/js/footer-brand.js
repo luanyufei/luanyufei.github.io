@@ -1,6 +1,7 @@
 /* ============================================================
    Footer Brand Injection Script
    Injects "FeeFeeNOON" text before the Butterfly footer
+   Adds AI credit below framework info
    ============================================================ */
 (() => {
   'use strict';
@@ -30,31 +31,43 @@
     return section;
   }
 
+  function injectAiInfo() {
+    const frameworkInfo = document.querySelector('#footer-wrap .framework-info');
+    if (frameworkInfo && !document.querySelector('.powered-by-ai')) {
+      const aiInfo = document.createElement('div');
+      aiInfo.className = 'powered-by-ai';
+      aiInfo.textContent = 'Powered by GPT-5.6 Sol / Gemini 3.5 Flash / Claude Opus 5.6';
+      frameworkInfo.parentNode.insertBefore(aiInfo, frameworkInfo.nextSibling);
+    }
+  }
+
   function inject() {
     const footer = document.getElementById('footer');
     if (!footer) return;
 
-    if (footer.parentNode.querySelector('.footer-brand-section')) return;
+    if (!footer.parentNode.querySelector('.footer-brand-section')) {
+      const brandSection = createBrandSection();
+      footer.parentNode.insertBefore(brandSection, footer);
 
-    const brandSection = createBrandSection();
-    footer.parentNode.insertBefore(brandSection, footer);
-
-    if ('IntersectionObserver' in window) {
-      const observer = new IntersectionObserver(
-        (entries) => {
-          entries.forEach((entry) => {
-            if (entry.isIntersecting) {
-              entry.target.classList.add('is-visible');
-              observer.unobserve(entry.target);
-            }
-          });
-        },
-        { threshold: 0.05, rootMargin: '0px 0px -20px 0px' }
-      );
-      observer.observe(brandSection);
-    } else {
-      brandSection.classList.add('is-visible');
+      if ('IntersectionObserver' in window) {
+        const observer = new IntersectionObserver(
+          (entries) => {
+            entries.forEach((entry) => {
+              if (entry.isIntersecting) {
+                entry.target.classList.add('is-visible');
+                observer.unobserve(entry.target);
+              }
+            });
+          },
+          { threshold: 0.05, rootMargin: '0px 0px -20px 0px' }
+        );
+        observer.observe(brandSection);
+      } else {
+        brandSection.classList.add('is-visible');
+      }
     }
+
+    injectAiInfo();
   }
 
   if (document.readyState === 'loading') {

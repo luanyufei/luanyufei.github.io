@@ -42,6 +42,13 @@
   transition: fill 0.3s ease;
 }
 
+.powered-by-ai {
+  margin-top: 4px;
+  font-size: 0.88em;
+  opacity: 0.8;
+  line-height: 1.5;
+}
+
 /* Dark mode support */
 [data-theme="dark"] .footer-brand-text {
   fill: #f0f0f0;
