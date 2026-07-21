@@ -27,7 +27,7 @@ const HOME_HERO = `
   </div>
 </div>
 <button id="scroll-down" type="button" aria-label="滚动到最近文章">
-  <span>向下阅读</span><i class="fas fa-arrow-down" aria-hidden="true"></i>
+  <i class="fas fa-chevron-down" aria-hidden="true"></i>
 </button>`;
 
 const COLLECTION_HEAD = `
