@@ -615,10 +615,21 @@
   const initTrendPage = () => {
     const trendPage = document.querySelector('#body-wrap.type-shuoshuo');
     const container = trendPage?.querySelector('#article-container');
-    if (!trendPage || !container) return;
+    if (!trendPage) return;
 
     document.body.classList.add('is-trend-page');
-    if (container.children.length) return;
+    const hero = document.getElementById('page-site-info');
+    if (hero && !hero.querySelector('.trend-hero')) {
+      hero.innerHTML = `
+        <div class="trend-hero">
+          <p>MOMENTS & SHORTS / STREAM</p>
+          <h1>FeeFee动态</h1>
+          <div><span>短想法</span><span>临时发现</span><span>随手分享</span></div>
+        </div>
+      `;
+    }
+
+    if (!container || container.children.length) return;
 
     container.innerHTML = `
       <section class="trend-empty">
