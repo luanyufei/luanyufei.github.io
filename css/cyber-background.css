@@ -707,35 +707,49 @@ input:focus-visible {
 
 #page-header #scroll-down {
   position: absolute;
-  left: auto;
-  right: 3rem;
-  bottom: 1.6rem;
+  left: 50%;
+  bottom: 2.4rem;
   z-index: 4;
-  display: inline-flex;
+  display: flex;
   align-items: center;
-  gap: 0.7rem;
-  width: auto;
-  min-height: 42px;
-  padding: 0 0 0.35rem;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  padding: 0;
   border: 0;
-  border-bottom: 1px solid var(--fs-line-strong);
   background: transparent;
-  color: var(--fs-text);
-  font-family: var(--fs-mono);
-  font-size: 0.66rem;
-  text-transform: uppercase;
+  color: var(--fs-accent);
   cursor: pointer;
-  transform: none;
+  transform: translateX(-50%);
+  -webkit-tap-highlight-color: transparent;
 }
 
 #page-header #scroll-down i {
-  color: var(--fs-accent);
-  animation: scroll-cue 1.4s steps(4, end) infinite !important;
+  font-size: 2.6rem;
+  line-height: 1;
+  animation: scroll-bounce 2s ease-in-out infinite;
 }
 
-@keyframes scroll-cue {
-  0%, 100% { transform: translateY(-3px); }
-  50% { transform: translateY(4px); }
+#page-header #scroll-down::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+#page-header #scroll-down:hover::after {
+  opacity: 0.06;
+}
+
+@keyframes scroll-bounce {
+  0%, 100% { transform: translateY(-2px); opacity: 0.5; }
+  15% { opacity: 0.6; }
+  30% { transform: translateY(4px); opacity: 0.8; }
+  50% { transform: translateY(14px); opacity: 1; }
+  70% { transform: translateY(4px); opacity: 0.8; }
+  85% { opacity: 0.6; }
 }
 
 /* Page headers */
@@ -2401,8 +2415,11 @@ html.search-open body {
   }
 
   #page-header #scroll-down {
-    right: 1rem;
-    bottom: 1rem;
+    bottom: 1.5rem;
+  }
+
+  #page-header #scroll-down i {
+    font-size: 2.2rem;
   }
 
   #page-site-info,
