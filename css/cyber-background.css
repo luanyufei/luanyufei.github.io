@@ -1340,7 +1340,138 @@ body.is-home-page #content-inner {
 }
 
 .is-trend-page #article-container {
-  width: 100%;
+  max-width: var(--fs-reading);
+  margin: 1.5rem auto 4rem;
+}
+
+.is-trend-page #aside-content {
+  display: none !important;
+}
+
+.is-trend-page #page-site-info {
+  width: min(calc(100% - 6rem), var(--fs-content));
+}
+
+.trend-hero {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  align-items: end;
+  gap: 1.2rem;
+}
+
+.trend-hero > p {
+  grid-column: 1 / span 3;
+  margin: 0 0 0.8rem;
+  color: var(--fs-text-3);
+  font-family: var(--fs-mono);
+  font-size: 0.7rem;
+}
+
+.trend-hero h1 {
+  grid-column: 4 / span 6;
+  margin: 0;
+  color: var(--fs-text);
+  font-size: 6rem;
+  font-weight: 760;
+  letter-spacing: 0;
+  line-height: 0.95;
+}
+
+.trend-hero > div {
+  grid-column: 10 / span 3;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.25rem;
+  color: var(--fs-text-2);
+  font-size: 1.05rem;
+}
+
+#article-container .shuoshuo-item {
+  background: var(--fs-surface) !important;
+  border: 1px solid var(--fs-line) !important;
+  border-radius: var(--fs-radius) !important;
+  padding: 1.8rem 2rem !important;
+  margin-bottom: 1.5rem;
+  box-shadow: none;
+  transition: border-color 200ms ease, transform 200ms ease, box-shadow 200ms ease;
+}
+
+#article-container .shuoshuo-item:hover {
+  border-color: var(--fs-line-strong) !important;
+  transform: translateY(-2px);
+  box-shadow: var(--fs-shadow);
+}
+
+#article-container .shuoshuo-item-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.8rem;
+  border-bottom: 1px dashed var(--fs-line);
+}
+
+#article-container .shuoshuo-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 1px solid var(--fs-line);
+}
+
+#article-container .shuoshuo-author {
+  font-weight: 600;
+  color: var(--fs-text);
+  font-size: 1rem;
+}
+
+#article-container .shuoshuo-date {
+  font-family: var(--fs-mono);
+  font-size: 0.78rem;
+  color: var(--fs-text-3);
+}
+
+#article-container .shuoshuo-content {
+  font-size: 1.05rem;
+  line-height: 1.7;
+  color: var(--fs-text);
+  padding: 0.5rem 0 1rem;
+}
+
+#article-container .shuoshuo-content a {
+  color: var(--fs-text) !important;
+  text-decoration: underline;
+  text-decoration-color: var(--fs-accent);
+  text-underline-offset: 4px;
+  font-family: var(--fs-mono);
+  font-size: 0.95rem;
+  padding: 0.1rem 0.3rem;
+  border-radius: 4px;
+  transition: color 180ms ease, background 180ms ease;
+}
+
+#article-container .shuoshuo-content a:hover {
+  background: var(--fs-accent);
+  color: #0b0d0b !important;
+  text-decoration: none;
+}
+
+#article-container .shuoshuo-tag {
+  border: 1px solid var(--fs-line) !important;
+  border-radius: var(--fs-radius) !important;
+  background: var(--fs-surface-2) !important;
+  color: var(--fs-text-2) !important;
+  font-family: var(--fs-mono);
+  font-size: 0.75rem;
+  padding: 0.25rem 0.65rem;
+  transition: all 180ms ease;
+}
+
+#article-container .shuoshuo-tag:hover {
+  background: var(--fs-accent) !important;
+  color: #0b0d0b !important;
+  border-color: var(--fs-accent) !important;
 }
 
 .trend-empty {
@@ -2152,17 +2283,20 @@ html.search-open body {
     display: none !important;
   }
 
-  .link-hero h1 {
+  .link-hero h1,
+  .trend-hero h1 {
     grid-column: 1 / span 9;
     font-size: 4.6rem;
   }
 
-  .link-hero > p {
+  .link-hero > p,
+  .trend-hero > p {
     grid-column: 1 / span 5;
     grid-row: 1;
   }
 
-  .link-hero > div {
+  .link-hero > div,
+  .trend-hero > div {
     grid-column: 10 / span 3;
     grid-row: 2;
   }
@@ -2328,18 +2462,21 @@ html.search-open body {
     min-height: 430px;
   }
 
-  .link-hero {
+  .link-hero,
+  .trend-hero {
     display: flex;
     flex-direction: column;
     align-items: flex-start;
   }
 
-  .link-hero h1 {
+  .link-hero h1,
+  .trend-hero h1 {
     order: -1;
     font-size: 3.8rem;
   }
 
-  .link-hero > div {
+  .link-hero > div,
+  .trend-hero > div {
     flex-direction: row;
     flex-wrap: wrap;
     gap: 0.7rem;
