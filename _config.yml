@@ -95,6 +95,8 @@ exclude:
 ignore:
   - '**/IMG_0167.jpeg'
   - '**/js/search/**'
+  - '**/草稿箱/**'
+
 
 # Extensions
 ## Plugins: https://hexo.io/plugins/

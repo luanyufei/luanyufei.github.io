@@ -2,43 +2,33 @@
   const THEME_KEY = 'theme';
   const THEME_TTL_DAYS = 365;
 
-  const normalizeTheme = (value) => (value === 'light' || value === 'dark' ? value : undefined);
+  const normalizeThemeMode = (value) =>
+    value === 'light' || value === 'dark' || value === 'system' ? value : undefined;
 
-  const readTheme = () => {
+  const readThemeMode = () => {
     try {
-      const butterflyValue = normalizeTheme(window.btf?.saveToLocal?.get?.(THEME_KEY));
-      if (butterflyValue) return butterflyValue;
-
-      const raw = localStorage.getItem(THEME_KEY);
-      if (!raw) return undefined;
+      const raw = sessionStorage.getItem(THEME_KEY);
+      if (!raw) return 'system';
 
       try {
         const parsed = JSON.parse(raw);
-        if (parsed.expiry && Date.now() > parsed.expiry) {
-          localStorage.removeItem(THEME_KEY);
-          return undefined;
-        }
-        return normalizeTheme(parsed.value);
+        return normalizeThemeMode(parsed.value) || 'system';
       } catch (error) {
-        return normalizeTheme(raw);
+        return normalizeThemeMode(raw) || 'system';
       }
     } catch (error) {
-      return undefined;
+      return 'system';
     }
   };
 
-  const saveTheme = (theme) => {
+  const saveThemeMode = (mode) => {
     try {
-      if (window.btf?.saveToLocal?.set) {
-        window.btf.saveToLocal.set(THEME_KEY, theme, THEME_TTL_DAYS);
-        return;
-      }
+      localStorage.removeItem(THEME_KEY);
 
-      localStorage.setItem(
+      sessionStorage.setItem(
         THEME_KEY,
         JSON.stringify({
-          value: theme,
-          expiry: Date.now() + THEME_TTL_DAYS * 86400000,
+          value: mode,
         })
       );
     } catch (error) {
@@ -46,50 +36,84 @@
     }
   };
 
-  const preferredTheme = () =>
-    readTheme() ||
-    normalizeTheme(document.documentElement.dataset.theme) ||
-    (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  const getSystemTheme = () =>
+    window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 
-  const updateThemeButton = (button, theme) => {
-    if (!button) return;
-    const nextTheme = theme === 'dark' ? '浅色' : '深色';
-    button.dataset.theme = theme;
-    button.setAttribute('aria-label', `切换到${nextTheme}模式`);
-    button.setAttribute('title', `切换到${nextTheme}模式`);
-    button.innerHTML = `<i class="fas ${theme === 'dark' ? 'fa-sun' : 'fa-moon'}" aria-hidden="true"></i>`;
+  const resolveTheme = (mode) => {
+    if (mode === 'light') return 'light';
+    if (mode === 'dark') return 'dark';
+    return getSystemTheme();
   };
 
-  const applyTheme = (theme, persist = false) => {
-    const nextTheme = normalizeTheme(theme) || 'light';
+  const updateThemeButton = (button, mode, actualTheme) => {
+    if (!button) return;
 
-    if (nextTheme === 'dark' && window.btf?.activateDarkMode) {
-      window.btf.activateDarkMode();
-    } else if (nextTheme === 'light' && window.btf?.activateLightMode) {
-      window.btf.activateLightMode();
+    let icon = 'fa-desktop';
+    let label = '跟随系统';
+    let nextLabel = '浅色';
+
+    if (mode === 'light') {
+      icon = 'fa-sun';
+      label = '浅色';
+      nextLabel = '深色';
+    } else if (mode === 'dark') {
+      icon = 'fa-moon';
+      label = '深色';
+      nextLabel = '跟随系统';
     } else {
-      document.documentElement.dataset.theme = nextTheme;
+      icon = 'fa-desktop';
+      label = `跟随系统 (${actualTheme === 'dark' ? '深色' : '浅色'})`;
+      nextLabel = '浅色';
     }
 
-    if (persist) saveTheme(nextTheme);
-    updateThemeButton(document.querySelector('.site-theme-toggle'), nextTheme);
+    button.dataset.themeMode = mode;
+    button.dataset.theme = actualTheme;
+    button.setAttribute('aria-label', `当前外观：${label}，点击切换为${nextLabel}模式`);
+    button.setAttribute('title', `外观：${label} (点击切换为${nextLabel})`);
+    button.innerHTML = `<i class="fas ${icon}" aria-hidden="true"></i>`;
+  };
+
+  const applyThemeMode = (mode, persist = false) => {
+    const validMode = normalizeThemeMode(mode) || 'system';
+    const actualTheme = resolveTheme(validMode);
+
+    if (actualTheme === 'dark' && window.btf?.activateDarkMode) {
+      window.btf.activateDarkMode();
+    } else if (actualTheme === 'light' && window.btf?.activateLightMode) {
+      window.btf.activateLightMode();
+    } else {
+      document.documentElement.dataset.theme = actualTheme;
+    }
+
+    if (persist) saveThemeMode(validMode);
+    updateThemeButton(document.querySelector('.site-theme-toggle'), validMode, actualTheme);
+  };
+
+  const getNextThemeMode = (currentMode) => {
+    if (currentMode === 'system') return 'light';
+    if (currentMode === 'light') return 'dark';
+    return 'system';
   };
 
   const initTheme = () => {
+    let currentMode = readThemeMode();
+
     const button = document.createElement('button');
     button.type = 'button';
     button.className = 'site-theme-toggle';
     document.body.appendChild(button);
 
-    applyTheme(preferredTheme());
+    applyThemeMode(currentMode);
 
     button.addEventListener('click', () => {
-      const current = normalizeTheme(document.documentElement.dataset.theme) || preferredTheme();
-      applyTheme(current === 'dark' ? 'light' : 'dark', true);
+      currentMode = getNextThemeMode(currentMode);
+      applyThemeMode(currentMode, true);
     });
 
-    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (event) => {
-      if (!readTheme()) applyTheme(event.matches ? 'dark' : 'light');
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+      if (currentMode === 'system') {
+        applyThemeMode('system');
+      }
     });
   };
 
