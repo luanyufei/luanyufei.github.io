@@ -2,7 +2,8 @@ nav:
   fixed: true
   display_title: false
 
-favicon: /img/favicon.ico
+favicon: /img/noon-avatar.png
+
 
 menu:
   首页: / || fas fa-home
