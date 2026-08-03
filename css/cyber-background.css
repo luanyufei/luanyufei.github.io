@@ -1132,6 +1132,14 @@ body.fs-lightbox-active {
   overflow: hidden !important;
 }
 
+body.fs-lightbox-dragging,
+body.fs-lightbox-dragging *,
+.fs-custom-lightbox.is-dragging,
+.fs-custom-lightbox.is-dragging *,
+.fs-custom-lightbox-img.is-dragging {
+  cursor: grabbing !important;
+}
+
 .fs-custom-lightbox {
   position: fixed;
   top: 0;
@@ -1153,9 +1161,9 @@ body.fs-lightbox-active {
 }
 
 .fs-custom-lightbox.is-open {
-  background: rgba(0, 0, 0, 0.65);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   opacity: 1;
 }
 
@@ -1183,8 +1191,9 @@ body.fs-lightbox-active {
 }
 
 .fs-custom-lightbox-img.is-dragging {
-  cursor: grabbing;
+  cursor: grabbing !important;
 }
+
 
 
 

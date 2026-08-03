@@ -1,6 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
+    <title>红米研究记2｜解锁BootLoader</title>
+    <url>/2025/08/07/BL%E9%94%81/</url>
+    <content><![CDATA[]]></content>
+      <categories>
+        <category>各种经验</category>
+      </categories>
+  </entry>
+  <entry>
     <title>Brave 浏览器去除无用功能</title>
     <url>/2026/07/18/Brave%E6%B5%8F%E8%A7%88%E5%99%A8%E5%8E%BB%E9%99%A4%E6%97%A0%E7%94%A8%E5%8A%9F%E8%83%BD/</url>
     <content><![CDATA[<p>由于 Chrome 浏览器对去广告插件有反制机制——检测到去广告扩展后会让 YouTube 变得卡顿——所以我决定转用 Brave。然而 Brave 也自带了不少臃肿功能，比如 AI、钱包、VPN 等等。下面分别介绍 macOS 和 Windows 上的一键精简方法。</p>
@@ -148,14 +156,6 @@
 ]]></content>
       <categories>
         <category>FeeFee电子扫盲</category>
-      </categories>
-  </entry>
-  <entry>
-    <title>红米研究记2｜解锁BootLoader</title>
-    <url>/2025/08/07/BL%E9%94%81/</url>
-    <content><![CDATA[]]></content>
-      <categories>
-        <category>各种经验</category>
       </categories>
   </entry>
 </search>
