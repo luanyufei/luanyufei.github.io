@@ -404,168 +404,163 @@
     const hero = document.querySelector('.feespace-hero');
     if (!canvas || !hero || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
-    const loadThree = () => {
-      if (window.THREE) return Promise.resolve(window.THREE);
-      if (window.btf?.getScript) {
-        return window.btf.getScript('https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js')
-          .then(() => window.THREE);
-      }
-      return new Promise((resolve, reject) => {
-        const script = document.createElement('script');
-        script.src = 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js';
-        script.onload = () => resolve(window.THREE);
-        script.onerror = reject;
-        document.head.appendChild(script);
+    Promise.all([
+      import('three'),
+      import('three/addons/loaders/FontLoader.js'),
+    ]).then(async ([THREE, { FontLoader }]) => {
+      if (!canvas.isConnected) return;
+      const font = await new Promise((resolve, reject) => {
+        new FontLoader().load(
+          '/data/arial-rounded-bold.typeface.json',
+          resolve,
+          undefined,
+          reject
+        );
       });
-    };
-
-    loadThree().then((THREE) => {
-      if (!THREE || !canvas.isConnected) return;
-
       const renderer = new THREE.WebGLRenderer({
         canvas,
         alpha: true,
         antialias: true,
         powerPreference: 'low-power',
       });
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, window.innerWidth < 620 ? 1 : 1.25));
       renderer.setClearColor(0x000000, 0);
-      if ('outputColorSpace' in renderer) renderer.outputColorSpace = THREE.SRGBColorSpace;
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, window.innerWidth < 620 ? 1 : 1.35));
+      renderer.outputColorSpace = THREE.SRGBColorSpace;
+      renderer.toneMapping = THREE.ACESFilmicToneMapping;
+      renderer.toneMappingExposure = 1.15;
 
       const scene = new THREE.Scene();
-      const camera = new THREE.PerspectiveCamera(28, 1, 0.1, 40);
-      camera.position.z = 8;
+      const camera = new THREE.PerspectiveCamera(29, 1, 0.1, 40);
+      camera.position.set(0, 0.1, 9.2);
 
-      const stage = new THREE.Group();
-      stage.position.set(0.35, -0.1, -0.3);
-      stage.rotation.set(-0.06, 0.1, 0.015);
-      scene.add(stage);
-
-      const textureCanvas = document.createElement('canvas');
-      textureCanvas.width = 1600;
-      textureCanvas.height = 680;
-      const textureContext = textureCanvas.getContext('2d');
-      if (!textureContext) return;
-
-      const texture = new THREE.CanvasTexture(textureCanvas);
-      texture.minFilter = THREE.LinearFilter;
-      texture.magFilter = THREE.LinearFilter;
-      texture.generateMipmaps = false;
-
-      const textPlanes = [];
-      const textGeometry = new THREE.PlaneGeometry(6.55, 2.78);
-      for (let index = 0; index < 7; index += 1) {
-        const material = new THREE.MeshBasicMaterial({
-          map: texture,
-          transparent: true,
-          depthWrite: false,
-          opacity: index === 0 ? 0.08 : 0.014,
-        });
-        const plane = new THREE.Mesh(textGeometry, material);
-        plane.position.set(-index * 0.018, index * 0.014, -0.18 - index * 0.014);
-        stage.add(plane);
-        textPlanes.push(plane);
-      }
-
-      const frameGeometry = new THREE.BoxGeometry(6.85, 2.98, 0.12);
-      const frame = new THREE.LineSegments(
-        new THREE.EdgesGeometry(frameGeometry),
-        new THREE.LineBasicMaterial({ transparent: true, opacity: 0.2 })
-      );
-      frame.position.z = -0.36;
-      stage.add(frame);
-
-      const axisGeometry = new THREE.BufferGeometry().setFromPoints([
-        new THREE.Vector3(-4.2, 0, -0.4),
-        new THREE.Vector3(4.2, 0, -0.4),
-      ]);
-      const axis = new THREE.Line(
-        axisGeometry,
-        new THREE.LineBasicMaterial({ transparent: true, opacity: 0.08 })
-      );
-      axis.position.y = -1.78;
-      stage.add(axis);
-
-      const readToken = (name, fallback) => {
-        const value = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
-        return value || fallback;
+      const textMaterial = new THREE.MeshPhysicalMaterial({
+        color: 0x3d7ff0,
+        metalness: 0.04,
+        roughness: 0.14,
+        clearcoat: 1,
+        clearcoatRoughness: 0.035,
+        iridescence: 0.6,
+        iridescenceIOR: 1.38,
+        transmission: 0.16,
+        thickness: 0.8,
+        ior: 1.45,
+      });
+      let shaderUniforms = null;
+      textMaterial.onBeforeCompile = (shader) => {
+        shader.uniforms.uTime = { value: 0 };
+        shaderUniforms = shader.uniforms;
+        shader.fragmentShader = shader.fragmentShader
+          .replace('void main() {', 'uniform float uTime;\nvoid main() {')
+          .replace(
+            '#include <dithering_fragment>',
+            `float shimmer = 0.5 + 0.5 * sin(gl_FragCoord.x * 0.016 + gl_FragCoord.y * 0.01 + uTime * 1.25);
+            vec3 shimmerColor = mix(vec3(0.42, 0.58, 1.0), vec3(0.92, 0.96, 1.0), shimmer);
+            outgoingLight = mix(outgoingLight, outgoingLight * shimmerColor, 0.24);
+            #include <dithering_fragment>`
+          );
       };
+
+      const textGroup = new THREE.Group();
+      const geometry = new THREE.ExtrudeGeometry(font.generateShapes('FEE SPACE', 1.2), {
+        depth: 0.32,
+        curveSegments: 14,
+        bevelEnabled: true,
+        bevelThickness: 0.13,
+        bevelSize: 0.11,
+        bevelSegments: 7,
+      });
+      geometry.computeBoundingBox();
+      geometry.center();
+      const textMesh = new THREE.Mesh(geometry, textMaterial);
+      textGroup.add(textMesh);
+      textGroup.rotation.x = -0.08;
+      textGroup.rotation.y = -0.04;
+      scene.add(textGroup);
+
+      const bounds = new THREE.Box3().setFromObject(textGroup);
+      const textWidth = Math.max(1, bounds.max.x - bounds.min.x);
+      const textHeight = Math.max(1, bounds.max.y - bounds.min.y);
+      const textFitScale = Math.min(0.78, 5.6 / textWidth, 3.25 / textHeight);
+      textGroup.scale.setScalar(textFitScale);
+      const baseY = 0.2;
+      let layoutBaseY = baseY;
+      textGroup.position.set(-0.18, baseY, 0);
+
+      const rimLight = new THREE.DirectionalLight(0xffffff, 4.2);
+      rimLight.position.set(-4, 4, 7);
+      scene.add(rimLight);
+
+      const coolLight = new THREE.PointLight(0x78a6ff, 7, 14);
+      coolLight.position.set(4, 1.5, 4);
+      scene.add(coolLight);
+
+      const warmLight = new THREE.PointLight(0xffe2ad, 3.5, 12);
+      warmLight.position.set(-3, -2, 3);
+      scene.add(warmLight);
+
+      scene.add(new THREE.HemisphereLight(0xdce7ff, 0x1b2445, 1.2));
+
+      const getThemeColor = () => document.documentElement.dataset.theme === 'dark'
+        ? 0x9db5ff
+        : 0x6c92ff;
 
       const updateTheme = () => {
-        const textColor = readToken('--fs-text', '#111412');
-        const accentColor = readToken('--fs-accent', '#bdff35');
-        textureContext.clearRect(0, 0, textureCanvas.width, textureCanvas.height);
-        textureContext.strokeStyle = textColor;
-        textureContext.lineWidth = 4;
-        textureContext.font = '800 214px "Helvetica Neue", Arial, sans-serif';
-        textureContext.textBaseline = 'alphabetic';
-        textureContext.strokeText('FEE', 90, 275);
-        textureContext.strokeText('SPACE', 550, 540);
-        textureContext.fillStyle = accentColor;
-        textureContext.fillRect(1120, 586, 220, 12);
-        texture.needsUpdate = true;
-        frame.material.color.set(accentColor);
-        axis.material.color.set(accentColor);
+        textMaterial.color.setHex(getThemeColor());
+        coolLight.color.setHex(document.documentElement.dataset.theme === 'dark' ? 0x8aaaff : 0x78a6ff);
+        warmLight.intensity = document.documentElement.dataset.theme === 'dark' ? 2.7 : 3.5;
       };
 
-      let targetX = stage.rotation.x;
-      let targetY = stage.rotation.y;
-      let animationFrame = 0;
       let visible = true;
+      let frame = 0;
+      let lastFrame = 0;
+      let pointerX = 0;
+      let pointerY = 0;
+      let targetX = 0;
+      let targetY = 0;
 
-      const setInteraction = (active) => {
-        textPlanes.forEach((plane, index) => {
-          plane.material.opacity = active
-            ? (index === 0 ? 0.15 : 0.028)
-            : (index === 0 ? 0.08 : 0.014);
-        });
-        frame.material.opacity = active ? 0.38 : 0.2;
-        axis.material.opacity = active ? 0.18 : 0.08;
-      };
-
-      const render = () => {
-        animationFrame = 0;
+      const render = (time) => {
+        frame = 0;
         if (!visible) return;
-        stage.rotation.x += (targetX - stage.rotation.x) * 0.16;
-        stage.rotation.y += (targetY - stage.rotation.y) * 0.16;
-        renderer.render(scene, camera);
-        if (Math.abs(targetX - stage.rotation.x) > 0.001 || Math.abs(targetY - stage.rotation.y) > 0.001) {
-          animationFrame = window.requestAnimationFrame(render);
+        if (time - lastFrame < 30) {
+          frame = window.requestAnimationFrame(render);
+          return;
         }
+        lastFrame = time;
+        const seconds = time * 0.001;
+        pointerX += (targetX - pointerX) * 0.08;
+        pointerY += (targetY - pointerY) * 0.08;
+        textGroup.rotation.y = -0.04 + Math.sin(seconds * 0.48) * 0.08 + pointerX * 0.24;
+        textGroup.rotation.x = -0.08 + Math.cos(seconds * 0.4) * 0.025 + pointerY * 0.16;
+        textGroup.position.y = layoutBaseY + Math.sin(seconds * 0.75) * 0.055;
+        if (shaderUniforms?.uTime) shaderUniforms.uTime.value = seconds;
+        coolLight.position.x = 4 + pointerX * 2.4;
+        coolLight.position.y = 1.5 - pointerY * 1.8;
+        renderer.render(scene, camera);
+        frame = window.requestAnimationFrame(render);
       };
 
       const requestRender = () => {
-        if (!animationFrame) animationFrame = window.requestAnimationFrame(render);
-      };
-
-      const updatePointer = (event) => {
-        const rect = hero.getBoundingClientRect();
-        const x = (event.clientX - rect.left) / Math.max(rect.width, 1);
-        const y = (event.clientY - rect.top) / Math.max(rect.height, 1);
-        targetY = 0.1 + (x - 0.5) * 0.22;
-        targetX = -0.06 - (y - 0.5) * 0.14;
-        setInteraction(true);
-        requestRender();
-      };
-
-      const resetPointer = () => {
-        targetX = -0.06;
-        targetY = 0.1;
-        setInteraction(false);
-        requestRender();
+        if (!frame) frame = window.requestAnimationFrame(render);
       };
 
       const resize = () => {
         const width = hero.clientWidth || window.innerWidth;
         const height = hero.clientHeight || window.innerHeight;
+        const mobile = width < 620;
         camera.aspect = width / Math.max(height, 1);
-        camera.position.z = width < 620 ? 9 : 8;
+        camera.position.z = mobile ? 16.2 : 10.2;
         camera.updateProjectionMatrix();
+        textGroup.scale.setScalar(textFitScale * (mobile ? 0.58 : 1));
+        textGroup.position.x = mobile ? 0 : -0.18;
+        layoutBaseY = mobile ? 0.95 : baseY;
         renderer.setSize(width, height, false);
-        stage.scale.setScalar(width < 620 ? 0.52 : 0.72);
-        textPlanes.forEach((plane) => {
-          plane.visible = width >= 620;
-        });
+        requestRender();
+      };
+
+      const updatePointer = (event) => {
+        const rect = hero.getBoundingClientRect();
+        targetX = ((event.clientX - rect.left) / Math.max(rect.width, 1) - 0.5) * 2;
+        targetY = ((event.clientY - rect.top) / Math.max(rect.height, 1) - 0.5) * 2;
         requestRender();
       };
 
@@ -573,25 +568,22 @@
         visible = entry.isIntersecting;
         if (visible) requestRender();
       });
-
       const themeObserver = new MutationObserver(() => {
         updateTheme();
         requestRender();
       });
 
       hero.addEventListener('pointermove', updatePointer, { passive: true });
-      hero.addEventListener('pointerleave', resetPointer, { passive: true });
       window.addEventListener('resize', resize, { passive: true });
       observer.observe(hero);
       themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
-
+      hero.classList.add('webgl-ready');
       updateTheme();
-      setInteraction(false);
       resize();
       requestRender();
     }).catch((error) => {
       canvas.hidden = true;
-      console.warn('Three.js hero unavailable; using HTML title fallback.', error);
+      console.warn('3D title unavailable; using HTML title fallback.', error);
     });
   };
 

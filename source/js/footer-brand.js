@@ -16,7 +16,7 @@
     svg.setAttribute('class', 'footer-brand-svg');
     svg.setAttribute('viewBox', '0 0 810 140');
     svg.setAttribute('width', '100%');
-    svg.setAttribute('height', 'auto');
+    svg.setAttribute('height', '140');
     svg.setAttribute('aria-label', 'FeeFeeNOON');
 
     const text = document.createElementNS(svgNS, 'text');
