@@ -728,6 +728,7 @@
 
     const close = () => {
       if (!overlay) return;
+      document.body.classList.remove('fs-lightbox-dragging');
       const currentOverlay = overlay;
       const currentImg = viewImg;
       overlay = null;
@@ -793,6 +794,9 @@
       activePointerId = e.pointerId;
       try { overlay.setPointerCapture(e.pointerId); } catch (err) {}
 
+      document.body.classList.add('fs-lightbox-dragging');
+      if (overlay) overlay.classList.add('is-dragging');
+
       startX = e.clientX;
       startY = e.clientY;
       startStateX = state.x;
@@ -808,7 +812,7 @@
 
       if (viewImg) {
         viewImg.style.transition = 'none';
-        if (dragButton === 0) viewImg.classList.add('is-dragging');
+        viewImg.classList.add('is-dragging');
       }
     };
 
@@ -830,7 +834,13 @@
         const centerY = rect.top + rect.height / 2;
         const currentAngle = Math.atan2(e.clientY - centerY, e.clientX - centerX) * (180 / Math.PI);
 
-        state.r = startStateR + (currentAngle - startAngle);
+        const rawR = startStateR + (currentAngle - startAngle);
+        const snapTarget = Math.round(rawR / 90) * 90;
+        if (Math.abs(rawR - snapTarget) < 4.5) {
+          state.r = snapTarget;
+        } else {
+          state.r = rawR;
+        }
 
         const scaleFactor = 1 - (dy / 300);
         state.s = Math.max(0.1, Math.min(20, startStateS * scaleFactor));
@@ -842,7 +852,10 @@
     const handlePointerUp = (e) => {
       if (!isPointerDown) return;
 
-      if (activePointerId !== null && overlay.hasPointerCapture && overlay.hasPointerCapture(activePointerId)) {
+      document.body.classList.remove('fs-lightbox-dragging');
+      if (overlay) overlay.classList.remove('is-dragging');
+
+      if (activePointerId !== null && overlay && overlay.hasPointerCapture && overlay.hasPointerCapture(activePointerId)) {
         try { overlay.releasePointerCapture(activePointerId); } catch (err) {}
       }
 
