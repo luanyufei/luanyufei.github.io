@@ -1,6 +1,6 @@
 const HOME_HERO = `
 <div id="site-info" class="feespace-hero">
-  <canvas id="feespace-hero-canvas"></canvas>
+  <canvas id="feespace-hero-canvas" aria-hidden="true"></canvas>
   <div class="hero-grid-lines" aria-hidden="true">
     <div class="grid-line line-h-top"></div>
     <div class="grid-line line-h-bottom"></div>
@@ -12,12 +12,15 @@ const HOME_HERO = `
     <span>CN · GMT+8</span>
   </div>
   <div class="hero-grid">
-    <p class="hero-intro">SYSTEM THOUGHTS<br>& DIGITAL CRAFT</p>
-    <h1 id="site-title" class="three-hero-title" aria-label="Fee Space">
-      <span class="hero-title-text">FEE SPACE</span>
-      <span class="hero-hud-coord" aria-hidden="true" data-kinetic-coordinates>0050 X 0050 Y</span>
+    <p class="hero-intro">SYSTEMS, NOTES<br>& SMALL TOOLS</p>
+    <h1 id="site-title" class="editorial-hero-title" aria-label="Fee Space">
+      <span class="editorial-word" data-word="FEE">FEE</span>
+      <span class="editorial-word editorial-word-space" data-word="SPACE">SPACE</span>
     </h1>
-    <p class="hero-statement">ARCHITECTING SYSTEMS<br>CURATING NOTES</p>
+    <div class="hero-statement">
+      <span class="hero-statement-index">001 / 004</span>
+      <p>A personal space for systems,<br>tools, and observations.</p>
+    </div>
   </div>
   <div class="hero-footer">
     <span>DIGITAL CRAFTSMANSHIP © 2026</span>

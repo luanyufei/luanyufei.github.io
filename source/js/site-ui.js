@@ -402,14 +402,13 @@
   const initThreeHero = () => {
     const canvas = document.getElementById('feespace-hero-canvas');
     const hero = document.querySelector('.feespace-hero');
-    if (!canvas || !hero) return;
-
-    const coordHud = hero.querySelector('[data-kinetic-coordinates]');
+    if (!canvas || !hero || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
     const loadThree = () => {
       if (window.THREE) return Promise.resolve(window.THREE);
       if (window.btf?.getScript) {
-        return window.btf.getScript('https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js').then(() => window.THREE);
+        return window.btf.getScript('https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js')
+          .then(() => window.THREE);
       }
       return new Promise((resolve, reject) => {
         const script = document.createElement('script');
@@ -421,308 +420,180 @@
     };
 
     loadThree().then((THREE) => {
-      if (!THREE || !document.getElementById('feespace-hero-canvas')) return;
-
-      const width = hero.clientWidth || window.innerWidth;
-      const height = hero.clientHeight || window.innerHeight;
-
-      const scene = new THREE.Scene();
-      const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100);
-      camera.position.z = window.innerWidth < 768 ? 7.0 : 5.8;
+      if (!THREE || !canvas.isConnected) return;
 
       const renderer = new THREE.WebGLRenderer({
         canvas,
         alpha: true,
         antialias: true,
-        powerPreference: 'high-performance',
+        powerPreference: 'low-power',
       });
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-      renderer.setSize(width, height);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, window.innerWidth < 620 ? 1 : 1.25));
+      renderer.setClearColor(0x000000, 0);
+      if ('outputColorSpace' in renderer) renderer.outputColorSpace = THREE.SRGBColorSpace;
 
-      const ambientLight = new THREE.AmbientLight(0xffffff, 1.8);
-      scene.add(ambientLight);
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(28, 1, 0.1, 40);
+      camera.position.z = 8;
 
-      const dirLight = new THREE.DirectionalLight(0xffffff, 3.0);
-      dirLight.position.set(5, 6, 6);
-      scene.add(dirLight);
+      const stage = new THREE.Group();
+      stage.position.set(0.35, -0.1, -0.3);
+      stage.rotation.set(-0.06, 0.1, 0.015);
+      scene.add(stage);
 
-      const pointLight = new THREE.PointLight(0x00f0ff, 4.0, 12);
-      pointLight.position.set(0, 0, 4);
-      scene.add(pointLight);
+      const textureCanvas = document.createElement('canvas');
+      textureCanvas.width = 1600;
+      textureCanvas.height = 680;
+      const textureContext = textureCanvas.getContext('2d');
+      if (!textureContext) return;
 
-      const isDark = document.documentElement.dataset.theme === 'dark';
-      const textMaterial = new THREE.MeshPhysicalMaterial({
-        color: isDark ? 0xf1f5f9 : 0x1e293b,
-        metalness: 0.88,
-        roughness: 0.12,
-        clearcoat: 1.0,
-        clearcoatRoughness: 0.08,
-        iridescence: 0.95,
-        iridescenceIOR: 1.33,
-        reflectivity: 1.0,
-      });
+      const texture = new THREE.CanvasTexture(textureCanvas);
+      texture.minFilter = THREE.LinearFilter;
+      texture.magFilter = THREE.LinearFilter;
+      texture.generateMipmaps = false;
 
-      const textGroup = new THREE.Group();
-      scene.add(textGroup);
-
-      const orbGroup = new THREE.Group();
-      const orbMaterial = new THREE.MeshPhysicalMaterial({
-        color: isDark ? 0x00f0ff : 0x3b82f6,
-        metalness: 0.9,
-        roughness: 0.1,
-        clearcoat: 1.0,
-        iridescence: 1.0,
-      });
-
-      for (let i = 0; i < 5; i++) {
-        const orbGeo = new THREE.SphereGeometry(0.1 + Math.random() * 0.08, 32, 32);
-        const orb = new THREE.Mesh(orbGeo, orbMaterial);
-        const angle = (i / 5) * Math.PI * 2;
-        const radius = 2.8 + Math.random() * 0.5;
-        orb.position.set(Math.cos(angle) * radius, Math.sin(angle) * radius, (Math.random() - 0.5) * 1.5);
-        orbGroup.add(orb);
+      const textPlanes = [];
+      const textGeometry = new THREE.PlaneGeometry(6.55, 2.78);
+      for (let index = 0; index < 7; index += 1) {
+        const material = new THREE.MeshBasicMaterial({
+          map: texture,
+          transparent: true,
+          depthWrite: false,
+          opacity: index === 0 ? 0.08 : 0.014,
+        });
+        const plane = new THREE.Mesh(textGeometry, material);
+        plane.position.set(-index * 0.018, index * 0.014, -0.18 - index * 0.014);
+        stage.add(plane);
+        textPlanes.push(plane);
       }
-      scene.add(orbGroup);
 
-      // Native 3D Shape Extrude Text Builder for FEE and SPACE
-      const createLetterShape = (char) => {
-        const shape = new THREE.Shape();
-        const w = 0.65;
-        const h = 0.95;
-        const t = 0.18;
+      const frameGeometry = new THREE.BoxGeometry(6.85, 2.98, 0.12);
+      const frame = new THREE.LineSegments(
+        new THREE.EdgesGeometry(frameGeometry),
+        new THREE.LineBasicMaterial({ transparent: true, opacity: 0.2 })
+      );
+      frame.position.z = -0.36;
+      stage.add(frame);
 
-        switch (char) {
-          case 'F':
-            shape.moveTo(0, 0);
-            shape.lineTo(t, 0);
-            shape.lineTo(t, h * 0.42);
-            shape.lineTo(w * 0.72, h * 0.42);
-            shape.lineTo(w * 0.72, h * 0.60);
-            shape.lineTo(t, h * 0.60);
-            shape.lineTo(t, h - t);
-            shape.lineTo(w, h - t);
-            shape.lineTo(w, h);
-            shape.lineTo(0, h);
-            break;
+      const axisGeometry = new THREE.BufferGeometry().setFromPoints([
+        new THREE.Vector3(-4.2, 0, -0.4),
+        new THREE.Vector3(4.2, 0, -0.4),
+      ]);
+      const axis = new THREE.Line(
+        axisGeometry,
+        new THREE.LineBasicMaterial({ transparent: true, opacity: 0.08 })
+      );
+      axis.position.y = -1.78;
+      stage.add(axis);
 
-          case 'E':
-            shape.moveTo(0, 0);
-            shape.lineTo(w, 0);
-            shape.lineTo(w, t);
-            shape.lineTo(t, t);
-            shape.lineTo(t, h * 0.42);
-            shape.lineTo(w * 0.72, h * 0.42);
-            shape.lineTo(w * 0.72, h * 0.60);
-            shape.lineTo(t, h * 0.60);
-            shape.lineTo(t, h - t);
-            shape.lineTo(w, h - t);
-            shape.lineTo(w, h);
-            shape.lineTo(0, h);
-            break;
-
-          case 'S':
-            shape.moveTo(0, t);
-            shape.lineTo(t, t);
-            shape.lineTo(t, t * 0.4);
-            shape.lineTo(w - t, t * 0.4);
-            shape.lineTo(w - t, h * 0.42);
-            shape.lineTo(0, h * 0.42);
-            shape.lineTo(0, h);
-            shape.lineTo(w, h);
-            shape.lineTo(w, h - t);
-            shape.lineTo(t, h - t);
-            shape.lineTo(t, h * 0.60);
-            shape.lineTo(w, h * 0.60);
-            shape.lineTo(w, 0);
-            shape.lineTo(0, 0);
-            break;
-
-          case 'P':
-            shape.moveTo(0, 0);
-            shape.lineTo(t, 0);
-            shape.lineTo(t, h * 0.42);
-            shape.lineTo(w, h * 0.42);
-            shape.lineTo(w, h);
-            shape.lineTo(0, h);
-
-            const holeP = new THREE.Path();
-            holeP.moveTo(t, h * 0.60);
-            holeP.lineTo(w - t, h * 0.60);
-            holeP.lineTo(w - t, h - t);
-            holeP.lineTo(t, h - t);
-            shape.holes.push(holeP);
-            break;
-
-          case 'A':
-            shape.moveTo(0, 0);
-            shape.lineTo(t * 1.2, 0);
-            shape.lineTo(w * 0.38, h * 0.42);
-            shape.lineTo(w * 0.62, h * 0.42);
-            shape.lineTo(w - t * 1.2, 0);
-            shape.lineTo(w, 0);
-            shape.lineTo(w * 0.62, h);
-            shape.lineTo(w * 0.38, h);
-
-            const holeA = new THREE.Path();
-            holeA.moveTo(w * 0.38, h * 0.60);
-            holeA.lineTo(w * 0.62, h * 0.60);
-            holeA.lineTo(w * 0.5, h - t * 0.8);
-            shape.holes.push(holeA);
-            break;
-
-          case 'C':
-            shape.moveTo(0, 0);
-            shape.lineTo(w, 0);
-            shape.lineTo(w, t);
-            shape.lineTo(t, t);
-            shape.lineTo(t, h - t);
-            shape.lineTo(w, h - t);
-            shape.lineTo(w, h);
-            shape.lineTo(0, h);
-            break;
-        }
-        return shape;
+      const readToken = (name, fallback) => {
+        const value = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+        return value || fallback;
       };
 
-      const build3DWord = (str) => {
-        const group = new THREE.Group();
-        const extrudeSettings = {
-          depth: 0.25,
-          bevelEnabled: true,
-          bevelThickness: 0.05,
-          bevelSize: 0.025,
-          bevelSegments: 5,
-        };
+      const updateTheme = () => {
+        const textColor = readToken('--fs-text', '#111412');
+        const accentColor = readToken('--fs-accent', '#bdff35');
+        textureContext.clearRect(0, 0, textureCanvas.width, textureCanvas.height);
+        textureContext.strokeStyle = textColor;
+        textureContext.lineWidth = 4;
+        textureContext.font = '800 214px "Helvetica Neue", Arial, sans-serif';
+        textureContext.textBaseline = 'alphabetic';
+        textureContext.strokeText('FEE', 90, 275);
+        textureContext.strokeText('SPACE', 550, 540);
+        textureContext.fillStyle = accentColor;
+        textureContext.fillRect(1120, 586, 220, 12);
+        texture.needsUpdate = true;
+        frame.material.color.set(accentColor);
+        axis.material.color.set(accentColor);
+      };
 
-        let xOffset = 0;
-        for (let i = 0; i < str.length; i++) {
-          const char = str[i];
-          const shape = createLetterShape(char);
-          const geo = new THREE.ExtrudeGeometry(shape, extrudeSettings);
-          const mesh = new THREE.Mesh(geo, textMaterial);
-          mesh.position.x = xOffset;
-          group.add(mesh);
-          xOffset += 0.82;
-        }
+      let targetX = stage.rotation.x;
+      let targetY = stage.rotation.y;
+      let animationFrame = 0;
+      let visible = true;
 
-        const box = new THREE.Box3().setFromObject(group);
-        const center = box.getCenter(new THREE.Vector3());
-        group.children.forEach((child) => {
-          child.position.x -= center.x;
-          child.position.y -= center.y;
+      const setInteraction = (active) => {
+        textPlanes.forEach((plane, index) => {
+          plane.material.opacity = active
+            ? (index === 0 ? 0.15 : 0.028)
+            : (index === 0 ? 0.08 : 0.014);
         });
-        return group;
+        frame.material.opacity = active ? 0.38 : 0.2;
+        axis.material.opacity = active ? 0.18 : 0.08;
       };
 
-      const feeWord = build3DWord('FEE');
-      const spaceWord = build3DWord('SPACE');
-
-      feeWord.position.y = 0.75;
-      spaceWord.position.y = -0.65;
-
-      textGroup.add(feeWord);
-      textGroup.add(spaceWord);
-
-
-      let pointerX = 0;
-      let pointerY = 0;
-      let targetRotX = 0;
-      let targetRotY = 0;
-
-      const updatePointer = (clientX, clientY) => {
-        const rect = hero.getBoundingClientRect();
-        const px = (clientX - rect.left) / rect.width;
-        const py = (clientY - rect.top) / rect.height;
-
-        pointerX = (px - 0.5) * 2;
-        pointerY = (py - 0.5) * 2;
-
-        targetRotY = pointerX * 0.45;
-        targetRotX = -pointerY * 0.35;
-
-        if (coordHud) {
-          const xVal = String(Math.round(px * 99)).padStart(4, '0');
-          const yVal = String(Math.round(py * 99)).padStart(4, '0');
-          coordHud.textContent = `${xVal} X ${yVal} Y`;
-        }
-      };
-
-      const handlePointerMove = (e) => {
-        updatePointer(e.clientX, e.clientY);
-      };
-
-      const handleTouchMove = (e) => {
-        if (e.touches && e.touches[0]) {
-          updatePointer(e.touches[0].clientX, e.touches[0].clientY);
-        }
-      };
-
-      window.addEventListener('pointermove', handlePointerMove, { passive: true });
-      window.addEventListener('touchmove', handleTouchMove, { passive: true });
-
-      const handleResize = () => {
-        const w = hero.clientWidth || window.innerWidth;
-        const h = hero.clientHeight || window.innerHeight;
-        camera.aspect = w / h;
-        const isMobile = w < 768;
-        camera.position.z = isMobile ? 7.0 : 5.8;
-        textGroup.scale.setScalar(isMobile ? 0.72 : 1.0);
-        camera.updateProjectionMatrix();
-        renderer.setSize(w, h);
-      };
-
-      window.addEventListener('resize', handleResize, { passive: true });
-      handleResize();
-
-      const updateThemeColors = () => {
-        const dark = document.documentElement.dataset.theme === 'dark';
-        textMaterial.color.setHex(dark ? 0xf1f5f9 : 0x1e293b);
-        orbMaterial.color.setHex(dark ? 0x00f0ff : 0x3b82f6);
-        pointLight.color.setHex(dark ? 0x00f0ff : 0x2563eb);
-      };
-
-      const themeObserver = new MutationObserver(updateThemeColors);
-      themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
-
-      let animId = null;
-      let isVisible = true;
-
-      const animate = (time) => {
-        if (!isVisible) return;
-
-        const t = time * 0.001;
-
-        textGroup.rotation.x += (targetRotX - textGroup.rotation.x) * 0.06;
-        textGroup.rotation.y += (targetRotY - textGroup.rotation.y) * 0.06;
-        textGroup.position.y = Math.sin(t * 1.5) * 0.08;
-
-        orbGroup.rotation.y = t * 0.25;
-        orbGroup.children.forEach((orb, idx) => {
-          orb.position.y += Math.sin(t * 2 + idx) * 0.002;
-        });
-
-        pointLight.position.x = pointerX * 3.5;
-        pointLight.position.y = -pointerY * 3.5;
-
+      const render = () => {
+        animationFrame = 0;
+        if (!visible) return;
+        stage.rotation.x += (targetX - stage.rotation.x) * 0.16;
+        stage.rotation.y += (targetY - stage.rotation.y) * 0.16;
         renderer.render(scene, camera);
-        animId = requestAnimationFrame(animate);
+        if (Math.abs(targetX - stage.rotation.x) > 0.001 || Math.abs(targetY - stage.rotation.y) > 0.001) {
+          animationFrame = window.requestAnimationFrame(render);
+        }
+      };
+
+      const requestRender = () => {
+        if (!animationFrame) animationFrame = window.requestAnimationFrame(render);
+      };
+
+      const updatePointer = (event) => {
+        const rect = hero.getBoundingClientRect();
+        const x = (event.clientX - rect.left) / Math.max(rect.width, 1);
+        const y = (event.clientY - rect.top) / Math.max(rect.height, 1);
+        targetY = 0.1 + (x - 0.5) * 0.22;
+        targetX = -0.06 - (y - 0.5) * 0.14;
+        setInteraction(true);
+        requestRender();
+      };
+
+      const resetPointer = () => {
+        targetX = -0.06;
+        targetY = 0.1;
+        setInteraction(false);
+        requestRender();
+      };
+
+      const resize = () => {
+        const width = hero.clientWidth || window.innerWidth;
+        const height = hero.clientHeight || window.innerHeight;
+        camera.aspect = width / Math.max(height, 1);
+        camera.position.z = width < 620 ? 9 : 8;
+        camera.updateProjectionMatrix();
+        renderer.setSize(width, height, false);
+        stage.scale.setScalar(width < 620 ? 0.52 : 0.72);
+        textPlanes.forEach((plane) => {
+          plane.visible = width >= 620;
+        });
+        requestRender();
       };
 
       const observer = new IntersectionObserver(([entry]) => {
-        isVisible = entry.isIntersecting;
-        if (isVisible && !animId) {
-          animId = requestAnimationFrame(animate);
-        }
+        visible = entry.isIntersecting;
+        if (visible) requestRender();
       });
-      observer.observe(hero);
 
-      animId = requestAnimationFrame(animate);
-    }).catch((err) => {
-      console.warn('Three.js failed to load:', err);
+      const themeObserver = new MutationObserver(() => {
+        updateTheme();
+        requestRender();
+      });
+
+      hero.addEventListener('pointermove', updatePointer, { passive: true });
+      hero.addEventListener('pointerleave', resetPointer, { passive: true });
+      window.addEventListener('resize', resize, { passive: true });
+      observer.observe(hero);
+      themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
+      updateTheme();
+      setInteraction(false);
+      resize();
+      requestRender();
+    }).catch((error) => {
+      canvas.hidden = true;
+      console.warn('Three.js hero unavailable; using HTML title fallback.', error);
     });
   };
-
-
 
   const initPixelTrail = () => {
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -1193,4 +1064,3 @@
     start();
   }
 })();
-
