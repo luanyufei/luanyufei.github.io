@@ -667,58 +667,166 @@
   };
 
   const initLightbox = () => {
-    const images = document.querySelectorAll('#article-container img:not(.no-lightbox)');
-    if (!images.length) return;
+    /* ── Custom image viewer ──
+       Left-drag   → move
+       Middle-drag → rotate
+       Right-click → close
+       Click bg    → close
+       Scroll      → zoom
+    */
 
-    const bindFancybox = () => {
-      images.forEach((img) => {
-        if (img.parentNode.tagName !== 'A') {
-          const dataSrc = img.dataset.lazySrc || img.src;
-          const dataCaption = img.title || img.alt || '';
-          if (dataSrc && window.btf?.wrap) {
-            window.btf.wrap(img, 'a', {
-              href: dataSrc,
-              'data-fancybox': 'gallery',
-              'data-caption': dataCaption,
-              'data-thumb': dataSrc,
-            });
-          }
-        }
-      });
+    let overlay = null;      // backdrop <div>
+    let viewImg = null;      // cloned <img>
+    let state = null;        // transform state
 
-      if (typeof window.Fancybox !== 'undefined') {
-        try {
-          window.Fancybox.bind('[data-fancybox="gallery"]', {
-            Hash: false,
-            Thumbs: { showOnStart: false },
-            Images: { Panzoom: { maxScale: 4 } },
-            Carousel: { transition: 'slide' },
-            Toolbar: {
-              display: {
-                left: ['infobar'],
-                middle: [
-                  'zoomIn',
-                  'zoomOut',
-                  'toggle1to1',
-                  'rotateCCW',
-                  'rotateCW',
-                  'flipX',
-                  'flipY',
-                ],
-                right: ['slideshow', 'thumbs', 'close'],
-              },
-            },
-          });
-        } catch (e) {
-          console.error('Fancybox bind error:', e);
-        }
-      }
+    // ── helpers ──
+    const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
+
+    const applyTransform = () => {
+      if (!viewImg || !state) return;
+      viewImg.style.transform =
+        `translate(${state.x}px, ${state.y}px) rotate(${state.r}deg) scale(${state.s})`;
     };
 
-    if (typeof window.Fancybox !== 'undefined') {
-      bindFancybox();
-    } else {
-      window.addEventListener('load', bindFancybox, { once: true });
+    // ── open ──
+    const open = (srcImg) => {
+      if (overlay) return;
+      const src = srcImg.dataset.lazySrc || srcImg.src;
+      if (!src || src.startsWith('data:')) return;
+
+      // build overlay
+      overlay = document.createElement('div');
+      overlay.className = 'fs-viewer';
+
+      viewImg = document.createElement('img');
+      viewImg.className = 'fs-viewer-img';
+      viewImg.src = src;
+      viewImg.alt = srcImg.alt || '';
+      viewImg.draggable = false;
+
+      overlay.appendChild(viewImg);
+      document.body.appendChild(overlay);
+      document.body.classList.add('fs-viewer-open');
+
+      // initial state
+      state = { x: 0, y: 0, r: 0, s: 1 };
+      applyTransform();
+
+      // entrance animation – trigger reflow then add .active
+      overlay.offsetHeight;              // force layout
+      requestAnimationFrame(() => overlay.classList.add('active'));
+
+      // ── bind events ──
+      overlay.addEventListener('contextmenu', handleContext);
+      overlay.addEventListener('mousedown', handleDown);
+      overlay.addEventListener('wheel', handleWheel, { passive: false });
+      overlay.addEventListener('click', handleBgClick);
+      document.addEventListener('keydown', handleKey);
+    };
+
+    // ── close ──
+    const close = () => {
+      if (!overlay) return;
+      overlay.classList.remove('active');
+      overlay.classList.add('closing');
+
+      const cleanup = () => {
+        overlay.removeEventListener('contextmenu', handleContext);
+        overlay.removeEventListener('mousedown', handleDown);
+        overlay.removeEventListener('wheel', handleWheel);
+        overlay.removeEventListener('click', handleBgClick);
+        document.removeEventListener('keydown', handleKey);
+        overlay.remove();
+        overlay = null;
+        viewImg = null;
+        state = null;
+        document.body.classList.remove('fs-viewer-open');
+      };
+
+      overlay.addEventListener('animationend', cleanup, { once: true });
+      // fallback in case animationend doesn't fire
+      setTimeout(cleanup, 400);
+    };
+
+    // ── event handlers ──
+    const handleContext = (e) => {
+      e.preventDefault();
+      close();
+    };
+
+    const handleBgClick = (e) => {
+      if (e.target === overlay) close();
+    };
+
+    const handleKey = (e) => {
+      if (e.key === 'Escape') close();
+    };
+
+    const handleWheel = (e) => {
+      e.preventDefault();
+      if (!state) return;
+      const delta = e.deltaY > 0 ? 0.9 : 1.1;
+      state.s = clamp(state.s * delta, 0.1, 20);
+      applyTransform();
+    };
+
+    const handleDown = (e) => {
+      if (!state) return;
+      // button 0 = left (drag), button 1 = middle (rotate)
+      if (e.button !== 0 && e.button !== 1) return;
+      e.preventDefault();
+
+      const isRotate = e.button === 1;
+      const startX = e.clientX;
+      const startY = e.clientY;
+      const origX = state.x;
+      const origY = state.y;
+      const origR = state.r;
+
+      // rotation pivot = center of viewport
+      const cx = window.innerWidth / 2;
+      const cy = window.innerHeight / 2;
+      const startAngle = Math.atan2(startY - cy, startX - cx) * 180 / Math.PI;
+
+      const onMove = (ev) => {
+        if (isRotate) {
+          const curAngle = Math.atan2(ev.clientY - cy, ev.clientX - cx) * 180 / Math.PI;
+          state.r = origR + (curAngle - startAngle);
+        } else {
+          state.x = origX + (ev.clientX - startX);
+          state.y = origY + (ev.clientY - startY);
+        }
+        applyTransform();
+      };
+
+      const onUp = () => {
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('mouseup', onUp);
+      };
+
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup', onUp);
+    };
+
+    // ── bind to all article images ──
+    const bind = () => {
+      document.querySelectorAll('#article-container img:not(.no-lightbox)').forEach((img) => {
+        // skip if already bound
+        if (img.dataset.fsViewer) return;
+        img.dataset.fsViewer = '1';
+        img.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          open(img);
+        });
+      });
+    };
+
+    // run now + after lazy-load updates
+    bind();
+    if (window.lazyLoadInstance) {
+      const origUpdate = window.lazyLoadInstance.update.bind(window.lazyLoadInstance);
+      window.lazyLoadInstance.update = (...args) => { origUpdate(...args); setTimeout(bind, 200); };
     }
   };
 
