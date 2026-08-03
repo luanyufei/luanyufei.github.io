@@ -428,7 +428,7 @@
 
       const scene = new THREE.Scene();
       const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100);
-      camera.position.z = window.innerWidth < 768 ? 7.5 : 5.5;
+      camera.position.z = window.innerWidth < 768 ? 7.0 : 5.8;
 
       const renderer = new THREE.WebGLRenderer({
         canvas,
@@ -439,32 +439,31 @@
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
       renderer.setSize(width, height);
 
-      const ambientLight = new THREE.AmbientLight(0xffffff, 1.4);
+      const ambientLight = new THREE.AmbientLight(0xffffff, 1.8);
       scene.add(ambientLight);
 
-      const dirLight = new THREE.DirectionalLight(0xffffff, 2.5);
-      dirLight.position.set(5, 5, 4);
+      const dirLight = new THREE.DirectionalLight(0xffffff, 3.0);
+      dirLight.position.set(5, 6, 6);
       scene.add(dirLight);
 
-      const pointLight = new THREE.PointLight(0x00f0ff, 3.5, 10);
-      pointLight.position.set(0, 0, 3);
+      const pointLight = new THREE.PointLight(0x00f0ff, 4.0, 12);
+      pointLight.position.set(0, 0, 4);
       scene.add(pointLight);
 
       const isDark = document.documentElement.dataset.theme === 'dark';
-      const mainMaterial = new THREE.MeshPhysicalMaterial({
-        color: isDark ? 0x222831 : 0xe0e6ed,
-        metalness: 0.85,
-        roughness: 0.15,
+      const textMaterial = new THREE.MeshPhysicalMaterial({
+        color: isDark ? 0xf1f5f9 : 0x1e293b,
+        metalness: 0.88,
+        roughness: 0.12,
         clearcoat: 1.0,
-        clearcoatRoughness: 0.1,
+        clearcoatRoughness: 0.08,
         iridescence: 0.95,
         iridescenceIOR: 1.33,
         reflectivity: 1.0,
       });
 
-      const geometry = new THREE.TorusKnotGeometry(1.2, 0.38, 128, 32, 2, 3);
-      const mesh = new THREE.Mesh(geometry, mainMaterial);
-      scene.add(mesh);
+      const textGroup = new THREE.Group();
+      scene.add(textGroup);
 
       const orbGroup = new THREE.Group();
       const orbMaterial = new THREE.MeshPhysicalMaterial({
@@ -475,15 +474,64 @@
         iridescence: 1.0,
       });
 
-      for (let i = 0; i < 6; i++) {
-        const orbGeo = new THREE.SphereGeometry(0.12 + Math.random() * 0.1, 32, 32);
+      for (let i = 0; i < 5; i++) {
+        const orbGeo = new THREE.SphereGeometry(0.1 + Math.random() * 0.08, 32, 32);
         const orb = new THREE.Mesh(orbGeo, orbMaterial);
-        const angle = (i / 6) * Math.PI * 2;
-        const radius = 2.2 + Math.random() * 0.4;
+        const angle = (i / 5) * Math.PI * 2;
+        const radius = 2.8 + Math.random() * 0.5;
         orb.position.set(Math.cos(angle) * radius, Math.sin(angle) * radius, (Math.random() - 0.5) * 1.5);
         orbGroup.add(orb);
       }
       scene.add(orbGroup);
+
+      // Load 3D Font and generate 3D FEE SPACE Text
+      Promise.all([
+        import('https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/loaders/FontLoader.js'),
+        import('https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/geometries/TextGeometry.js'),
+      ]).then(([{ FontLoader }, { TextGeometry }]) => {
+        const loader = new FontLoader();
+        loader.load('https://cdn.jsdelivr.net/npm/three@0.160.0/examples/fonts/helvetiker_bold.typeface.json', (font) => {
+          const isMobile = window.innerWidth < 768;
+          const textSize = isMobile ? 0.9 : 1.35;
+          const textDepth = 0.3;
+
+          const geoFEE = new TextGeometry('FEE', {
+            font,
+            size: textSize,
+            height: textDepth,
+            curveSegments: 16,
+            bevelEnabled: true,
+            bevelThickness: 0.06,
+            bevelSize: 0.03,
+            bevelOffset: 0,
+            bevelSegments: 8,
+          });
+          geoFEE.center();
+
+          const geoSPACE = new TextGeometry('SPACE', {
+            font,
+            size: textSize,
+            height: textDepth,
+            curveSegments: 16,
+            bevelEnabled: true,
+            bevelThickness: 0.06,
+            bevelSize: 0.03,
+            bevelOffset: 0,
+            bevelSegments: 8,
+          });
+          geoSPACE.center();
+
+          const meshFEE = new THREE.Mesh(geoFEE, textMaterial);
+          const meshSPACE = new THREE.Mesh(geoSPACE, textMaterial);
+
+          const verticalGap = isMobile ? 0.9 : 1.25;
+          meshFEE.position.set(0, verticalGap / 2, 0);
+          meshSPACE.position.set(0, -verticalGap / 2, 0);
+
+          textGroup.add(meshFEE);
+          textGroup.add(meshSPACE);
+        });
+      }).catch((e) => console.warn('3D Font loader error:', e));
 
       let pointerX = 0;
       let pointerY = 0;
@@ -498,8 +546,8 @@
         pointerX = (px - 0.5) * 2;
         pointerY = (py - 0.5) * 2;
 
-        targetRotY = pointerX * 0.8;
-        targetRotX = pointerY * 0.8;
+        targetRotY = pointerX * 0.45;
+        targetRotX = -pointerY * 0.35;
 
         if (coordHud) {
           const xVal = String(Math.round(px * 99)).padStart(4, '0');
@@ -526,8 +574,8 @@
         const h = hero.clientHeight || window.innerHeight;
         camera.aspect = w / h;
         const isMobile = w < 768;
-        camera.position.z = isMobile ? 7.5 : 5.5;
-        mesh.scale.setScalar(isMobile ? 0.75 : 1.0);
+        camera.position.z = isMobile ? 7.0 : 5.8;
+        textGroup.scale.setScalar(isMobile ? 0.72 : 1.0);
         camera.updateProjectionMatrix();
         renderer.setSize(w, h);
       };
@@ -537,7 +585,7 @@
 
       const updateThemeColors = () => {
         const dark = document.documentElement.dataset.theme === 'dark';
-        mainMaterial.color.setHex(dark ? 0x222831 : 0xe0e6ed);
+        textMaterial.color.setHex(dark ? 0xf1f5f9 : 0x1e293b);
         orbMaterial.color.setHex(dark ? 0x00f0ff : 0x3b82f6);
         pointLight.color.setHex(dark ? 0x00f0ff : 0x2563eb);
       };
@@ -553,16 +601,17 @@
 
         const t = time * 0.001;
 
-        mesh.rotation.x += (targetRotX - mesh.rotation.x) * 0.05 + 0.003;
-        mesh.rotation.y += (targetRotY - mesh.rotation.y) * 0.05 + 0.005;
+        textGroup.rotation.x += (targetRotX - textGroup.rotation.x) * 0.06;
+        textGroup.rotation.y += (targetRotY - textGroup.rotation.y) * 0.06;
+        textGroup.position.y = Math.sin(t * 1.5) * 0.08;
 
-        orbGroup.rotation.y = t * 0.2;
+        orbGroup.rotation.y = t * 0.25;
         orbGroup.children.forEach((orb, idx) => {
           orb.position.y += Math.sin(t * 2 + idx) * 0.002;
         });
 
-        pointLight.position.x = pointerX * 3;
-        pointLight.position.y = -pointerY * 3;
+        pointLight.position.x = pointerX * 3.5;
+        pointLight.position.y = -pointerY * 3.5;
 
         renderer.render(scene, camera);
         animId = requestAnimationFrame(animate);
@@ -581,6 +630,7 @@
       console.warn('Three.js failed to load:', err);
     });
   };
+
 
 
   const initPixelTrail = () => {
