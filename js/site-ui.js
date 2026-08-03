@@ -842,11 +842,9 @@
           state.r = rawR;
         }
 
-        const scaleFactor = 1 - (dy / 300);
-        state.s = Math.max(0.1, Math.min(20, startStateS * scaleFactor));
-
         applyTransform(false);
       }
+
     };
 
     const handlePointerUp = (e) => {
