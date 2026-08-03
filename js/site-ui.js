@@ -484,54 +484,145 @@
       }
       scene.add(orbGroup);
 
-      // Load 3D Font and generate 3D FEE SPACE Text
-      Promise.all([
-        import('https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/loaders/FontLoader.js'),
-        import('https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/geometries/TextGeometry.js'),
-      ]).then(([{ FontLoader }, { TextGeometry }]) => {
-        const loader = new FontLoader();
-        loader.load('https://cdn.jsdelivr.net/npm/three@0.160.0/examples/fonts/helvetiker_bold.typeface.json', (font) => {
-          const isMobile = window.innerWidth < 768;
-          const textSize = isMobile ? 0.9 : 1.35;
-          const textDepth = 0.3;
+      // Native 3D Shape Extrude Text Builder for FEE and SPACE
+      const createLetterShape = (char) => {
+        const shape = new THREE.Shape();
+        const w = 0.65;
+        const h = 0.95;
+        const t = 0.18;
 
-          const geoFEE = new TextGeometry('FEE', {
-            font,
-            size: textSize,
-            height: textDepth,
-            curveSegments: 16,
-            bevelEnabled: true,
-            bevelThickness: 0.06,
-            bevelSize: 0.03,
-            bevelOffset: 0,
-            bevelSegments: 8,
-          });
-          geoFEE.center();
+        switch (char) {
+          case 'F':
+            shape.moveTo(0, 0);
+            shape.lineTo(t, 0);
+            shape.lineTo(t, h * 0.42);
+            shape.lineTo(w * 0.72, h * 0.42);
+            shape.lineTo(w * 0.72, h * 0.60);
+            shape.lineTo(t, h * 0.60);
+            shape.lineTo(t, h - t);
+            shape.lineTo(w, h - t);
+            shape.lineTo(w, h);
+            shape.lineTo(0, h);
+            break;
 
-          const geoSPACE = new TextGeometry('SPACE', {
-            font,
-            size: textSize,
-            height: textDepth,
-            curveSegments: 16,
-            bevelEnabled: true,
-            bevelThickness: 0.06,
-            bevelSize: 0.03,
-            bevelOffset: 0,
-            bevelSegments: 8,
-          });
-          geoSPACE.center();
+          case 'E':
+            shape.moveTo(0, 0);
+            shape.lineTo(w, 0);
+            shape.lineTo(w, t);
+            shape.lineTo(t, t);
+            shape.lineTo(t, h * 0.42);
+            shape.lineTo(w * 0.72, h * 0.42);
+            shape.lineTo(w * 0.72, h * 0.60);
+            shape.lineTo(t, h * 0.60);
+            shape.lineTo(t, h - t);
+            shape.lineTo(w, h - t);
+            shape.lineTo(w, h);
+            shape.lineTo(0, h);
+            break;
 
-          const meshFEE = new THREE.Mesh(geoFEE, textMaterial);
-          const meshSPACE = new THREE.Mesh(geoSPACE, textMaterial);
+          case 'S':
+            shape.moveTo(0, t);
+            shape.lineTo(t, t);
+            shape.lineTo(t, t * 0.4);
+            shape.lineTo(w - t, t * 0.4);
+            shape.lineTo(w - t, h * 0.42);
+            shape.lineTo(0, h * 0.42);
+            shape.lineTo(0, h);
+            shape.lineTo(w, h);
+            shape.lineTo(w, h - t);
+            shape.lineTo(t, h - t);
+            shape.lineTo(t, h * 0.60);
+            shape.lineTo(w, h * 0.60);
+            shape.lineTo(w, 0);
+            shape.lineTo(0, 0);
+            break;
 
-          const verticalGap = isMobile ? 0.9 : 1.25;
-          meshFEE.position.set(0, verticalGap / 2, 0);
-          meshSPACE.position.set(0, -verticalGap / 2, 0);
+          case 'P':
+            shape.moveTo(0, 0);
+            shape.lineTo(t, 0);
+            shape.lineTo(t, h * 0.42);
+            shape.lineTo(w, h * 0.42);
+            shape.lineTo(w, h);
+            shape.lineTo(0, h);
 
-          textGroup.add(meshFEE);
-          textGroup.add(meshSPACE);
+            const holeP = new THREE.Path();
+            holeP.moveTo(t, h * 0.60);
+            holeP.lineTo(w - t, h * 0.60);
+            holeP.lineTo(w - t, h - t);
+            holeP.lineTo(t, h - t);
+            shape.holes.push(holeP);
+            break;
+
+          case 'A':
+            shape.moveTo(0, 0);
+            shape.lineTo(t * 1.2, 0);
+            shape.lineTo(w * 0.38, h * 0.42);
+            shape.lineTo(w * 0.62, h * 0.42);
+            shape.lineTo(w - t * 1.2, 0);
+            shape.lineTo(w, 0);
+            shape.lineTo(w * 0.62, h);
+            shape.lineTo(w * 0.38, h);
+
+            const holeA = new THREE.Path();
+            holeA.moveTo(w * 0.38, h * 0.60);
+            holeA.lineTo(w * 0.62, h * 0.60);
+            holeA.lineTo(w * 0.5, h - t * 0.8);
+            shape.holes.push(holeA);
+            break;
+
+          case 'C':
+            shape.moveTo(0, 0);
+            shape.lineTo(w, 0);
+            shape.lineTo(w, t);
+            shape.lineTo(t, t);
+            shape.lineTo(t, h - t);
+            shape.lineTo(w, h - t);
+            shape.lineTo(w, h);
+            shape.lineTo(0, h);
+            break;
+        }
+        return shape;
+      };
+
+      const build3DWord = (str) => {
+        const group = new THREE.Group();
+        const extrudeSettings = {
+          depth: 0.25,
+          bevelEnabled: true,
+          bevelThickness: 0.05,
+          bevelSize: 0.025,
+          bevelSegments: 5,
+        };
+
+        let xOffset = 0;
+        for (let i = 0; i < str.length; i++) {
+          const char = str[i];
+          const shape = createLetterShape(char);
+          const geo = new THREE.ExtrudeGeometry(shape, extrudeSettings);
+          const mesh = new THREE.Mesh(geo, textMaterial);
+          mesh.position.x = xOffset;
+          group.add(mesh);
+          xOffset += 0.82;
+        }
+
+        const box = new THREE.Box3().setFromObject(group);
+        const center = box.getCenter(new THREE.Vector3());
+        group.children.forEach((child) => {
+          child.position.x -= center.x;
+          child.position.y -= center.y;
         });
-      }).catch((e) => console.warn('3D Font loader error:', e));
+        return group;
+      };
+
+      const feeWord = build3DWord('FEE');
+      const spaceWord = build3DWord('SPACE');
+
+      feeWord.position.y = 0.75;
+      spaceWord.position.y = -0.65;
+
+      textGroup.add(feeWord);
+      textGroup.add(spaceWord);
+
 
       let pointerX = 0;
       let pointerY = 0;

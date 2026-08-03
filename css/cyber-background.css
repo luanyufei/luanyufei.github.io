@@ -516,9 +516,12 @@ input:focus-visible {
 
 .three-hero-title .hero-title-text {
   display: block;
-  opacity: 0;
-  pointer-events: none;
+  background: linear-gradient(135deg, var(--fs-text) 30%, var(--fs-text-2) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  opacity: 0.85;
 }
+
 
 
 .hero-hud-coord {
