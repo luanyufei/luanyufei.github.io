@@ -667,153 +667,209 @@
   };
 
   const initLightbox = () => {
-    /* ── Custom image viewer ──
-       Left-drag   → move
-       Middle-drag → rotate
-       Right-click → close
-       Click bg    → close
-       Scroll      → zoom
-    */
+    let overlay = null;
+    let viewImg = null;
+    let state = null;
+    let activePointerId = null;
 
-    let overlay = null;      // backdrop <div>
-    let viewImg = null;      // cloned <img>
-    let state = null;        // transform state
-
-    // ── helpers ──
-    const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
-
-    const applyTransform = () => {
+    const applyTransform = (withTransition = false) => {
       if (!viewImg || !state) return;
-      viewImg.style.transform =
-        `translate(${state.x}px, ${state.y}px) rotate(${state.r}deg) scale(${state.s})`;
+      if (withTransition) {
+        viewImg.style.transition = 'transform 0.32s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+      } else {
+        viewImg.style.transition = 'none';
+      }
+      viewImg.style.transform = `translate3d(${state.x}px, ${state.y}px, 0px) rotate(${state.r}deg) scale(${state.s})`;
     };
 
-    // ── open ──
     const open = (srcImg) => {
       if (overlay) return;
       const src = srcImg.dataset.lazySrc || srcImg.src;
       if (!src || src.startsWith('data:')) return;
 
-      // build overlay
+      state = { x: 0, y: 0, r: 0, s: 0.6 };
+
       overlay = document.createElement('div');
-      overlay.className = 'fs-viewer';
+      overlay.className = 'fs-custom-lightbox';
 
       viewImg = document.createElement('img');
-      viewImg.className = 'fs-viewer-img';
+      viewImg.className = 'fs-custom-lightbox-img';
       viewImg.src = src;
       viewImg.alt = srcImg.alt || '';
       viewImg.draggable = false;
 
       overlay.appendChild(viewImg);
       document.body.appendChild(overlay);
-      document.body.classList.add('fs-viewer-open');
+      document.body.classList.add('fs-lightbox-active');
 
-      // initial state
-      state = { x: 0, y: 0, r: 0, s: 1 };
-      applyTransform();
+      applyTransform(false);
 
-      // entrance animation – trigger reflow then add .active
-      overlay.offsetHeight;              // force layout
-      requestAnimationFrame(() => overlay.classList.add('active'));
+      void overlay.offsetWidth;
 
-      // ── bind events ──
-      overlay.addEventListener('contextmenu', handleContext);
-      overlay.addEventListener('mousedown', handleDown);
+      requestAnimationFrame(() => {
+        overlay.classList.add('is-open');
+        state.s = 1.0;
+        applyTransform(true);
+      });
+
+      setTimeout(() => {
+        if (viewImg) viewImg.style.transition = 'none';
+      }, 330);
+
+      overlay.addEventListener('contextmenu', handleContextMenu);
+      overlay.addEventListener('auxclick', handleAuxClick);
+      overlay.addEventListener('pointerdown', handlePointerDown);
+      overlay.addEventListener('pointermove', handlePointerMove);
+      overlay.addEventListener('pointerup', handlePointerUp);
+      overlay.addEventListener('pointercancel', handlePointerUp);
       overlay.addEventListener('wheel', handleWheel, { passive: false });
-      overlay.addEventListener('click', handleBgClick);
-      document.addEventListener('keydown', handleKey);
+      document.addEventListener('keydown', handleKeyDown);
     };
 
-    // ── close ──
     const close = () => {
       if (!overlay) return;
-      overlay.classList.remove('active');
-      overlay.classList.add('closing');
+      const currentOverlay = overlay;
+      const currentImg = viewImg;
+      overlay = null;
+      viewImg = null;
+      state = null;
 
-      const cleanup = () => {
-        overlay.removeEventListener('contextmenu', handleContext);
-        overlay.removeEventListener('mousedown', handleDown);
-        overlay.removeEventListener('wheel', handleWheel);
-        overlay.removeEventListener('click', handleBgClick);
-        document.removeEventListener('keydown', handleKey);
-        overlay.remove();
-        overlay = null;
-        viewImg = null;
-        state = null;
-        document.body.classList.remove('fs-viewer-open');
-      };
+      currentOverlay.classList.remove('is-open');
+      currentOverlay.classList.add('is-closing');
 
-      overlay.addEventListener('animationend', cleanup, { once: true });
-      // fallback in case animationend doesn't fire
-      setTimeout(cleanup, 400);
+      if (currentImg) {
+        currentImg.style.transition = 'transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s ease';
+        currentImg.style.transform = `translate3d(0px, 0px, 0px) rotate(0deg) scale(0.6)`;
+        currentImg.style.opacity = '0';
+      }
+
+      document.removeEventListener('keydown', handleKeyDown);
+
+      setTimeout(() => {
+        currentOverlay.remove();
+        document.body.classList.remove('fs-lightbox-active');
+      }, 260);
     };
 
-    // ── event handlers ──
-    const handleContext = (e) => {
+    const handleContextMenu = (e) => {
       e.preventDefault();
       close();
     };
 
-    const handleBgClick = (e) => {
-      if (e.target === overlay) close();
+    const handleAuxClick = (e) => {
+      if (e.button === 1 || e.button === 2) {
+        e.preventDefault();
+      }
     };
 
-    const handleKey = (e) => {
+    const handleKeyDown = (e) => {
       if (e.key === 'Escape') close();
     };
 
+    let isPointerDown = false;
+    let dragButton = -1;
+    let startX = 0;
+    let startY = 0;
+    let startStateX = 0;
+    let startStateY = 0;
+    let startStateR = 0;
+    let startStateS = 0;
+    let startAngle = 0;
+    let movedDistance = 0;
+
+    const handlePointerDown = (e) => {
+      if (!state || isPointerDown) return;
+      if (e.button !== 0 && e.button !== 1 && e.button !== 2) return;
+
+      if (e.button === 2) {
+        e.preventDefault();
+        close();
+        return;
+      }
+
+      e.preventDefault();
+      isPointerDown = true;
+      dragButton = e.button;
+      activePointerId = e.pointerId;
+      try { overlay.setPointerCapture(e.pointerId); } catch (err) {}
+
+      startX = e.clientX;
+      startY = e.clientY;
+      startStateX = state.x;
+      startStateY = state.y;
+      startStateR = state.r;
+      startStateS = state.s;
+      movedDistance = 0;
+
+      const rect = overlay.getBoundingClientRect();
+      const centerX = rect.left + rect.width / 2;
+      const centerY = rect.top + rect.height / 2;
+      startAngle = Math.atan2(e.clientY - centerY, e.clientX - centerX) * (180 / Math.PI);
+
+      if (viewImg) {
+        viewImg.style.transition = 'none';
+        if (dragButton === 0) viewImg.classList.add('is-dragging');
+      }
+    };
+
+    const handlePointerMove = (e) => {
+      if (!isPointerDown || !state) return;
+      e.preventDefault();
+
+      const dx = e.clientX - startX;
+      const dy = e.clientY - startY;
+      movedDistance += Math.hypot(dx, dy);
+
+      if (dragButton === 0) {
+        state.x = startStateX + dx;
+        state.y = startStateY + dy;
+        applyTransform(false);
+      } else if (dragButton === 1) {
+        const rect = overlay.getBoundingClientRect();
+        const centerX = rect.left + rect.width / 2;
+        const centerY = rect.top + rect.height / 2;
+        const currentAngle = Math.atan2(e.clientY - centerY, e.clientX - centerX) * (180 / Math.PI);
+
+        state.r = startStateR + (currentAngle - startAngle);
+
+        const scaleFactor = 1 - (dy / 300);
+        state.s = Math.max(0.1, Math.min(20, startStateS * scaleFactor));
+
+        applyTransform(false);
+      }
+    };
+
+    const handlePointerUp = (e) => {
+      if (!isPointerDown) return;
+
+      if (activePointerId !== null && overlay.hasPointerCapture && overlay.hasPointerCapture(activePointerId)) {
+        try { overlay.releasePointerCapture(activePointerId); } catch (err) {}
+      }
+
+      if (viewImg) viewImg.classList.remove('is-dragging');
+
+      if (dragButton === 0 && movedDistance < 5 && e.target === overlay) {
+        close();
+      }
+
+      isPointerDown = false;
+      dragButton = -1;
+      activePointerId = null;
+    };
+
     const handleWheel = (e) => {
-      e.preventDefault();
       if (!state) return;
-      const delta = e.deltaY > 0 ? 0.9 : 1.1;
-      state.s = clamp(state.s * delta, 0.1, 20);
-      applyTransform();
-    };
-
-    const handleDown = (e) => {
-      if (!state) return;
-      // button 0 = left (drag), button 1 = middle (rotate)
-      if (e.button !== 0 && e.button !== 1) return;
       e.preventDefault();
 
-      const isRotate = e.button === 1;
-      const startX = e.clientX;
-      const startY = e.clientY;
-      const origX = state.x;
-      const origY = state.y;
-      const origR = state.r;
-
-      // rotation pivot = center of viewport
-      const cx = window.innerWidth / 2;
-      const cy = window.innerHeight / 2;
-      const startAngle = Math.atan2(startY - cy, startX - cx) * 180 / Math.PI;
-
-      const onMove = (ev) => {
-        if (isRotate) {
-          const curAngle = Math.atan2(ev.clientY - cy, ev.clientX - cx) * 180 / Math.PI;
-          state.r = origR + (curAngle - startAngle);
-        } else {
-          state.x = origX + (ev.clientX - startX);
-          state.y = origY + (ev.clientY - startY);
-        }
-        applyTransform();
-      };
-
-      const onUp = () => {
-        document.removeEventListener('mousemove', onMove);
-        document.removeEventListener('mouseup', onUp);
-      };
-
-      document.addEventListener('mousemove', onMove);
-      document.addEventListener('mouseup', onUp);
+      const factor = e.deltaY < 0 ? 1.15 : 0.85;
+      state.s = Math.max(0.1, Math.min(20, state.s * factor));
+      applyTransform(false);
     };
 
-    // ── bind to all article images ──
     const bind = () => {
       document.querySelectorAll('#article-container img:not(.no-lightbox)').forEach((img) => {
-        // skip if already bound
-        if (img.dataset.fsViewer) return;
-        img.dataset.fsViewer = '1';
+        if (img.dataset.fsLightboxBound) return;
+        img.dataset.fsLightboxBound = 'true';
         img.addEventListener('click', (e) => {
           e.preventDefault();
           e.stopPropagation();
@@ -822,13 +878,16 @@
       });
     };
 
-    // run now + after lazy-load updates
     bind();
     if (window.lazyLoadInstance) {
       const origUpdate = window.lazyLoadInstance.update.bind(window.lazyLoadInstance);
-      window.lazyLoadInstance.update = (...args) => { origUpdate(...args); setTimeout(bind, 200); };
+      window.lazyLoadInstance.update = (...args) => {
+        origUpdate(...args);
+        setTimeout(bind, 200);
+      };
     }
   };
+
 
   const start = () => {
     initTheme();
