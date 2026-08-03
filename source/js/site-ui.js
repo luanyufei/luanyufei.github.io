@@ -857,6 +857,10 @@
       overlay.addEventListener('pointermove', handlePointerMove);
       overlay.addEventListener('pointerup', handlePointerUp);
       overlay.addEventListener('pointercancel', handlePointerUp);
+      overlay.addEventListener('touchstart', handleTouchStart, { passive: false });
+      overlay.addEventListener('touchmove', handleTouchMove, { passive: false });
+      overlay.addEventListener('touchend', handleTouchEnd, { passive: false });
+      overlay.addEventListener('touchcancel', handleTouchEnd, { passive: false });
       overlay.addEventListener('wheel', handleWheel, { passive: false });
       document.addEventListener('keydown', handleKeyDown);
     };
@@ -913,7 +917,108 @@
     let startAngle = 0;
     let movedDistance = 0;
 
+    // Mobile touch gesture state
+    let initialTouchDist = 0;
+    let initialTouchAngle = 0;
+    let initialTouchStateS = 1;
+    let initialTouchStateR = 0;
+    let initialTouchStateX = 0;
+    let initialTouchStateY = 0;
+    let touchStartX = 0;
+    let touchStartY = 0;
+    let isTouchActive = false;
+    let isMultiTouch = false;
+
+    const getTouchDist = (t1, t2) => {
+      const dx = t2.clientX - t1.clientX;
+      const dy = t2.clientY - t1.clientY;
+      return Math.hypot(dx, dy);
+    };
+
+    const getTouchAngle = (t1, t2) => {
+      return Math.atan2(t2.clientY - t1.clientY, t2.clientX - t1.clientX) * (180 / Math.PI);
+    };
+
+    const handleTouchStart = (e) => {
+      if (!state) return;
+      if (e.touches.length === 1) {
+        isTouchActive = true;
+        isMultiTouch = false;
+        touchStartX = e.touches[0].clientX;
+        touchStartY = e.touches[0].clientY;
+        initialTouchStateX = state.x;
+        initialTouchStateY = state.y;
+        movedDistance = 0;
+      } else if (e.touches.length === 2) {
+        isTouchActive = true;
+        isMultiTouch = true;
+        initialTouchDist = getTouchDist(e.touches[0], e.touches[1]);
+        initialTouchAngle = getTouchAngle(e.touches[0], e.touches[1]);
+        initialTouchStateS = state.s;
+        initialTouchStateR = state.r;
+        initialTouchStateX = state.x;
+        initialTouchStateY = state.y;
+        touchStartX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+        touchStartY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+      }
+    };
+
+    const handleTouchMove = (e) => {
+      if (!isTouchActive || !state) return;
+      e.preventDefault();
+
+      if (e.touches.length === 1 && !isMultiTouch) {
+        const dx = e.touches[0].clientX - touchStartX;
+        const dy = e.touches[0].clientY - touchStartY;
+        movedDistance += Math.hypot(dx, dy);
+        state.x = initialTouchStateX + dx;
+        state.y = initialTouchStateY + dy;
+        applyTransform(false);
+      } else if (e.touches.length === 2) {
+        const currentDist = getTouchDist(e.touches[0], e.touches[1]);
+        const currentAngle = getTouchAngle(e.touches[0], e.touches[1]);
+        const currentMidX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+        const currentMidY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+
+        if (initialTouchDist > 0) {
+          const scaleRatio = currentDist / initialTouchDist;
+          state.s = Math.max(0.1, Math.min(20, initialTouchStateS * scaleRatio));
+        }
+
+        const deltaAngle = currentAngle - initialTouchAngle;
+        const rawR = initialTouchStateR + deltaAngle;
+        const snapTarget = Math.round(rawR / 90) * 90;
+        if (Math.abs(rawR - snapTarget) < 4.5) {
+          state.r = snapTarget;
+        } else {
+          state.r = rawR;
+        }
+
+        state.x = initialTouchStateX + (currentMidX - touchStartX);
+        state.y = initialTouchStateY + (currentMidY - touchStartY);
+
+        applyTransform(false);
+      }
+    };
+
+    const handleTouchEnd = (e) => {
+      if (e.touches.length === 0) {
+        if (!isMultiTouch && movedDistance < 5 && e.target === overlay) {
+          close();
+        }
+        isTouchActive = false;
+        isMultiTouch = false;
+      } else if (e.touches.length === 1) {
+        isMultiTouch = false;
+        touchStartX = e.touches[0].clientX;
+        touchStartY = e.touches[0].clientY;
+        initialTouchStateX = state.x;
+        initialTouchStateY = state.y;
+      }
+    };
+
     const handlePointerDown = (e) => {
+      if (e.pointerType === 'touch') return;
       if (!state || isPointerDown) return;
       if (e.button !== 0 && e.button !== 1 && e.button !== 2) return;
 
@@ -952,6 +1057,7 @@
     };
 
     const handlePointerMove = (e) => {
+      if (e.pointerType === 'touch') return;
       if (!isPointerDown || !state) return;
       e.preventDefault();
 
@@ -979,10 +1085,10 @@
 
         applyTransform(false);
       }
-
     };
 
     const handlePointerUp = (e) => {
+      if (e.pointerType === 'touch') return;
       if (!isPointerDown) return;
 
       document.body.classList.remove('fs-lightbox-dragging');
@@ -1002,6 +1108,7 @@
       dragButton = -1;
       activePointerId = null;
     };
+
 
     const handleWheel = (e) => {
       if (!state) return;
