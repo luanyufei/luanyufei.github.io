@@ -399,58 +399,189 @@
     });
   };
 
-  const initKineticTitle = () => {
+  const initThreeHero = () => {
+    const canvas = document.getElementById('feespace-hero-canvas');
     const hero = document.querySelector('.feespace-hero');
-    const title = hero?.querySelector('.kinetic-title');
-    if (!hero || !title || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    if (!canvas || !hero) return;
 
-    const coordinates = title.querySelector('[data-kinetic-coordinates]');
-    const supportsFinePointer = window.matchMedia('(pointer: fine)').matches;
-    let frame = 0;
-    let pointerX = 0.5;
-    let pointerY = 0.5;
-    let pulseTimer = 0;
+    const coordHud = hero.querySelector('[data-kinetic-coordinates]');
 
-    const render = () => {
-      const x = pointerX - 0.5;
-      const y = pointerY - 0.5;
-      title.style.setProperty('--kinetic-tilt-x', `${(-y * 9).toFixed(2)}deg`);
-      title.style.setProperty('--kinetic-tilt-y', `${(x * 11).toFixed(2)}deg`);
-      title.style.setProperty('--kinetic-echo-x', `${(x * 18).toFixed(2)}px`);
-      title.style.setProperty('--kinetic-echo-y', `${(y * 12).toFixed(2)}px`);
-      title.style.setProperty('--kinetic-scan', `${(pointerY * 76 + 12).toFixed(2)}%`);
-      if (coordinates) {
-        const xValue = String(Math.round(pointerX * 99)).padStart(2, '0');
-        const yValue = String(Math.round(pointerY * 99)).padStart(2, '0');
-        coordinates.textContent = `X ${xValue} / Y ${yValue}`;
+    const loadThree = () => {
+      if (window.THREE) return Promise.resolve(window.THREE);
+      if (window.btf?.getScript) {
+        return window.btf.getScript('https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js').then(() => window.THREE);
       }
-      frame = 0;
+      return new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js';
+        script.onload = () => resolve(window.THREE);
+        script.onerror = reject;
+        document.head.appendChild(script);
+      });
     };
 
-    const pulse = () => {
-      window.clearTimeout(pulseTimer);
-      title.classList.remove('is-pulsing');
-      window.requestAnimationFrame(() => title.classList.add('is-pulsing'));
-      pulseTimer = window.setTimeout(() => title.classList.remove('is-pulsing'), 620);
-    };
+    loadThree().then((THREE) => {
+      if (!THREE || !document.getElementById('feespace-hero-canvas')) return;
 
-    if (supportsFinePointer) {
-      hero.addEventListener('pointermove', (event) => {
+      const width = hero.clientWidth || window.innerWidth;
+      const height = hero.clientHeight || window.innerHeight;
+
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100);
+      camera.position.z = window.innerWidth < 768 ? 7.5 : 5.5;
+
+      const renderer = new THREE.WebGLRenderer({
+        canvas,
+        alpha: true,
+        antialias: true,
+        powerPreference: 'high-performance',
+      });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.setSize(width, height);
+
+      const ambientLight = new THREE.AmbientLight(0xffffff, 1.4);
+      scene.add(ambientLight);
+
+      const dirLight = new THREE.DirectionalLight(0xffffff, 2.5);
+      dirLight.position.set(5, 5, 4);
+      scene.add(dirLight);
+
+      const pointLight = new THREE.PointLight(0x00f0ff, 3.5, 10);
+      pointLight.position.set(0, 0, 3);
+      scene.add(pointLight);
+
+      const isDark = document.documentElement.dataset.theme === 'dark';
+      const mainMaterial = new THREE.MeshPhysicalMaterial({
+        color: isDark ? 0x222831 : 0xe0e6ed,
+        metalness: 0.85,
+        roughness: 0.15,
+        clearcoat: 1.0,
+        clearcoatRoughness: 0.1,
+        iridescence: 0.95,
+        iridescenceIOR: 1.33,
+        reflectivity: 1.0,
+      });
+
+      const geometry = new THREE.TorusKnotGeometry(1.2, 0.38, 128, 32, 2, 3);
+      const mesh = new THREE.Mesh(geometry, mainMaterial);
+      scene.add(mesh);
+
+      const orbGroup = new THREE.Group();
+      const orbMaterial = new THREE.MeshPhysicalMaterial({
+        color: isDark ? 0x00f0ff : 0x3b82f6,
+        metalness: 0.9,
+        roughness: 0.1,
+        clearcoat: 1.0,
+        iridescence: 1.0,
+      });
+
+      for (let i = 0; i < 6; i++) {
+        const orbGeo = new THREE.SphereGeometry(0.12 + Math.random() * 0.1, 32, 32);
+        const orb = new THREE.Mesh(orbGeo, orbMaterial);
+        const angle = (i / 6) * Math.PI * 2;
+        const radius = 2.2 + Math.random() * 0.4;
+        orb.position.set(Math.cos(angle) * radius, Math.sin(angle) * radius, (Math.random() - 0.5) * 1.5);
+        orbGroup.add(orb);
+      }
+      scene.add(orbGroup);
+
+      let pointerX = 0;
+      let pointerY = 0;
+      let targetRotX = 0;
+      let targetRotY = 0;
+
+      const updatePointer = (clientX, clientY) => {
         const rect = hero.getBoundingClientRect();
-        pointerX = Math.min(1, Math.max(0, (event.clientX - rect.left) / rect.width));
-        pointerY = Math.min(1, Math.max(0, (event.clientY - rect.top) / rect.height));
-        if (!frame) frame = window.requestAnimationFrame(render);
-      }, { passive: true });
+        const px = (clientX - rect.left) / rect.width;
+        const py = (clientY - rect.top) / rect.height;
 
-      hero.addEventListener('pointerleave', () => {
-        pointerX = 0.5;
-        pointerY = 0.5;
-        if (!frame) frame = window.requestAnimationFrame(render);
-      }, { passive: true });
+        pointerX = (px - 0.5) * 2;
+        pointerY = (py - 0.5) * 2;
 
-      title.addEventListener('pointerenter', pulse, { passive: true });
-    }
+        targetRotY = pointerX * 0.8;
+        targetRotX = pointerY * 0.8;
+
+        if (coordHud) {
+          const xVal = String(Math.round(px * 99)).padStart(4, '0');
+          const yVal = String(Math.round(py * 99)).padStart(4, '0');
+          coordHud.textContent = `${xVal} X ${yVal} Y`;
+        }
+      };
+
+      const handlePointerMove = (e) => {
+        updatePointer(e.clientX, e.clientY);
+      };
+
+      const handleTouchMove = (e) => {
+        if (e.touches && e.touches[0]) {
+          updatePointer(e.touches[0].clientX, e.touches[0].clientY);
+        }
+      };
+
+      window.addEventListener('pointermove', handlePointerMove, { passive: true });
+      window.addEventListener('touchmove', handleTouchMove, { passive: true });
+
+      const handleResize = () => {
+        const w = hero.clientWidth || window.innerWidth;
+        const h = hero.clientHeight || window.innerHeight;
+        camera.aspect = w / h;
+        const isMobile = w < 768;
+        camera.position.z = isMobile ? 7.5 : 5.5;
+        mesh.scale.setScalar(isMobile ? 0.75 : 1.0);
+        camera.updateProjectionMatrix();
+        renderer.setSize(w, h);
+      };
+
+      window.addEventListener('resize', handleResize, { passive: true });
+      handleResize();
+
+      const updateThemeColors = () => {
+        const dark = document.documentElement.dataset.theme === 'dark';
+        mainMaterial.color.setHex(dark ? 0x222831 : 0xe0e6ed);
+        orbMaterial.color.setHex(dark ? 0x00f0ff : 0x3b82f6);
+        pointLight.color.setHex(dark ? 0x00f0ff : 0x2563eb);
+      };
+
+      const themeObserver = new MutationObserver(updateThemeColors);
+      themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
+      let animId = null;
+      let isVisible = true;
+
+      const animate = (time) => {
+        if (!isVisible) return;
+
+        const t = time * 0.001;
+
+        mesh.rotation.x += (targetRotX - mesh.rotation.x) * 0.05 + 0.003;
+        mesh.rotation.y += (targetRotY - mesh.rotation.y) * 0.05 + 0.005;
+
+        orbGroup.rotation.y = t * 0.2;
+        orbGroup.children.forEach((orb, idx) => {
+          orb.position.y += Math.sin(t * 2 + idx) * 0.002;
+        });
+
+        pointLight.position.x = pointerX * 3;
+        pointLight.position.y = -pointerY * 3;
+
+        renderer.render(scene, camera);
+        animId = requestAnimationFrame(animate);
+      };
+
+      const observer = new IntersectionObserver(([entry]) => {
+        isVisible = entry.isIntersecting;
+        if (isVisible && !animId) {
+          animId = requestAnimationFrame(animate);
+        }
+      });
+      observer.observe(hero);
+
+      animId = requestAnimationFrame(animate);
+    }).catch((err) => {
+      console.warn('Three.js failed to load:', err);
+    });
   };
+
 
   const initPixelTrail = () => {
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -906,7 +1037,7 @@
     initSearch();
     initReadingProgress();
     initTocCollapsing();
-    initKineticTitle();
+    initThreeHero();
     initPixelTrail();
     initHomeTransition();
     initLinkHero();

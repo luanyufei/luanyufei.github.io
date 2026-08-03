@@ -1,24 +1,26 @@
 const HOME_HERO = `
 <div id="site-info" class="feespace-hero">
+  <canvas id="feespace-hero-canvas"></canvas>
+  <div class="hero-grid-lines" aria-hidden="true">
+    <div class="grid-line line-h-top"></div>
+    <div class="grid-line line-h-bottom"></div>
+    <div class="grid-line line-v-left"></div>
+    <div class="grid-line line-v-right"></div>
+  </div>
   <div class="hero-meta" aria-hidden="true">
     <span>FEE SPACE / DIGITAL GARDEN</span>
     <span>CN · GMT+8</span>
   </div>
   <div class="hero-grid">
-    <p class="hero-intro">电子扫盲、系统折腾<br>以及值得留下的经验</p>
-    <h1 id="site-title" class="kinetic-title" aria-label="Fee Space">
-      <span class="kinetic-word kinetic-word-fee" data-word="FEE" aria-hidden="true"><span class="kinetic-face">FEE</span></span>
-      <span class="kinetic-word kinetic-word-space" data-word="SPACE" aria-hidden="true"><span class="kinetic-face">SPACE</span></span>
-      <span class="kinetic-axis kinetic-axis-x" aria-hidden="true"></span>
-      <span class="kinetic-axis kinetic-axis-y" aria-hidden="true"></span>
-      <span class="kinetic-corner kinetic-corner-tl" aria-hidden="true"></span>
-      <span class="kinetic-corner kinetic-corner-br" aria-hidden="true"></span>
-      <span class="kinetic-hud" aria-hidden="true"><span>TYPE.SYS / FS-01</span><span data-kinetic-coordinates>X 50 / Y 50</span></span>
+    <p class="hero-intro">SYSTEM THOUGHTS<br>& DIGITAL CRAFT</p>
+    <h1 id="site-title" class="three-hero-title" aria-label="Fee Space">
+      <span class="hero-title-text">FEE SPACE</span>
+      <span class="hero-hud-coord" aria-hidden="true" data-kinetic-coordinates>0050 X 0050 Y</span>
     </h1>
-    <p class="hero-statement">把复杂的技术讲清楚<br>把真实的折腾写下来</p>
+    <p class="hero-statement">ARCHITECTING SYSTEMS<br>CURATING NOTES</p>
   </div>
   <div class="hero-footer">
-    <span>乱与狒的数字花园 © 2026</span>
+    <span>DIGITAL CRAFTSMANSHIP © 2026</span>
     <div class="hero-links">
       <a href="https://github.com/luanyufei" target="_blank" rel="noopener">GitHub ↗</a>
       <a href="https://space.bilibili.com/3493130162669961" target="_blank" rel="noopener">Bilibili ↗</a>
@@ -29,6 +31,7 @@ const HOME_HERO = `
 <button id="scroll-down" type="button" aria-label="滚动到最近文章">
   <i class="fas fa-chevron-down" aria-hidden="true"></i>
 </button>`;
+
 
 const COLLECTION_HEAD = `
 <header class="collection-head">
