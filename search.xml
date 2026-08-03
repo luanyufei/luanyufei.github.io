@@ -1,14 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
-    <title>红米研究记2｜解锁BootLoader</title>
-    <url>/2025/08/07/BL%E9%94%81/</url>
-    <content><![CDATA[]]></content>
-      <categories>
-        <category>各种经验</category>
-      </categories>
-  </entry>
-  <entry>
     <title>Brave 浏览器去除无用功能</title>
     <url>/2026/07/18/Brave%E6%B5%8F%E8%A7%88%E5%99%A8%E5%8E%BB%E9%99%A4%E6%97%A0%E7%94%A8%E5%8A%9F%E8%83%BD/</url>
     <content><![CDATA[<p>由于 Chrome 浏览器对去广告插件有反制机制——检测到去广告扩展后会让 YouTube 变得卡顿——所以我决定转用 Brave。然而 Brave 也自带了不少臃肿功能，比如 AI、钱包、VPN 等等。下面分别介绍 macOS 和 Windows 上的一键精简方法。</p>
@@ -28,14 +20,6 @@
 ]]></content>
       <categories>
         <category>实用技巧</category>
-      </categories>
-  </entry>
-  <entry>
-    <title>红米研究记3｜刷欧盟版（EEA）澎湃系统</title>
-    <url>/2025/08/07/EEA/</url>
-    <content><![CDATA[]]></content>
-      <categories>
-        <category>各种经验</category>
       </categories>
   </entry>
   <entry>
@@ -98,6 +82,14 @@
       </categories>
   </entry>
   <entry>
+    <title>红米研究记3｜刷欧盟版（EEA）澎湃系统</title>
+    <url>/2025/08/07/EEA/</url>
+    <content><![CDATA[]]></content>
+      <categories>
+        <category>各种经验</category>
+      </categories>
+  </entry>
+  <entry>
     <title>红米研究记4｜Root，Magisk与Xposed</title>
     <url>/2025/08/07/root/</url>
     <content><![CDATA[]]></content>
@@ -116,6 +108,16 @@
 <p>随着手机的逐渐普及，越来越多人已经逐渐抛弃了电脑，甚至有人妄言：电脑已经没用了，手机能解决一切。如此的后果就是越来越多的年轻人正逐渐称为「赛博文盲」。</p>
 <p><a href="https://zhuanlan.zhihu.com/p/706499217">https://zhuanlan.zhihu.com/p/706499217</a></p>
 <h1 id="后面的内容还没想好，过几天写"><a href="#后面的内容还没想好，过几天写" class="headerlink" title="后面的内容还没想好，过几天写"></a>后面的内容还没想好，过几天写</h1>]]></content>
+      <categories>
+        <category>FeeFee电子扫盲</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>电子扫盲｜操作系统</title>
+    <url>/2025/02/20/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%EF%BC%9AWindows,%20Linux,%20macOS,%20Android,%20iOS%E7%AD%89/</url>
+    <content><![CDATA[<p>电脑、手机都有操作系统（Operating System，简称OS），常见的电脑操作系统有<strong>Windows，Linux和macOS</strong>，常见的手机操作系统有<strong>安卓（Android）和iOS</strong>。<br>不同的操作系统之间是不能互通的！比如，当你发现老师发来的软件是.exe格式，而你正在使用macOS，那你就该知道这个软件我装不了，因为.exe是windows上才有的格式。</p>
+<p>先来说说电脑系统：<br>1、Windows是最常见的电脑操作系统，它是微软公司（Microsoft）开发的，<strong>跟安卓系统半毛钱关系没有！！</strong> 总有人会有类似这样的发言：“你的电脑是安卓还是苹果？”这是严重的笑话。<br>2、macOS是苹果的电脑系统，不要叫它iOS！！iOS指的是苹果的<strong>手机</strong>系统。<br>3、Linux是著名的开源系统（开源的意思是源代码公开），一般只有程序员会使用。<br>4、其他系统，如ChromeOS、Unix等，不需要了解。</p>
+]]></content>
       <categories>
         <category>FeeFee电子扫盲</category>
       </categories>
@@ -149,13 +151,11 @@
       </categories>
   </entry>
   <entry>
-    <title>电子扫盲｜操作系统</title>
-    <url>/2025/02/20/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%EF%BC%9AWindows,%20Linux,%20macOS,%20Android,%20iOS%E7%AD%89/</url>
-    <content><![CDATA[<p>电脑、手机都有操作系统（Operating System，简称OS），常见的电脑操作系统有<strong>Windows，Linux和macOS</strong>，常见的手机操作系统有<strong>安卓（Android）和iOS</strong>。<br>不同的操作系统之间是不能互通的！比如，当你发现老师发来的软件是.exe格式，而你正在使用macOS，那你就该知道这个软件我装不了，因为.exe是windows上才有的格式。</p>
-<p>先来说说电脑系统：<br>1、Windows是最常见的电脑操作系统，它是微软公司（Microsoft）开发的，<strong>跟安卓系统半毛钱关系没有！！</strong> 总有人会有类似这样的发言：“你的电脑是安卓还是苹果？”这是严重的笑话。<br>2、macOS是苹果的电脑系统，不要叫它iOS！！iOS指的是苹果的<strong>手机</strong>系统。<br>3、Linux是著名的开源系统（开源的意思是源代码公开），一般只有程序员会使用。<br>4、其他系统，如ChromeOS、Unix等，不需要了解。</p>
-]]></content>
+    <title>红米研究记2｜解锁BootLoader</title>
+    <url>/2025/08/07/BL%E9%94%81/</url>
+    <content><![CDATA[]]></content>
       <categories>
-        <category>FeeFee电子扫盲</category>
+        <category>各种经验</category>
       </categories>
   </entry>
 </search>
