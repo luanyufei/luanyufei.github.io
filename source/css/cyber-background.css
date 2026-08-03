@@ -1120,6 +1120,7 @@ body.is-home-page #content-inner {
 #article-container img {
   max-width: 100%;
   border-radius: var(--fs-radius);
+  cursor: zoom-in;
 }
 
 #article-container table {

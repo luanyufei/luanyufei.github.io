@@ -666,6 +666,62 @@
     `;
   };
 
+  const initLightbox = () => {
+    const images = document.querySelectorAll('#article-container img:not(.no-lightbox)');
+    if (!images.length) return;
+
+    const bindFancybox = () => {
+      images.forEach((img) => {
+        if (img.parentNode.tagName !== 'A') {
+          const dataSrc = img.dataset.lazySrc || img.src;
+          const dataCaption = img.title || img.alt || '';
+          if (dataSrc && window.btf?.wrap) {
+            window.btf.wrap(img, 'a', {
+              href: dataSrc,
+              'data-fancybox': 'gallery',
+              'data-caption': dataCaption,
+              'data-thumb': dataSrc,
+            });
+          }
+        }
+      });
+
+      if (typeof window.Fancybox !== 'undefined') {
+        try {
+          window.Fancybox.bind('[data-fancybox="gallery"]', {
+            Hash: false,
+            Thumbs: { showOnStart: false },
+            Images: { Panzoom: { maxScale: 4 } },
+            Carousel: { transition: 'slide' },
+            Toolbar: {
+              display: {
+                left: ['infobar'],
+                middle: [
+                  'zoomIn',
+                  'zoomOut',
+                  'toggle1to1',
+                  'rotateCCW',
+                  'rotateCW',
+                  'flipX',
+                  'flipY',
+                ],
+                right: ['slideshow', 'thumbs', 'close'],
+              },
+            },
+          });
+        } catch (e) {
+          console.error('Fancybox bind error:', e);
+        }
+      }
+    };
+
+    if (typeof window.Fancybox !== 'undefined') {
+      bindFancybox();
+    } else {
+      window.addEventListener('load', bindFancybox, { once: true });
+    }
+  };
+
   const start = () => {
     initTheme();
     initNav();
@@ -677,6 +733,7 @@
     initHomeTransition();
     initLinkHero();
     initTrendPage();
+    initLightbox();
     window.requestAnimationFrame(() => document.documentElement.classList.add('site-ready'));
   };
 
@@ -686,3 +743,4 @@
     start();
   }
 })();
+
