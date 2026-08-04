@@ -12,10 +12,7 @@ const HOME_HERO = `
     <span>CN · GMT+8</span>
   </div>
   <div class="hero-grid">
-    <h1 id="site-title" class="editorial-hero-title" aria-label="Fee Space">
-      <span class="editorial-word" data-word="FEE">FEE</span>
-      <span class="editorial-word editorial-word-space" data-word="SPACE">SPACE</span>
-    </h1>
+    <h1 id="site-title" class="sr-only">Fee Space</h1>
   </div>
   <div class="hero-footer">
     <span>ALAN NOON © 2026</span>

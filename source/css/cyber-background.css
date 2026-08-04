@@ -2460,110 +2460,17 @@ html.search-open body {
   }
 }
 
-/* Editorial homepage title: large, quiet, and theme-aware. */
-.editorial-hero-title {
-  grid-column: 3 / span 8;
-  align-self: center;
-  position: relative;
-  z-index: 2;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  margin: 0 !important;
-  color: var(--fs-text) !important;
-  font-family: "Helvetica Neue", "Arial Narrow", var(--fs-font);
-  font-size: 9.5rem !important;
-  font-stretch: expanded;
-  font-weight: 800;
-  letter-spacing: -0.07em !important;
-  line-height: 0.78 !important;
-  text-align: left;
-  text-transform: uppercase;
-  user-select: none;
-}
-
-#site-info #site-title.editorial-hero-title {
-  min-width: 0;
-  max-width: 100%;
-}
-
-.editorial-word {
-  position: relative;
-  display: block;
-  width: max-content;
-  color: var(--fs-text);
-  opacity: 0;
-  transform: translateY(0.14em);
-  animation: editorial-word-in 800ms var(--fs-ease) forwards;
-}
-
-#site-info #site-title.editorial-hero-title .editorial-word {
-  max-width: 100%;
-}
-
-.editorial-word::before {
-  content: attr(data-word);
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  color: transparent;
-  -webkit-text-stroke: 1px var(--fs-line-strong);
-  transform: translate(0.045em, 0.055em);
-  transition: transform 220ms var(--fs-ease), -webkit-text-stroke-color 220ms ease;
-}
-
-.editorial-word-space {
-  align-self: flex-end;
-  margin-top: 0.04em;
-  margin-right: -0.02em;
-  animation-delay: 90ms;
-}
-
-.editorial-word-space::after {
-  content: "";
-  position: absolute;
-  right: 0.04em;
-  bottom: -0.19em;
-  width: 36%;
-  height: 0.07em;
-  background: var(--fs-accent);
-  transform: scaleX(0);
-  transform-origin: right;
-  animation: editorial-mark-in 650ms 520ms var(--fs-ease) forwards;
-}
-
-.editorial-hero-title:hover .editorial-word::before {
-  transform: translate(0.09em, 0.09em);
-  -webkit-text-stroke-color: var(--fs-accent);
-}
-
-.editorial-hero-title:hover .editorial-word-space::after {
-  width: 48%;
-  transition: width 220ms var(--fs-ease);
-}
-
-.hero-statement {
-  grid-column: 10 / span 3;
-  align-self: end;
-  margin: 0 0 0.35rem;
-  color: var(--fs-text);
-  font-size: 1.2rem;
-  font-weight: 650;
-  line-height: 1.42;
-}
-
-.hero-statement-index {
-  display: block;
-  margin-bottom: 1.2rem;
-  color: var(--fs-text-3);
-  font-family: var(--fs-mono);
-  font-size: 0.65rem;
-  font-weight: 500;
-  letter-spacing: 0.08em;
-}
-
-.hero-statement p {
-  margin: 0;
+/* Visually hidden helper for accessible h1 header */
+.sr-only {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
 }
 
 #feespace-hero-canvas {
@@ -2579,47 +2486,6 @@ html.search-open body {
   opacity: 1;
 }
 
-/* Desktop (≥620px): hide 2D title by default so it doesn't flash before
-   3D loads. The .webgl-failed class is added by JS if WebGL init fails,
-   restoring the 2D title as fallback. Mobile (<620px) always shows 2D. */
-@media (min-width: 621px) {
-  .editorial-hero-title {
-    opacity: 0 !important;
-    pointer-events: none;
-    animation: none !important;
-  }
-  .editorial-hero-title .editorial-word {
-    animation: none !important;
-    opacity: 0 !important;
-  }
-  .editorial-hero-title .editorial-word-space::after {
-    animation: none !important;
-  }
-  /* If WebGL fails, restore the 2D title with a fade-in */
-  .feespace-hero.webgl-failed .editorial-hero-title {
-    opacity: 1 !important;
-    pointer-events: auto;
-    animation: editorial-2d-fadein 600ms var(--fs-ease) forwards !important;
-  }
-  .feespace-hero.webgl-failed .editorial-hero-title .editorial-word {
-    animation: editorial-word-in 800ms var(--fs-ease) forwards !important;
-    opacity: 0 !important;
-  }
-  .feespace-hero.webgl-failed .editorial-hero-title .editorial-word-space::after {
-    animation: editorial-mark-in 650ms 520ms var(--fs-ease) forwards !important;
-  }
-}
-
-@keyframes editorial-2d-fadein {
-  from { opacity: 0; }
-  to   { opacity: 1; }
-}
-
-.feespace-hero.webgl-ready .editorial-hero-title {
-  opacity: 0 !important;
-  pointer-events: none;
-}
-
 .feespace-hero.webgl-ready #feespace-hero-canvas {
   z-index: 6;
 }
@@ -2631,30 +2497,7 @@ html.search-open body {
   z-index: 3;
 }
 
-.feespace-hero.webgl-ready .hero-statement {
-  position: relative;
-  z-index: 7;
-  pointer-events: none;
-}
-
-@keyframes editorial-word-in {
-  from {
-    opacity: 0;
-    clip-path: inset(0 0 100% 0);
-    transform: translateY(0.14em);
-  }
-  to {
-    opacity: 1;
-    clip-path: inset(0);
-    transform: translateY(0);
-  }
-}
-
-@keyframes editorial-mark-in {
-  to { transform: scaleX(1); }
-}
-
-/* Minecraft-style splash note beside the 3D title (desktop only). */
+/* Minecraft-style splash note beside the 3D title. */
 .hero-pixel-note {
   position: absolute;
   right: 18%;
@@ -2680,32 +2523,7 @@ html.search-open body {
   50% { transform: rotate(-12deg) scale(1.08); }
 }
 
-@media (max-width: 1100px) {
-  .editorial-hero-title {
-    grid-column: 3 / span 8;
-    font-size: 6.5rem !important;
-  }
-}
-
-@media (max-width: 768px) {
-  .editorial-hero-title {
-    grid-column: 1 / -1;
-    grid-row: 2;
-    margin-top: 1.5rem !important;
-    font-size: 5.5rem !important;
-  }
-
-  .hero-statement {
-    grid-column: 7 / -1;
-    grid-row: 1;
-    font-size: 1rem;
-  }
-}
-
 @media (max-width: 620px) {
-  /* Canvas is now shown on mobile — 3D title renders at all sizes.
-     The 2D fallback code is preserved and activates via .webgl-failed. */
-
   .hero-pixel-note {
     display: block !important;
     right: 6%;

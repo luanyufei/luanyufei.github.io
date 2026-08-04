@@ -404,12 +404,10 @@
     const hero = document.querySelector('.feespace-hero');
     if (!canvas || !hero || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
-    // Launch 3D title on all screen sizes (including mobile).
-    // Touch drag remains disabled (mouse-only) per the existing design.
     createThreeTitle(canvas, hero);
   };
 
-  // Desktop-only interactive 3D title. Mobile keeps the 2D HTML fallback.
+  // Interactive 3D title (FEE SPACE).
   const createThreeTitle = (canvas, hero) => {
     const instance = { dispose: () => disposeOnce?.() };
     let disposeOnce = null;
@@ -912,8 +910,7 @@
       };
     }).catch((error) => {
       canvas.hidden = true;
-      if (hero) hero.classList.add('webgl-failed');
-      console.warn('3D title unavailable; using HTML title fallback.', error);
+      console.warn('3D title unavailable.', error);
     });
 
     return instance;
