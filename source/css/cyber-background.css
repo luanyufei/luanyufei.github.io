@@ -554,14 +554,14 @@ input:focus-visible {
   85% { opacity: 0.6; }
 }
 
-/* Page headers */
+/* Page headers - Unified Layout */
 
 #page-header.not-home-page,
 #page-header.post-bg {
   display: flex;
   align-items: flex-end;
-  min-height: 380px;
-  height: auto;
+  min-height: 0 !important;
+  height: auto !important;
   border-bottom: 1px solid var(--fs-line);
 }
 
@@ -569,40 +569,47 @@ input:focus-visible {
 #post-info {
   width: min(calc(100% - 6rem), var(--fs-content));
   margin: 0 auto;
-  padding: calc(var(--fs-nav-height) + 4rem) 0 2.2rem;
+  padding: calc(var(--fs-nav-height) + 2.2rem) 0 1.8rem;
   text-align: left;
 }
 
+.fs-unified-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.45rem;
+}
+
+.fs-hero-tag {
+  display: inline-block;
+  color: var(--fs-text-3);
+  font-family: var(--fs-mono);
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.fs-hero-title,
 #page-site-info #site-title,
 #post-info .post-title {
   display: block;
   max-width: 1100px;
   margin: 0;
   color: var(--fs-text) !important;
-  font-size: 4.75rem;
+  font-size: 3.2rem !important;
   font-weight: 760;
-  letter-spacing: 0 !important;
-  line-height: 1.04;
+  letter-spacing: -0.01em !important;
+  line-height: 1.1 !important;
   text-shadow: none !important;
 }
 
 #post-info .post-title::before,
-#page-site-info > #site-title::before {
-  display: block;
-  margin-bottom: 1.15rem;
-  color: var(--fs-text-3);
-  font-family: var(--fs-mono);
-  font-size: 0.7rem;
-  font-weight: 500;
-  text-transform: uppercase;
-}
-
-#post-info .post-title::before {
-  content: "NOTE / ARTICLE";
-}
-
-#page-site-info > #site-title::before {
-  content: "INDEX / COLLECTION";
+#page-site-info > #site-title::before,
+.trend-hero > div,
+.link-hero > div,
+.music-hero > div {
+  display: none !important;
 }
 
 #post-meta {
@@ -1239,49 +1246,7 @@ body.fs-lightbox-dragging *,
   display: none !important;
 }
 
-.is-trend-page #page-site-info,
-.is-music-page #page-site-info {
-  width: min(calc(100% - 6rem), var(--fs-content));
-}
-
-.trend-hero,
-.music-hero {
-  display: grid;
-  grid-template-columns: repeat(12, minmax(0, 1fr));
-  align-items: end;
-  gap: 1.2rem;
-}
-
-.trend-hero > p,
-.music-hero > p {
-  grid-column: 1 / span 3;
-  margin: 0 0 0.8rem;
-  color: var(--fs-text-3);
-  font-family: var(--fs-mono);
-  font-size: 0.7rem;
-}
-
-.trend-hero h1,
-.music-hero h1 {
-  grid-column: 4 / span 6;
-  margin: 0;
-  color: var(--fs-text);
-  font-size: 6rem;
-  font-weight: 760;
-  letter-spacing: 0;
-  line-height: 0.95;
-}
-
-.trend-hero > div,
-.music-hero > div {
-  grid-column: 10 / span 3;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 0.25rem;
-  color: var(--fs-text-2);
-  font-size: 1.05rem;
-}
+/* ── Cyber Music Deck Redesign ── */
 
 /* ── Cyber Music Deck Redesign ── */
 .cyber-music-deck {
@@ -2446,25 +2411,15 @@ html.search-open body {
     display: none !important;
   }
 
-  .link-hero h1,
-  .trend-hero h1,
-  .music-hero h1 {
-    grid-column: 1 / span 9;
-    font-size: 4.6rem;
+  .fs-hero-title,
+  #page-site-info #site-title,
+  #post-info .post-title {
+    font-size: 2.25rem !important;
   }
 
-  .link-hero > p,
-  .trend-hero > p,
-  .music-hero > p {
-    grid-column: 1 / span 5;
-    grid-row: 1;
-  }
-
-  .link-hero > div,
-  .trend-hero > div,
-  .music-hero > div {
-    grid-column: 10 / span 3;
-    grid-row: 2;
+  #page-site-info,
+  #post-info {
+    padding: calc(var(--fs-nav-height) + 1.4rem) 0 1.2rem;
   }
 
   .category-lists .category-list,

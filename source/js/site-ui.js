@@ -1098,37 +1098,10 @@
     observer.observe(collection);
   };
 
-  const initLinkHero = () => {
-    const linkPage = document.querySelector('#body-wrap.type-link');
-    const hero = document.getElementById('page-site-info');
-    if (!linkPage || !hero) return;
-
-    document.body.classList.add('is-link-page');
-    hero.innerHTML = `
-      <div class="link-hero">
-        <p>LINK DIRECTORY / CURATED</p>
-        <h1>狒狒导航</h1>
-        <div><span>工具</span><span>灵感</span><span>长期收藏</span></div>
-      </div>
-    `;
-  };
-
   const initTrendPage = () => {
     const trendPage = document.querySelector('#body-wrap.type-shuoshuo');
     const container = trendPage?.querySelector('#article-container');
     if (!trendPage) return;
-
-    document.body.classList.add('is-trend-page');
-    const hero = document.getElementById('page-site-info');
-    if (hero && !hero.querySelector('.trend-hero')) {
-      hero.innerHTML = `
-        <div class="trend-hero">
-          <p>MOMENTS & SHORTS / STREAM</p>
-          <h1>FeeFee动态</h1>
-          <div><span>短想法</span><span>临时发现</span><span>随手分享</span></div>
-        </div>
-      `;
-    }
 
     if (!container || container.children.length) return;
 
@@ -1143,18 +1116,63 @@
     `;
   };
 
-  const initMusicHero = () => {
-    const musicPage = document.querySelector('#body-wrap.type-music');
-    const hero = document.getElementById('page-site-info');
-    if (!musicPage) return;
+  const initPageHero = () => {
+    const postInfo = document.getElementById('post-info');
+    if (postInfo) {
+      if (!postInfo.querySelector('.fs-hero-tag')) {
+        const tagSpan = document.createElement('span');
+        tagSpan.className = 'fs-hero-tag';
+        tagSpan.textContent = 'NOTE & ARTICLE';
+        postInfo.insertBefore(tagSpan, postInfo.firstChild);
+      }
+      return;
+    }
 
-    document.body.classList.add('is-music-page');
-    if (hero && !hero.querySelector('.music-hero')) {
+    const hero = document.getElementById('page-site-info');
+    if (!hero) return;
+
+    const path = window.location.pathname.replace(/\/$/, '') || '/';
+    let tag = '';
+    let title = '';
+
+    if (path.startsWith('/trend')) {
+      tag = 'MOMENTS & SHORTS';
+      title = 'FeeFee动态';
+      document.body.classList.add('is-trend-page');
+    } else if (path.startsWith('/link')) {
+      tag = 'LINK DIRECTORY';
+      title = '狒狒导航';
+      document.body.classList.add('is-link-page');
+    } else if (path.startsWith('/about')) {
+      tag = 'ABOUT & PROFILE';
+      title = '关于';
+      document.body.classList.add('is-about-page');
+    } else if (path.startsWith('/music')) {
+      tag = 'MUSIC & SOUNDTRACKS';
+      title = '狒狒音乐盒';
+      document.body.classList.add('is-music-page');
+    } else if (path.startsWith('/archives')) {
+      tag = 'ARCHIVES / COLLECTION';
+      title = '全部文章';
+    } else if (path.startsWith('/categories')) {
+      tag = 'CATEGORIES / INDEX';
+      title = '分类';
+    } else if (path.startsWith('/tags')) {
+      tag = 'TAGS / INDEX';
+      title = '标签';
+    } else {
+      const siteTitle = hero.querySelector('#site-title');
+      if (siteTitle) {
+        tag = 'INDEX / COLLECTION';
+        title = siteTitle.textContent.trim();
+      }
+    }
+
+    if (tag && title) {
       hero.innerHTML = `
-        <div class="music-hero">
-          <p>SOUNDTRACKS & AUDIO / STREAM</p>
-          <h1>狒狒音乐盒</h1>
-          <div><span>网易云</span><span>精选歌单</span><span>音频随想</span></div>
+        <div class="fs-unified-hero">
+          <span class="fs-hero-tag">${tag}</span>
+          <h1 class="fs-hero-title">${title}</h1>
         </div>
       `;
     }
@@ -1511,9 +1529,8 @@
     initPixelNote();
     initPixelTrail();
     initHomeTransition();
-    initLinkHero();
+    initPageHero();
     initTrendPage();
-    initMusicHero();
     initLightbox();
     window.requestAnimationFrame(() => document.documentElement.classList.add('site-ready'));
   };

@@ -91,6 +91,40 @@ hexo.extend.filter.register('after_render:html', (html) => {
       /(<div class="recent-posts[^>]*" id="recent-posts">)/,
       `$1${COLLECTION_HEAD}`
     );
+  } else {
+    // Non-home pages: rewrite page-site-info & post-info to fs-unified-hero
+    output = output.replace(
+      /<div id="page-site-info"><h1 id="site-title">(.*?)<\/h1><\/div>/,
+      (match, title) => {
+        let tag = 'INDEX / COLLECTION';
+        const cleanTitle = title.trim();
+
+        if (cleanTitle === 'FeeFee动态' || cleanTitle.includes('动态')) {
+          tag = 'MOMENTS & SHORTS';
+        } else if (cleanTitle === '狒狒导航' || cleanTitle.includes('链接') || cleanTitle.includes('导航')) {
+          tag = 'LINK DIRECTORY';
+        } else if (cleanTitle === '关于' || cleanTitle.includes('About')) {
+          tag = 'ABOUT & PROFILE';
+        } else if (cleanTitle.includes('文章') || cleanTitle.includes('归档')) {
+          tag = 'ARCHIVES / COLLECTION';
+        } else if (cleanTitle.includes('分类')) {
+          tag = 'CATEGORIES / INDEX';
+        } else if (cleanTitle.includes('标签')) {
+          tag = 'TAGS / INDEX';
+        } else if (cleanTitle.includes('音乐')) {
+          tag = 'MUSIC & SOUNDTRACKS';
+        }
+
+        return `<div id="page-site-info"><div class="fs-unified-hero"><span class="fs-hero-tag">${tag}</span><h1 class="fs-hero-title">${cleanTitle}</h1></div></div>`;
+      }
+    );
+
+    output = output.replace(
+      /<div id="post-info"><h1 class="post-title">(.*?)<\/h1>/,
+      (match, title) => {
+        return `<div id="post-info"><div class="fs-unified-hero"><span class="fs-hero-tag">NOTE &amp; ARTICLE</span><h1 class="post-title">${title}</h1>`;
+      }
+    );
   }
 
   return output;
