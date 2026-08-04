@@ -81,7 +81,6 @@
     models.forEach((model) => {
       const item = document.createElement('li');
       item.className = 'ai-models-pop-item';
-      if (model.name === headline.name) item.classList.add('is-current');
 
       const link = document.createElement('a');
       link.href = model.url;
