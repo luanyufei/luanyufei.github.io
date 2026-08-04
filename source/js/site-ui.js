@@ -1050,7 +1050,7 @@
 
   const initPixelNote = () => {
     const note = document.querySelector('.hero-pixel-note');
-    if (!note || window.matchMedia('(max-width: 619px)').matches) return;
+    if (!note) return;
 
     note.textContent = PIXEL_NOTES[Math.floor(Math.random() * PIXEL_NOTES.length)];
   };
