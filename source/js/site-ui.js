@@ -1131,6 +1131,8 @@
     const hero = document.getElementById('page-site-info');
     if (!hero) return;
 
+    if (hero.querySelector('.fs-unified-hero')) return;
+
     const path = window.location.pathname.replace(/\/$/, '') || '/';
     let tag = '';
     let title = '';
@@ -1161,7 +1163,7 @@
       tag = 'TAGS / INDEX';
       title = '标签';
     } else {
-      const siteTitle = hero.querySelector('#site-title');
+      const siteTitle = hero.querySelector('#site-title, .fs-hero-title');
       if (siteTitle) {
         tag = 'INDEX / COLLECTION';
         title = siteTitle.textContent.trim();

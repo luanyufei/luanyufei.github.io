@@ -94,7 +94,7 @@ hexo.extend.filter.register('after_render:html', (html) => {
   } else {
     // Non-home pages: rewrite page-site-info & post-info to fs-unified-hero
     output = output.replace(
-      /<div id="page-site-info"><h1 id="site-title">(.*?)<\/h1><\/div>/,
+      /<div id="page-site-info">[\s\S]*?<h1 id="site-title">([\s\S]*?)<\/h1>[\s\S]*?<\/div>/,
       (match, title) => {
         let tag = 'INDEX / COLLECTION';
         const cleanTitle = title.trim();
@@ -120,9 +120,9 @@ hexo.extend.filter.register('after_render:html', (html) => {
     );
 
     output = output.replace(
-      /<div id="post-info"><h1 class="post-title">(.*?)<\/h1>/,
+      /<div id="post-info">[\s\S]*?<h1 class="post-title">([\s\S]*?)<\/h1>/,
       (match, title) => {
-        return `<div id="post-info"><div class="fs-unified-hero"><span class="fs-hero-tag">NOTE &amp; ARTICLE</span><h1 class="post-title">${title}</h1>`;
+        return `<div id="post-info"><div class="fs-unified-hero"><span class="fs-hero-tag">NOTE &amp; ARTICLE</span><h1 class="post-title">${title.trim()}</h1>`;
       }
     );
   }
