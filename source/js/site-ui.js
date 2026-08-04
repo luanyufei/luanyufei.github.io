@@ -730,21 +730,27 @@
       const resize = () => {
         const width = window.innerWidth;
         const height = window.innerHeight;
-        camera.aspect = width / Math.max(height, 1);
+        const aspect = width / Math.max(height, 1);
+        camera.aspect = aspect;
+        camera.position.z = 10.2;
 
-        // On narrow screens, pull the camera closer and scale the title up
-        // so the 3D text fills the viewport similarly to the 2D fallback.
-        if (width < 620) {
-          const mobileFactor = Math.max(0.52, width / 620);
-          camera.position.z = 7.4;
-          titleGroup.scale.setScalar(textFitScale * mobileFactor * 1.18);
-          layoutBaseY = baseY + 0.15;
+        // Calculate visible viewport dimensions at z=0 plane
+        const vFOV = (camera.fov * Math.PI) / 180;
+        const visibleHeight = 2 * Math.tan(vFOV / 2) * camera.position.z;
+        const visibleWidth = visibleHeight * aspect;
+
+        // Ensure title width fits within ~82% of viewport width on narrow screens,
+        // and scales appropriately on desktop screens.
+        let fitScale;
+        if (aspect < 1.1) {
+          fitScale = Math.min((visibleWidth * 0.82) / textWidth, (visibleHeight * 0.38) / textHeight);
+          layoutBaseY = baseY + 0.1;
         } else {
-          camera.position.z = 10.2;
-          titleGroup.scale.setScalar(textFitScale);
+          fitScale = Math.min(0.86, 6 / textWidth, (visibleHeight * 0.55) / textHeight);
           layoutBaseY = baseY;
         }
 
+        titleGroup.scale.setScalar(fitScale);
         camera.updateProjectionMatrix();
         renderer.setSize(width, height, false);
         canvas.style.width = `${width}px`;
@@ -753,10 +759,15 @@
       };
 
       const onPointerDown = (event) => {
-        if (event.pointerType !== 'mouse' || !entranceDone) return;
+        if (!entranceDone) return;
         const ndc = getPointerNdc(event);
         const hit = raycastLetters(ndc.x, ndc.y);
         if (!hit) return;
+
+        if (event.cancelable) {
+          event.preventDefault();
+        }
+
         draggingLetter = hit;
         dragPointerId = event.pointerId;
         dragNdcX = ndc.x;
@@ -774,21 +785,27 @@
           grabOffsetWorldY = 0;
         }
         try { hero.setPointerCapture(event.pointerId); } catch (error) {}
-        hero.style.cursor = 'grabbing';
+        if (event.pointerType === 'mouse') {
+          hero.style.cursor = 'grabbing';
+        }
         requestRender();
       };
 
       const onPointerMove = (event) => {
-        if (event.pointerType !== 'mouse') return;
         targetX = (event.clientX / window.innerWidth) * 2 - 1;
         targetY = (event.clientY / window.innerHeight) * 2 - 1;
         const ndc = getPointerNdc(event);
 
         if (draggingLetter && event.pointerId === dragPointerId) {
+          if (event.cancelable) {
+            event.preventDefault();
+          }
           dragNdcX = ndc.x;
           dragNdcY = ndc.y;
         } else {
-          hero.style.cursor = raycastLetters(ndc.x, ndc.y) ? 'grab' : '';
+          if (event.pointerType === 'mouse') {
+            hero.style.cursor = raycastLetters(ndc.x, ndc.y) ? 'grab' : '';
+          }
         }
         requestRender();
       };
@@ -797,8 +814,8 @@
         if (event.pointerId !== dragPointerId) return;
         draggingLetter = null;
         dragPointerId = null;
-        grabOffsetX = 0;
-        grabOffsetY = 0;
+        grabOffsetWorldX = 0;
+        grabOffsetWorldY = 0;
         if (hero.hasPointerCapture && hero.hasPointerCapture(event.pointerId)) {
           try { hero.releasePointerCapture(event.pointerId); } catch (error) {}
         }
@@ -820,7 +837,7 @@
       });
 
       hero.addEventListener('pointerdown', onPointerDown);
-      hero.addEventListener('pointermove', onPointerMove, { passive: true });
+      hero.addEventListener('pointermove', onPointerMove, { passive: false });
       hero.addEventListener('pointerup', endDrag);
       hero.addEventListener('pointercancel', endDrag);
       hero.addEventListener('pointerleave', clearCursor, { passive: true });
