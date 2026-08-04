@@ -1117,22 +1117,6 @@
   };
 
   const initPageHero = () => {
-    const postInfo = document.getElementById('post-info');
-    if (postInfo) {
-      if (!postInfo.querySelector('.fs-hero-tag')) {
-        const tagSpan = document.createElement('span');
-        tagSpan.className = 'fs-hero-tag';
-        tagSpan.textContent = 'NOTE & ARTICLE';
-        postInfo.insertBefore(tagSpan, postInfo.firstChild);
-      }
-      return;
-    }
-
-    const hero = document.getElementById('page-site-info');
-    if (!hero) return;
-
-    if (hero.querySelector('.fs-unified-hero')) return;
-
     const path = window.location.pathname.replace(/\/$/, '') || '/';
     let tag = '';
     let title = '';
@@ -1162,13 +1146,23 @@
     } else if (path.startsWith('/tags')) {
       tag = 'TAGS / INDEX';
       title = '标签';
-    } else {
-      const siteTitle = hero.querySelector('#site-title, .fs-hero-title');
-      if (siteTitle) {
-        tag = 'INDEX / COLLECTION';
-        title = siteTitle.textContent.trim();
-      }
     }
+
+    const postInfo = document.getElementById('post-info');
+    if (postInfo) {
+      if (!postInfo.querySelector('.fs-hero-tag')) {
+        const tagSpan = document.createElement('span');
+        tagSpan.className = 'fs-hero-tag';
+        tagSpan.textContent = 'NOTE & ARTICLE';
+        postInfo.insertBefore(tagSpan, postInfo.firstChild);
+      }
+      return;
+    }
+
+    const hero = document.getElementById('page-site-info');
+    if (!hero) return;
+
+    if (hero.querySelector('.fs-unified-hero')) return;
 
     if (tag && title) {
       hero.innerHTML = `
@@ -1177,6 +1171,16 @@
           <h1 class="fs-hero-title">${title}</h1>
         </div>
       `;
+    } else {
+      const siteTitle = hero.querySelector('#site-title, .fs-hero-title');
+      if (siteTitle) {
+        hero.innerHTML = `
+          <div class="fs-unified-hero">
+            <span class="fs-hero-tag">INDEX / COLLECTION</span>
+            <h1 class="fs-hero-title">${siteTitle.textContent.trim()}</h1>
+          </div>
+        `;
+      }
     }
   };
 

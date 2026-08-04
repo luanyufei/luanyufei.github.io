@@ -566,9 +566,11 @@ input:focus-visible {
   border-bottom: 1px solid var(--fs-line);
 }
 
-#page-header.not-top-img #page-site-info,
-#page-site-info,
-#post-info {
+#page-header #page-site-info,
+#page-header #post-info {
+  position: relative;
+  top: auto;
+  bottom: auto;
   display: block !important;
   width: min(calc(100% - 6rem), var(--fs-content));
   margin: 0 auto;
@@ -2416,8 +2418,8 @@ html.search-open body {
     font-size: 2.25rem !important;
   }
 
-  #page-site-info,
-  #post-info {
+  #page-header #page-site-info,
+  #page-header #post-info {
     padding: calc(var(--fs-nav-height) + 1.4rem) 0 1.2rem;
   }
 
