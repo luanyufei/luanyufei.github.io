@@ -2697,9 +2697,8 @@ html.search-open body {
 }
 
 @media (max-width: 620px) {
-  #feespace-hero-canvas {
-    display: none !important;
-  }
+  /* Canvas is now shown on mobile — 3D title renders at all sizes.
+     The 2D fallback code is preserved and activates via .webgl-failed. */
 
   .hero-pixel-note {
     display: none !important;

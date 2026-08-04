@@ -404,21 +404,9 @@
     const hero = document.querySelector('.feespace-hero');
     if (!canvas || !hero || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
-    const MOBILE_WIDTH = 620;
-    let instance = null;
-
-    const sync = () => {
-      const mobile = window.innerWidth < MOBILE_WIDTH;
-      if (mobile && instance) {
-        instance.dispose();
-        instance = null;
-      } else if (!mobile && !instance) {
-        instance = createThreeTitle(canvas, hero);
-      }
-    };
-
-    window.addEventListener('resize', sync, { passive: true });
-    sync();
+    // Launch 3D title on all screen sizes (including mobile).
+    // Touch drag remains disabled (mouse-only) per the existing design.
+    createThreeTitle(canvas, hero);
   };
 
   // Desktop-only interactive 3D title. Mobile keeps the 2D HTML fallback.
@@ -740,14 +728,24 @@
       };
 
       const resize = () => {
-        if (window.innerWidth < 620) return;
         const width = window.innerWidth;
         const height = window.innerHeight;
         camera.aspect = width / Math.max(height, 1);
-        camera.position.z = 10.2;
+
+        // On narrow screens, pull the camera closer and scale the title up
+        // so the 3D text fills the viewport similarly to the 2D fallback.
+        if (width < 620) {
+          const mobileFactor = Math.max(0.52, width / 620);
+          camera.position.z = 7.4;
+          titleGroup.scale.setScalar(textFitScale * mobileFactor * 1.18);
+          layoutBaseY = baseY + 0.15;
+        } else {
+          camera.position.z = 10.2;
+          titleGroup.scale.setScalar(textFitScale);
+          layoutBaseY = baseY;
+        }
+
         camera.updateProjectionMatrix();
-        titleGroup.scale.setScalar(textFitScale);
-        layoutBaseY = baseY;
         renderer.setSize(width, height, false);
         canvas.style.width = `${width}px`;
         canvas.style.height = `${height}px`;
