@@ -42,25 +42,187 @@
   transition: fill 0.3s ease;
 }
 
+/* ============================================================
+   AI Credit – Compact Inline Pills
+   ============================================================ */
+
 .powered-by-ai {
-  display: block;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4em;
   width: 100%;
-  margin-top: 4px;
-  font-size: 0.88em;
-  opacity: 0.8;
-  line-height: 1.4;
+  margin-top: 6px;
+  font-family: var(--fs-mono, monospace);
+  font-size: 0.72rem;
+  letter-spacing: 0.03em;
+  color: var(--fs-text-3);
+  line-height: 1;
   text-align: center;
+  user-select: none;
 }
 
-/* Dark mode support */
+.ai-powered-label {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.62rem;
+  opacity: 0.7;
+}
+
+.powered-by-ai .ai-model-headline {
+  font-weight: 600;
+  color: var(--fs-text-2);
+  letter-spacing: 0.02em;
+}
+
+/* "+N more" / "收起" toggle */
+.ai-models-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25em;
+  padding: 0.2em 0.5em;
+  border: 1px solid var(--fs-line);
+  border-radius: 100px;
+  background: transparent;
+  color: var(--fs-text-3);
+  font-family: var(--fs-mono, monospace);
+  font-size: 0.62rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.25s var(--fs-ease, ease);
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.ai-models-toggle:hover,
+.ai-models-toggle:focus-visible {
+  background: var(--fs-text);
+  color: var(--fs-bg);
+  border-color: var(--fs-text);
+}
+
+.ai-models-toggle[aria-expanded="true"] {
+  background: var(--fs-text);
+  color: var(--fs-bg);
+  border-color: var(--fs-text);
+}
+
+/* ============================================================
+   Popover – Glassmorphic Compact Card
+   ============================================================ */
+
+.ai-models-pop {
+  position: absolute;
+  bottom: calc(100% + 10px);
+  left: 50%;
+  transform: translateX(-50%) translateY(6px);
+  opacity: 0;
+  pointer-events: none;
+  min-width: 0;
+  width: max-content;
+  max-width: min(360px, 90vw);
+  padding: 8px;
+  border: 1px solid var(--fs-line);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--fs-surface) 82%, transparent);
+  backdrop-filter: blur(18px) saturate(1.4);
+  -webkit-backdrop-filter: blur(18px) saturate(1.4);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08),
+              0 1px 3px rgba(0, 0, 0, 0.04);
+  z-index: 20;
+  transition: opacity 0.22s var(--fs-ease, ease),
+              transform 0.22s var(--fs-ease, ease);
+}
+
+.ai-models-pop.is-open {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+  pointer-events: auto;
+}
+
+/* Tiny caret pointing down */
+.ai-models-pop::after {
+  content: '';
+  position: absolute;
+  bottom: -5px;
+  left: 50%;
+  transform: translateX(-50%) rotate(45deg);
+  width: 9px;
+  height: 9px;
+  background: color-mix(in srgb, var(--fs-surface) 82%, transparent);
+  border-right: 1px solid var(--fs-line);
+  border-bottom: 1px solid var(--fs-line);
+}
+
+/* Hidden state */
+.ai-models-pop[hidden] {
+  display: block !important;      /* keep in DOM for transitions */
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(-50%) translateY(6px);
+}
+
+.ai-models-pop-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  justify-content: center;
+}
+
+.ai-models-pop-item {
+  padding: 0.3em 0.6em;
+  border-radius: 6px;
+  font-family: var(--fs-mono, monospace);
+  font-size: 0.66rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  color: var(--fs-text-2);
+  background: var(--fs-surface-2);
+  transition: all 0.18s ease;
+  line-height: 1.2;
+  cursor: default;
+}
+
+/* Current model highlight */
+.ai-models-pop-item.is-current {
+  background: var(--fs-accent);
+  color: #0b0d0b;
+  font-weight: 700;
+}
+
+.ai-models-pop-item:not(.is-current):hover {
+  background: var(--fs-line-strong);
+}
+
+/* Dark mode */
 [data-theme="dark"] .footer-brand-text {
   fill: #f0f0f0;
 }
 
-/* Responsive spacing */
+[data-theme="dark"] .ai-models-pop {
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.32),
+              0 1px 3px rgba(0, 0, 0, 0.16);
+}
+
+/* Responsive */
 @media (max-width: 768px) {
   .footer-brand-section {
     margin: 20px auto 5px auto;
     padding: 0 3vw;
+  }
+
+  .powered-by-ai {
+    flex-wrap: wrap;
+    font-size: 0.65rem;
+  }
+
+  .ai-models-pop {
+    max-width: 88vw;
   }
 }

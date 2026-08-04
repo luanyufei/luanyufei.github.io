@@ -404,11 +404,36 @@
     const hero = document.querySelector('.feespace-hero');
     if (!canvas || !hero || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
+    const MOBILE_WIDTH = 620;
+    let instance = null;
+
+    const sync = () => {
+      const mobile = window.innerWidth < MOBILE_WIDTH;
+      if (mobile && instance) {
+        instance.dispose();
+        instance = null;
+      } else if (!mobile && !instance) {
+        instance = createThreeTitle(canvas, hero);
+      }
+    };
+
+    window.addEventListener('resize', sync, { passive: true });
+    sync();
+  };
+
+  // Desktop-only interactive 3D title. Mobile keeps the 2D HTML fallback.
+  const createThreeTitle = (canvas, hero) => {
+    const instance = { dispose: () => disposeOnce?.() };
+    let disposeOnce = null;
+    let cancelled = false;
+
     Promise.all([
       import('three'),
       import('three/addons/loaders/FontLoader.js'),
-    ]).then(async ([THREE, { FontLoader }]) => {
-      if (!canvas.isConnected) return;
+      import('three/addons/environments/RoomEnvironment.js'),
+    ]).then(async ([THREE, { FontLoader }, { RoomEnvironment }]) => {
+      if (cancelled || !canvas.isConnected) return;
+
       const font = await new Promise((resolve, reject) => {
         new FontLoader().load(
           '/data/arial-rounded-bold.typeface.json',
@@ -417,6 +442,8 @@
           reject
         );
       });
+      if (cancelled || !canvas.isConnected) return;
+
       const renderer = new THREE.WebGLRenderer({
         canvas,
         alpha: true,
@@ -424,26 +451,30 @@
         powerPreference: 'low-power',
       });
       renderer.setClearColor(0x000000, 0);
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, window.innerWidth < 620 ? 1 : 1.35));
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.35));
       renderer.outputColorSpace = THREE.SRGBColorSpace;
       renderer.toneMapping = THREE.ACESFilmicToneMapping;
-      renderer.toneMappingExposure = 1.15;
+      renderer.toneMappingExposure = 1.22;
 
       const scene = new THREE.Scene();
       const camera = new THREE.PerspectiveCamera(29, 1, 0.1, 40);
       camera.position.set(0, 0.1, 9.2);
 
+      // A soft studio environment so the metal reads as metal (not black).
+      const pmrem = new THREE.PMREMGenerator(renderer);
+      scene.environment = pmrem.fromScene(new RoomEnvironment(renderer), 0.04).texture;
+      pmrem.dispose();
+
+      // One shared glossy metal material, tinted to match the site theme.
       const textMaterial = new THREE.MeshPhysicalMaterial({
-        color: 0x3d7ff0,
-        metalness: 0.04,
-        roughness: 0.14,
+        color: 0x9aa3a0,
+        metalness: 0.88,
+        roughness: 0.28,
         clearcoat: 1,
-        clearcoatRoughness: 0.035,
-        iridescence: 0.6,
-        iridescenceIOR: 1.38,
-        transmission: 0.16,
-        thickness: 0.8,
-        ior: 1.45,
+        clearcoatRoughness: 0.14,
+        iridescence: 0.42,
+        iridescenceIOR: 1.35,
+        envMapIntensity: 0.95,
       });
       let shaderUniforms = null;
       textMaterial.onBeforeCompile = (shader) => {
@@ -453,85 +484,250 @@
           .replace('void main() {', 'uniform float uTime;\nvoid main() {')
           .replace(
             '#include <dithering_fragment>',
-            `float shimmer = 0.5 + 0.5 * sin(gl_FragCoord.x * 0.016 + gl_FragCoord.y * 0.01 + uTime * 1.25);
-            vec3 shimmerColor = mix(vec3(0.42, 0.58, 1.0), vec3(0.92, 0.96, 1.0), shimmer);
-            outgoingLight = mix(outgoingLight, outgoingLight * shimmerColor, 0.24);
+            `float shimmer = 0.5 + 0.5 * sin(gl_FragCoord.x * 0.014 + gl_FragCoord.y * 0.008 + uTime * 1.1);
+            vec3 shimmerColor = mix(vec3(1.0), vec3(0.72, 0.95, 0.6), shimmer);
+            outgoingLight = mix(outgoingLight, outgoingLight * shimmerColor, 0.08);
             #include <dithering_fragment>`
           );
       };
 
-      const textGroup = new THREE.Group();
-      const geometry = new THREE.ExtrudeGeometry(font.generateShapes('FEE SPACE', 1.2), {
-        depth: 0.32,
-        curveSegments: 14,
-        bevelEnabled: true,
-        bevelThickness: 0.13,
-        bevelSize: 0.11,
-        bevelSegments: 7,
-      });
-      geometry.computeBoundingBox();
-      geometry.center();
-      const textMesh = new THREE.Mesh(geometry, textMaterial);
-      textGroup.add(textMesh);
-      textGroup.rotation.x = -0.08;
-      textGroup.rotation.y = -0.04;
-      scene.add(textGroup);
+      // Per-letter extruded geometry, cached per glyph (F/E/S/P/A/C are reused).
+      const unitScale = 1.2 / (font.data.resolution || 2048);
+      const letterGeometries = new Map();
+      const getLetterGeometry = (char) => {
+        if (!letterGeometries.has(char)) {
+          const geometry = new THREE.ExtrudeGeometry(font.generateShapes(char, 1.2), {
+            depth: 0.32,
+            curveSegments: 12,
+            bevelEnabled: true,
+            bevelThickness: 0.13,
+            bevelSize: 0.11,
+            bevelSegments: 6,
+          });
+          geometry.computeBoundingBox();
+          letterGeometries.set(char, geometry);
+        }
+        return letterGeometries.get(char);
+      };
 
-      const bounds = new THREE.Box3().setFromObject(textGroup);
-      const textWidth = Math.max(1, bounds.max.x - bounds.min.x);
-      const textHeight = Math.max(1, bounds.max.y - bounds.min.y);
-      const textFitScale = Math.min(0.78, 5.6 / textWidth, 3.25 / textHeight);
-      textGroup.scale.setScalar(textFitScale);
+      // Two stacked lines, right edges aligned — mirrors the HTML fallback title.
+      const letterSpacing = 0.12;
+      const lineHeight = (font.data.ascender - font.data.descender) * unitScale;
+      const lineGap = lineHeight * 0.16;
+      const lines = ['FEE', 'SPACE'].map((word) => {
+        const glyphs = Array.from(word).map((char) => ({
+          char,
+          geometry: getLetterGeometry(char),
+          advance: (font.data.glyphs[char]?.ha || 0) * unitScale,
+        }));
+        let cursor = 0;
+        glyphs.forEach((item) => {
+          item.x = cursor;
+          cursor += item.advance + letterSpacing;
+        });
+        return { glyphs, width: cursor - letterSpacing };
+      });
+
+      const titleGroup = new THREE.Group();
+      scene.add(titleGroup);
+
+      const letterMeshes = [];
+      lines.forEach((line, lineIndex) => {
+        const baselineY = (lineIndex === 0 ? 1 : -1) * (lineHeight + lineGap) * 0.5;
+        line.glyphs.forEach((item, index) => {
+          const mesh = new THREE.Mesh(item.geometry, textMaterial);
+          mesh.position.set(
+            item.x - line.width * 0.5,
+            baselineY,
+            0
+          );
+          titleGroup.add(mesh);
+          mesh.userData = {
+            layoutX: mesh.position.x,
+            layoutY: mesh.position.y,
+          };
+          letterMeshes.push(mesh);
+        });
+      });
+
+      // Center the composition and measure it for fitting.
+      const union = { minX: Infinity, maxX: -Infinity, minY: Infinity, maxY: -Infinity };
+      letterMeshes.forEach((mesh) => {
+        const box = mesh.geometry.boundingBox;
+        union.minX = Math.min(union.minX, mesh.position.x + box.min.x);
+        union.maxX = Math.max(union.maxX, mesh.position.x + box.max.x);
+        union.minY = Math.min(union.minY, mesh.position.y + box.min.y);
+        union.maxY = Math.max(union.maxY, mesh.position.y + box.max.y);
+      });
+      const centerX = (union.minX + union.maxX) * 0.5;
+      const centerY = (union.minY + union.maxY) * 0.5;
+      letterMeshes.forEach((mesh) => {
+        mesh.position.x -= centerX;
+        mesh.position.y -= centerY;
+        mesh.userData.layoutX = mesh.position.x;
+        mesh.userData.layoutY = mesh.position.y;
+      });
+      union.minX -= centerX;
+      union.maxX -= centerX;
+      union.minY -= centerY;
+      union.maxY -= centerY;
+
+      const textWidth = Math.max(1, union.maxX - union.minX);
+      const textHeight = Math.max(1, union.maxY - union.minY);
+      const textFitScale = Math.min(0.86, 6 / textWidth, 3.1 / textHeight);
+      titleGroup.scale.setScalar(textFitScale);
       const baseY = 0.2;
       let layoutBaseY = baseY;
-      textGroup.position.set(-0.18, baseY, 0);
+      titleGroup.position.set(0, baseY, 0);
 
-      const rimLight = new THREE.DirectionalLight(0xffffff, 4.2);
-      rimLight.position.set(-4, 4, 7);
+      const rimLight = new THREE.DirectionalLight(0xffffff, 1.5);
+      rimLight.position.set(3, 3.5, 6);
       scene.add(rimLight);
 
-      const coolLight = new THREE.PointLight(0x78a6ff, 7, 14);
-      coolLight.position.set(4, 1.5, 4);
+      const accentLight = new THREE.DirectionalLight(0xbdff35, 0.9);
+      accentLight.position.set(-4, 2, -2.5);
+      scene.add(accentLight);
+
+      const coolLight = new THREE.PointLight(0xa4ef47, 2.2, 14);
+      coolLight.position.set(4, -1, 3.5);
       scene.add(coolLight);
 
-      const warmLight = new THREE.PointLight(0xffe2ad, 3.5, 12);
-      warmLight.position.set(-3, -2, 3);
+      const warmLight = new THREE.PointLight(0xffe0a8, 2, 12);
+      warmLight.position.set(-3, -2.5, 3);
       scene.add(warmLight);
 
-      scene.add(new THREE.HemisphereLight(0xdce7ff, 0x1b2445, 1.2));
-
-      const getThemeColor = () => document.documentElement.dataset.theme === 'dark'
-        ? 0x9db5ff
-        : 0x6c92ff;
+      scene.add(new THREE.HemisphereLight(0xffffff, 0x2c322f, 0.4));
 
       const updateTheme = () => {
-        textMaterial.color.setHex(getThemeColor());
-        coolLight.color.setHex(document.documentElement.dataset.theme === 'dark' ? 0x8aaaff : 0x78a6ff);
-        warmLight.intensity = document.documentElement.dataset.theme === 'dark' ? 2.7 : 3.5;
+        const dark = document.documentElement.dataset.theme === 'dark';
+        textMaterial.color.setHex(dark ? 0xaab3b0 : 0x9aa3a0);
+        textMaterial.envMapIntensity = dark ? 0.8 : 0.95;
+        renderer.toneMappingExposure = dark ? 1.05 : 1.22;
       };
+
+      const easeOutBack = (t) => {
+        const c1 = 1.70158;
+        const c3 = c1 + 1;
+        const x = t - 1;
+        return 1 + c3 * x * x * x + c1 * x * x;
+      };
+      const clamp01 = (value) => Math.min(1, Math.max(0, value));
+
+      const START_DELAY = 0.18;
+      const STAGGER = 0.06;
+      const RISE_DURATION = 0.8;
+      const RISE_DISTANCE = 1.4;
+      const entranceTotal = START_DELAY + letterMeshes.length * STAGGER + RISE_DURATION;
 
       let visible = true;
       let frame = 0;
       let lastFrame = 0;
+      let startTime = null;
+      let entranceDone = false;
       let pointerX = 0;
       let pointerY = 0;
       let targetX = 0;
       let targetY = 0;
+      let draggingLetter = null;
+      let dragPointerId = null;
+      let dragNdcX = 0;
+      let dragNdcY = 0;
+      let grabOffsetWorldX = 0;
+      let grabOffsetWorldY = 0;
+
+      const raycaster = new THREE.Raycaster();
+      const dragPlane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
+      const dragPoint = new THREE.Vector3();
+      const viewportPoint = new THREE.Vector3();
+      const DRAG_MARGIN = 12;
+
+      const getPointerNdc = (event) => ({
+        x: (event.clientX / window.innerWidth) * 2 - 1,
+        y: -((event.clientY / window.innerHeight) * 2 - 1),
+      });
+
+      const raycastLetters = (ndcX, ndcY) => {
+        if (!entranceDone) return null;
+        raycaster.setFromCamera(new THREE.Vector2(ndcX, ndcY), camera);
+        const hits = raycaster.intersectObjects(letterMeshes, false);
+        return hits.length ? hits[0].object : null;
+      };
+
+      // Clamp a world point on the drag plane to the viewport bounds.
+      const clampToViewport = (worldPoint) => {
+        const ndc = worldPoint.clone().project(camera);
+        const marginX = DRAG_MARGIN / (window.innerWidth / 2);
+        const marginY = DRAG_MARGIN / (window.innerHeight / 2);
+        const x = Math.min(1 - marginX, Math.max(-1 + marginX, ndc.x));
+        const y = Math.min(1 - marginY, Math.max(-1 + marginY, ndc.y));
+        if (x === ndc.x && y === ndc.y) return worldPoint;
+        raycaster.setFromCamera(new THREE.Vector2(x, y), camera);
+        return raycaster.ray.intersectPlane(dragPlane, viewportPoint) ? viewportPoint : worldPoint;
+      };
 
       const render = (time) => {
         frame = 0;
         if (!visible) return;
-        if (time - lastFrame < 30) {
+        if (time - lastFrame < (draggingLetter || !entranceDone ? 0 : 30)) {
           frame = window.requestAnimationFrame(render);
           return;
         }
+        const dt = Math.min(0.05, Math.max(0.016, (time - lastFrame) * 0.001));
         lastFrame = time;
         const seconds = time * 0.001;
-        pointerX += (targetX - pointerX) * 0.08;
-        pointerY += (targetY - pointerY) * 0.08;
-        textGroup.rotation.y = -0.04 + Math.sin(seconds * 0.48) * 0.08 + pointerX * 0.24;
-        textGroup.rotation.x = -0.08 + Math.cos(seconds * 0.4) * 0.025 + pointerY * 0.16;
-        textGroup.position.y = layoutBaseY + Math.sin(seconds * 0.75) * 0.055;
+        if (startTime === null) startTime = seconds;
+        if (seconds - startTime >= entranceTotal) entranceDone = true;
+
+        pointerX += (targetX - pointerX) * 0.09;
+        pointerY += (targetY - pointerY) * 0.09;
+
+        const elapsed = seconds - startTime;
+
+        // The whole title always tilts toward the pointer, even while dragging.
+        titleGroup.rotation.y = -0.06 + Math.sin(seconds * 0.5) * 0.05 + pointerX * 0.22;
+        titleGroup.rotation.x = -0.07 + Math.cos(seconds * 0.42) * 0.025 + pointerY * 0.14;
+        titleGroup.position.y = layoutBaseY + Math.sin(seconds * 0.7) * 0.03;
+        titleGroup.updateMatrixWorld();
+
+        letterMeshes.forEach((mesh, index) => {
+          const data = mesh.userData;
+          const entrance = clamp01((elapsed - START_DELAY - index * STAGGER) / RISE_DURATION);
+          const eased = easeOutBack(entrance);
+
+          if (mesh === draggingLetter) {
+            // Pin the grabbed letter to the pointer in world space so it keeps
+            // following even while the group tilts underneath it.
+            raycaster.setFromCamera(new THREE.Vector2(dragNdcX, dragNdcY), camera);
+            if (raycaster.ray.intersectPlane(dragPlane, dragPoint)) {
+              const world = dragPoint.clone();
+              world.x += grabOffsetWorldX;
+              world.y += grabOffsetWorldY;
+              const clamped = clampToViewport(world);
+              titleGroup.worldToLocal(clamped);
+              data.layoutX = clamped.x;
+              data.layoutY = clamped.y;
+              mesh.position.x = clamped.x;
+              mesh.position.y = clamped.y;
+            }
+            return;
+          }
+
+          if (entrance < 1) {
+            mesh.position.x = data.layoutX;
+            mesh.position.y = data.layoutY - RISE_DISTANCE * (1 - eased);
+            mesh.rotation.x = -1.15 * (1 - eased);
+            mesh.rotation.z = (index % 2 === 0 ? 0.32 : -0.32) * (1 - eased);
+            mesh.scale.setScalar(0.86 + 0.14 * eased);
+          } else {
+            const idleT = seconds + index * 1.1;
+            mesh.position.x = data.layoutX;
+            mesh.position.y = data.layoutY + Math.sin(idleT * 0.85) * 0.045;
+            mesh.rotation.x = 0;
+            mesh.rotation.z = Math.sin(idleT * 0.55 + 1.4) * 0.03;
+            mesh.scale.setScalar(1);
+          }
+        });
+
         if (shaderUniforms?.uTime) shaderUniforms.uTime.value = seconds;
         coolLight.position.x = 4 + pointerX * 2.4;
         coolLight.position.y = 1.5 - pointerY * 1.8;
@@ -544,24 +740,76 @@
       };
 
       const resize = () => {
-        const width = hero.clientWidth || window.innerWidth;
-        const height = hero.clientHeight || window.innerHeight;
-        const mobile = width < 620;
+        if (window.innerWidth < 620) return;
+        const width = window.innerWidth;
+        const height = window.innerHeight;
         camera.aspect = width / Math.max(height, 1);
-        camera.position.z = mobile ? 16.2 : 10.2;
+        camera.position.z = 10.2;
         camera.updateProjectionMatrix();
-        textGroup.scale.setScalar(textFitScale * (mobile ? 0.58 : 1));
-        textGroup.position.x = mobile ? 0 : -0.18;
-        layoutBaseY = mobile ? 0.95 : baseY;
+        titleGroup.scale.setScalar(textFitScale);
+        layoutBaseY = baseY;
         renderer.setSize(width, height, false);
+        canvas.style.width = `${width}px`;
+        canvas.style.height = `${height}px`;
         requestRender();
       };
 
-      const updatePointer = (event) => {
-        const rect = hero.getBoundingClientRect();
-        targetX = ((event.clientX - rect.left) / Math.max(rect.width, 1) - 0.5) * 2;
-        targetY = ((event.clientY - rect.top) / Math.max(rect.height, 1) - 0.5) * 2;
+      const onPointerDown = (event) => {
+        if (event.pointerType !== 'mouse' || !entranceDone) return;
+        const ndc = getPointerNdc(event);
+        const hit = raycastLetters(ndc.x, ndc.y);
+        if (!hit) return;
+        draggingLetter = hit;
+        dragPointerId = event.pointerId;
+        dragNdcX = ndc.x;
+        dragNdcY = ndc.y;
+        hit.rotation.set(0, 0, 0);
+        hit.scale.setScalar(1);
+        raycaster.setFromCamera(new THREE.Vector2(ndc.x, ndc.y), camera);
+        if (raycaster.ray.intersectPlane(dragPlane, dragPoint)) {
+          const letterWorld = new THREE.Vector3();
+          hit.getWorldPosition(letterWorld);
+          grabOffsetWorldX = letterWorld.x - dragPoint.x;
+          grabOffsetWorldY = letterWorld.y - dragPoint.y;
+        } else {
+          grabOffsetWorldX = 0;
+          grabOffsetWorldY = 0;
+        }
+        try { hero.setPointerCapture(event.pointerId); } catch (error) {}
+        hero.style.cursor = 'grabbing';
         requestRender();
+      };
+
+      const onPointerMove = (event) => {
+        if (event.pointerType !== 'mouse') return;
+        targetX = (event.clientX / window.innerWidth) * 2 - 1;
+        targetY = (event.clientY / window.innerHeight) * 2 - 1;
+        const ndc = getPointerNdc(event);
+
+        if (draggingLetter && event.pointerId === dragPointerId) {
+          dragNdcX = ndc.x;
+          dragNdcY = ndc.y;
+        } else {
+          hero.style.cursor = raycastLetters(ndc.x, ndc.y) ? 'grab' : '';
+        }
+        requestRender();
+      };
+
+      const endDrag = (event) => {
+        if (event.pointerId !== dragPointerId) return;
+        draggingLetter = null;
+        dragPointerId = null;
+        grabOffsetX = 0;
+        grabOffsetY = 0;
+        if (hero.hasPointerCapture && hero.hasPointerCapture(event.pointerId)) {
+          try { hero.releasePointerCapture(event.pointerId); } catch (error) {}
+        }
+        hero.style.cursor = '';
+        requestRender();
+      };
+
+      const clearCursor = () => {
+        hero.style.cursor = '';
       };
 
       const observer = new IntersectionObserver(([entry]) => {
@@ -573,7 +821,11 @@
         requestRender();
       });
 
-      hero.addEventListener('pointermove', updatePointer, { passive: true });
+      hero.addEventListener('pointerdown', onPointerDown);
+      hero.addEventListener('pointermove', onPointerMove, { passive: true });
+      hero.addEventListener('pointerup', endDrag);
+      hero.addEventListener('pointercancel', endDrag);
+      hero.addEventListener('pointerleave', clearCursor, { passive: true });
       window.addEventListener('resize', resize, { passive: true });
       observer.observe(hero);
       themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
@@ -581,10 +833,34 @@
       updateTheme();
       resize();
       requestRender();
+
+      disposeOnce = () => {
+        cancelled = true;
+        if (frame) {
+          window.cancelAnimationFrame(frame);
+          frame = 0;
+        }
+        hero.removeEventListener('pointerdown', onPointerDown);
+        hero.removeEventListener('pointermove', onPointerMove);
+        hero.removeEventListener('pointerup', endDrag);
+        hero.removeEventListener('pointercancel', endDrag);
+        hero.removeEventListener('pointerleave', clearCursor);
+        window.removeEventListener('resize', resize);
+        observer.disconnect();
+        themeObserver.disconnect();
+        hero.classList.remove('webgl-ready');
+        hero.style.cursor = '';
+        letterGeometries.forEach((geometry) => geometry.dispose());
+        textMaterial.dispose();
+        renderer.dispose();
+        canvas.hidden = true;
+      };
     }).catch((error) => {
       canvas.hidden = true;
       console.warn('3D title unavailable; using HTML title fallback.', error);
     });
+
+    return instance;
   };
 
   const initPixelTrail = () => {
@@ -708,6 +984,22 @@
     }, { passive: true });
     window.addEventListener('resize', resize, { passive: true });
     resize();
+  };
+
+  const PIXEL_NOTES = [
+    'Notes, tools, observations & more!',
+    'Welcome to FEE SPACE!!',
+    'Also try the archives!',
+    '100% more 3D letters!',
+    'Grab a letter and drag it!',
+    'CTRL+D to bookmark this!',
+  ];
+
+  const initPixelNote = () => {
+    const note = document.querySelector('.hero-pixel-note');
+    if (!note || window.matchMedia('(max-width: 619px)').matches) return;
+
+    note.textContent = PIXEL_NOTES[Math.floor(Math.random() * PIXEL_NOTES.length)];
   };
 
   const initHomeTransition = () => {
@@ -1149,6 +1441,7 @@
     initReadingProgress();
     initTocCollapsing();
     initThreeHero();
+    initPixelNote();
     initPixelTrail();
     initHomeTransition();
     initLinkHero();
