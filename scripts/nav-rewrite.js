@@ -54,7 +54,6 @@ const SITE_NAV = `
       </div>
       <div class="menus_item"><a class="site-page" href="/trend/"><i class="fa-fw fas fa-bolt"></i><span>动态</span></a></div>
       <div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-compass"></i><span>链接</span></a></div>
-      <div class="menus_item"><a class="site-page" href="/music/"><i class="fa-fw fas fa-music"></i><span>音乐</span></a></div>
       <div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-user"></i><span>关于</span></a></div>
     </div>
   </div>
