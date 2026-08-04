@@ -988,12 +988,9 @@
   };
 
   const PIXEL_NOTES = [
-    'Notes, tools, observations & more!',
     'Welcome to FEE SPACE!!',
-    'Also try the archives!',
-    '100% more 3D letters!',
-    'Grab a letter and drag it!',
-    'CTRL+D to bookmark this!',
+    'Notes, tools, observations & more!',
+    'Do not drag the letters!',
   ];
 
   const initPixelNote = () => {
