@@ -1143,6 +1143,23 @@
     `;
   };
 
+  const initMusicHero = () => {
+    const musicPage = document.querySelector('#body-wrap.type-music');
+    const hero = document.getElementById('page-site-info');
+    if (!musicPage) return;
+
+    document.body.classList.add('is-music-page');
+    if (hero && !hero.querySelector('.music-hero')) {
+      hero.innerHTML = `
+        <div class="music-hero">
+          <p>SOUNDTRACKS & AUDIO / STREAM</p>
+          <h1>狒狒音乐盒</h1>
+          <div><span>网易云</span><span>精选歌单</span><span>音频随想</span></div>
+        </div>
+      `;
+    }
+  };
+
   const initLightbox = () => {
     let overlay = null;
     let viewImg = null;
@@ -1496,6 +1513,7 @@
     initHomeTransition();
     initLinkHero();
     initTrendPage();
+    initMusicHero();
     initLightbox();
     window.requestAnimationFrame(() => document.documentElement.classList.add('site-ready'));
   };
