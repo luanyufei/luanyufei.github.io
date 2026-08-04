@@ -404,24 +404,10 @@
     const hero = document.querySelector('.feespace-hero');
     if (!canvas || !hero || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
-    const MOBILE_WIDTH = 620;
-    let instance = null;
-
-    const sync = () => {
-      const mobile = window.innerWidth < MOBILE_WIDTH;
-      if (mobile && instance) {
-        instance.dispose();
-        instance = null;
-      } else if (!mobile && !instance) {
-        instance = createThreeTitle(canvas, hero);
-      }
-    };
-
-    window.addEventListener('resize', sync, { passive: true });
-    sync();
+    createThreeTitle(canvas, hero);
   };
 
-  // Desktop-only interactive 3D title. Mobile keeps the 2D HTML fallback.
+  // Interactive 3D title (FEE SPACE).
   const createThreeTitle = (canvas, hero) => {
     const instance = { dispose: () => disposeOnce?.() };
     let disposeOnce = null;
@@ -641,9 +627,9 @@
       const viewportPoint = new THREE.Vector3();
       const DRAG_MARGIN = 12;
 
-      const getPointerNdc = (event) => ({
-        x: (event.clientX / window.innerWidth) * 2 - 1,
-        y: -((event.clientY / window.innerHeight) * 2 - 1),
+      const getPointerNdc = (eventOrTouch) => ({
+        x: (eventOrTouch.clientX / window.innerWidth) * 2 - 1,
+        y: -((eventOrTouch.clientY / window.innerHeight) * 2 - 1),
       });
 
       const raycastLetters = (ndcX, ndcY) => {
@@ -740,14 +726,30 @@
       };
 
       const resize = () => {
-        if (window.innerWidth < 620) return;
         const width = window.innerWidth;
         const height = window.innerHeight;
-        camera.aspect = width / Math.max(height, 1);
+        const aspect = width / Math.max(height, 1);
+        camera.aspect = aspect;
         camera.position.z = 10.2;
+
+        // Calculate visible viewport dimensions at z=0 plane
+        const vFOV = (camera.fov * Math.PI) / 180;
+        const visibleHeight = 2 * Math.tan(vFOV / 2) * camera.position.z;
+        const visibleWidth = visibleHeight * aspect;
+
+        // Ensure title width fits within ~82% of viewport width on narrow screens,
+        // and scales appropriately on desktop screens.
+        let fitScale;
+        if (aspect < 1.1) {
+          fitScale = Math.min((visibleWidth * 0.82) / textWidth, (visibleHeight * 0.38) / textHeight);
+          layoutBaseY = baseY + 0.1;
+        } else {
+          fitScale = Math.min(0.86, 6 / textWidth, (visibleHeight * 0.55) / textHeight);
+          layoutBaseY = baseY;
+        }
+
+        titleGroup.scale.setScalar(fitScale);
         camera.updateProjectionMatrix();
-        titleGroup.scale.setScalar(textFitScale);
-        layoutBaseY = baseY;
         renderer.setSize(width, height, false);
         canvas.style.width = `${width}px`;
         canvas.style.height = `${height}px`;
@@ -755,10 +757,15 @@
       };
 
       const onPointerDown = (event) => {
-        if (event.pointerType !== 'mouse' || !entranceDone) return;
+        if (!entranceDone) return;
         const ndc = getPointerNdc(event);
         const hit = raycastLetters(ndc.x, ndc.y);
         if (!hit) return;
+
+        if (event.cancelable) {
+          event.preventDefault();
+        }
+
         draggingLetter = hit;
         dragPointerId = event.pointerId;
         dragNdcX = ndc.x;
@@ -776,36 +783,70 @@
           grabOffsetWorldY = 0;
         }
         try { hero.setPointerCapture(event.pointerId); } catch (error) {}
-        hero.style.cursor = 'grabbing';
+        if (event.pointerType === 'mouse') {
+          hero.style.cursor = 'grabbing';
+        }
         requestRender();
       };
 
       const onPointerMove = (event) => {
-        if (event.pointerType !== 'mouse') return;
         targetX = (event.clientX / window.innerWidth) * 2 - 1;
         targetY = (event.clientY / window.innerHeight) * 2 - 1;
         const ndc = getPointerNdc(event);
 
         if (draggingLetter && event.pointerId === dragPointerId) {
+          if (event.cancelable) {
+            event.preventDefault();
+          }
           dragNdcX = ndc.x;
           dragNdcY = ndc.y;
         } else {
-          hero.style.cursor = raycastLetters(ndc.x, ndc.y) ? 'grab' : '';
+          if (event.pointerType === 'mouse') {
+            hero.style.cursor = raycastLetters(ndc.x, ndc.y) ? 'grab' : '';
+          }
         }
         requestRender();
       };
 
       const endDrag = (event) => {
-        if (event.pointerId !== dragPointerId) return;
+        if (event.pointerId !== dragPointerId && dragPointerId !== null) return;
         draggingLetter = null;
         dragPointerId = null;
-        grabOffsetX = 0;
-        grabOffsetY = 0;
-        if (hero.hasPointerCapture && hero.hasPointerCapture(event.pointerId)) {
+        grabOffsetWorldX = 0;
+        grabOffsetWorldY = 0;
+        if (event?.pointerId && hero.hasPointerCapture && hero.hasPointerCapture(event.pointerId)) {
           try { hero.releasePointerCapture(event.pointerId); } catch (error) {}
         }
         hero.style.cursor = '';
         requestRender();
+      };
+
+      const onTouchStart = (event) => {
+        if (!entranceDone || event.touches.length !== 1) return;
+        const touch = event.touches[0];
+        const ndc = getPointerNdc(touch);
+        const hit = raycastLetters(ndc.x, ndc.y);
+        if (hit) {
+          if (event.cancelable) {
+            event.preventDefault();
+          }
+        }
+      };
+
+      const onTouchMove = (event) => {
+        if (draggingLetter) {
+          if (event.cancelable) {
+            event.preventDefault();
+          }
+          if (event.touches.length === 1) {
+            const touch = event.touches[0];
+            targetX = (touch.clientX / window.innerWidth) * 2 - 1;
+            targetY = (touch.clientY / window.innerHeight) * 2 - 1;
+            dragNdcX = (touch.clientX / window.innerWidth) * 2 - 1;
+            dragNdcY = -((touch.clientY / window.innerHeight) * 2 - 1);
+            requestRender();
+          }
+        }
       };
 
       const clearCursor = () => {
@@ -822,10 +863,16 @@
       });
 
       hero.addEventListener('pointerdown', onPointerDown);
-      hero.addEventListener('pointermove', onPointerMove, { passive: true });
+      hero.addEventListener('pointermove', onPointerMove, { passive: false });
       hero.addEventListener('pointerup', endDrag);
       hero.addEventListener('pointercancel', endDrag);
       hero.addEventListener('pointerleave', clearCursor, { passive: true });
+
+      hero.addEventListener('touchstart', onTouchStart, { passive: false });
+      hero.addEventListener('touchmove', onTouchMove, { passive: false });
+      hero.addEventListener('touchend', endDrag, { passive: true });
+      hero.addEventListener('touchcancel', endDrag, { passive: true });
+
       window.addEventListener('resize', resize, { passive: true });
       observer.observe(hero);
       themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
@@ -845,6 +892,12 @@
         hero.removeEventListener('pointerup', endDrag);
         hero.removeEventListener('pointercancel', endDrag);
         hero.removeEventListener('pointerleave', clearCursor);
+
+        hero.removeEventListener('touchstart', onTouchStart);
+        hero.removeEventListener('touchmove', onTouchMove);
+        hero.removeEventListener('touchend', endDrag);
+        hero.removeEventListener('touchcancel', endDrag);
+
         window.removeEventListener('resize', resize);
         observer.disconnect();
         themeObserver.disconnect();
@@ -857,8 +910,7 @@
       };
     }).catch((error) => {
       canvas.hidden = true;
-      if (hero) hero.classList.add('webgl-failed');
-      console.warn('3D title unavailable; using HTML title fallback.', error);
+      console.warn('3D title unavailable.', error);
     });
 
     return instance;
@@ -995,7 +1047,7 @@
 
   const initPixelNote = () => {
     const note = document.querySelector('.hero-pixel-note');
-    if (!note || window.matchMedia('(max-width: 619px)').matches) return;
+    if (!note) return;
 
     note.textContent = PIXEL_NOTES[Math.floor(Math.random() * PIXEL_NOTES.length)];
   };
@@ -1046,37 +1098,10 @@
     observer.observe(collection);
   };
 
-  const initLinkHero = () => {
-    const linkPage = document.querySelector('#body-wrap.type-link');
-    const hero = document.getElementById('page-site-info');
-    if (!linkPage || !hero) return;
-
-    document.body.classList.add('is-link-page');
-    hero.innerHTML = `
-      <div class="link-hero">
-        <p>LINK DIRECTORY / CURATED</p>
-        <h1>狒狒导航</h1>
-        <div><span>工具</span><span>灵感</span><span>长期收藏</span></div>
-      </div>
-    `;
-  };
-
   const initTrendPage = () => {
     const trendPage = document.querySelector('#body-wrap.type-shuoshuo');
     const container = trendPage?.querySelector('#article-container');
     if (!trendPage) return;
-
-    document.body.classList.add('is-trend-page');
-    const hero = document.getElementById('page-site-info');
-    if (hero && !hero.querySelector('.trend-hero')) {
-      hero.innerHTML = `
-        <div class="trend-hero">
-          <p>MOMENTS & SHORTS / STREAM</p>
-          <h1>FeeFee动态</h1>
-          <div><span>短想法</span><span>临时发现</span><span>随手分享</span></div>
-        </div>
-      `;
-    }
 
     if (!container || container.children.length) return;
 
@@ -1089,6 +1114,74 @@
         <span>等待第一条动态</span>
       </section>
     `;
+  };
+
+  const initPageHero = () => {
+    const path = window.location.pathname.replace(/\/$/, '') || '/';
+    let tag = '';
+    let title = '';
+
+    if (path.startsWith('/trend')) {
+      tag = 'MOMENTS & SHORTS';
+      title = 'FeeFee动态';
+      document.body.classList.add('is-trend-page');
+    } else if (path.startsWith('/link')) {
+      tag = 'LINK DIRECTORY';
+      title = '狒狒导航';
+      document.body.classList.add('is-link-page');
+    } else if (path.startsWith('/about')) {
+      tag = 'ABOUT & PROFILE';
+      title = '关于';
+      document.body.classList.add('is-about-page');
+    } else if (path.startsWith('/music')) {
+      tag = 'MUSIC & SOUNDTRACKS';
+      title = '狒狒音乐盒';
+      document.body.classList.add('is-music-page');
+    } else if (path.startsWith('/archives')) {
+      tag = 'ARCHIVES / COLLECTION';
+      title = '全部文章';
+    } else if (path.startsWith('/categories')) {
+      tag = 'CATEGORIES / INDEX';
+      title = '分类';
+    } else if (path.startsWith('/tags')) {
+      tag = 'TAGS / INDEX';
+      title = '标签';
+    }
+
+    const postInfo = document.getElementById('post-info');
+    if (postInfo) {
+      if (!postInfo.querySelector('.fs-hero-tag')) {
+        const tagSpan = document.createElement('span');
+        tagSpan.className = 'fs-hero-tag';
+        tagSpan.textContent = 'NOTE & ARTICLE';
+        postInfo.insertBefore(tagSpan, postInfo.firstChild);
+      }
+      return;
+    }
+
+    const hero = document.getElementById('page-site-info');
+    if (!hero) return;
+
+    if (hero.querySelector('.fs-unified-hero')) return;
+
+    if (tag && title) {
+      hero.innerHTML = `
+        <div class="fs-unified-hero">
+          <span class="fs-hero-tag">${tag}</span>
+          <h1 class="fs-hero-title">${title}</h1>
+        </div>
+      `;
+    } else {
+      const siteTitle = hero.querySelector('#site-title, .fs-hero-title');
+      if (siteTitle) {
+        hero.innerHTML = `
+          <div class="fs-unified-hero">
+            <span class="fs-hero-tag">INDEX / COLLECTION</span>
+            <h1 class="fs-hero-title">${siteTitle.textContent.trim()}</h1>
+          </div>
+        `;
+      }
+    }
   };
 
   const initLightbox = () => {
@@ -1442,7 +1535,7 @@
     initPixelNote();
     initPixelTrail();
     initHomeTransition();
-    initLinkHero();
+    initPageHero();
     initTrendPage();
     initLightbox();
     window.requestAnimationFrame(() => document.documentElement.classList.add('site-ready'));
