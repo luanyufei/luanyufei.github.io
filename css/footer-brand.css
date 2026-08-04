@@ -196,15 +196,11 @@
   text-decoration: none;
 }
 
-/* Current model highlight */
-.ai-models-pop-item.is-current {
+/* Hover highlight */
+.ai-models-pop-item:hover {
   background: var(--fs-accent);
   color: #0b0d0b;
   font-weight: 700;
-}
-
-.ai-models-pop-item:not(.is-current):hover {
-  background: var(--fs-line-strong);
 }
 
 /* Dark mode */
