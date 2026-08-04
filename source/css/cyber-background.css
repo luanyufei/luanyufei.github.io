@@ -1393,55 +1393,21 @@ body.fs-lightbox-dragging *,
   color: #0b0d0b;
 }
 
-/* APlayer Theme Override */
-.aplayer {
-  margin: 0 !important;
-  border: 1px solid var(--fs-line) !important;
-  background: var(--fs-surface) !important;
-  box-shadow: var(--fs-shadow) !important;
-  font-family: var(--fs-font) !important;
-  color: var(--fs-text) !important;
-  border-radius: var(--fs-radius) !important;
+/* Official Netease Player Frame Box */
+.music-official-frame-box {
+  width: 100%;
+  overflow: hidden;
+  border: 1px solid var(--fs-line);
+  background: var(--fs-surface);
+  border-radius: var(--fs-radius);
+  box-shadow: var(--fs-shadow);
 }
 
-.aplayer .aplayer-body {
-  background: transparent !important;
-}
-
-.aplayer .aplayer-title {
-  color: var(--fs-text) !important;
-  font-weight: 600 !important;
-}
-
-.aplayer .aplayer-author {
-  color: var(--fs-text-2) !important;
-}
-
-.aplayer .aplayer-list ol li {
-  border-top: 1px solid var(--fs-line) !important;
-  color: var(--fs-text-2) !important;
-}
-
-.aplayer .aplayer-list ol li:hover {
-  background: var(--fs-surface-2) !important;
-  color: var(--fs-text) !important;
-}
-
-.aplayer .aplayer-list ol li.aplayer-list-light {
-  background: var(--fs-surface-2) !important;
-  color: var(--fs-text) !important;
-}
-
-.aplayer .aplayer-list ol li.aplayer-list-light .aplayer-list-cur {
-  background-color: var(--fs-accent) !important;
-}
-
-.aplayer .aplayer-lrc p {
-  color: var(--fs-text-2) !important;
-}
-
-.aplayer .aplayer-lrc p.aplayer-lrc-current {
-  color: var(--fs-accent) !important;
+.music-official-frame-box iframe {
+  display: block;
+  width: 100%;
+  height: 450px;
+  border: 0;
 }
 
 #article-container .shuoshuo-item {
