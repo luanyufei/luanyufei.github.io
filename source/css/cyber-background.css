@@ -1283,131 +1283,290 @@ body.fs-lightbox-dragging *,
   font-size: 1.05rem;
 }
 
-/* ── Music Page UI ── */
-.music-page-shell {
+/* ── Cyber Music Deck Redesign ── */
+.cyber-music-deck {
   display: flex;
   flex-direction: column;
-  gap: 2rem;
-  max-width: 900px;
+  gap: 1.8rem;
+  max-width: 920px;
   margin: 0 auto;
 }
 
-.music-hero-card {
+.deck-status-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 0.8rem;
+  border-bottom: 1px dashed var(--fs-line-strong);
+  font-family: var(--fs-mono);
+  font-size: 0.68rem;
+  color: var(--fs-text-3);
+  text-transform: uppercase;
+}
+
+.deck-status-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--fs-accent);
+  box-shadow: 0 0 10px var(--fs-accent);
+  animation: pulse-dot 2s infinite ease-in-out;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 0.4; transform: scale(0.9); }
+  50% { opacity: 1; transform: scale(1.15); }
+}
+
+.status-tag {
+  color: var(--fs-accent);
+  font-weight: 600;
+}
+
+.deck-control-card {
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
-  padding: 1.8rem 2rem;
+  gap: 1.5rem;
+  padding: 2.2rem 2.2rem 1.8rem;
   border: 1px solid var(--fs-line);
   background: var(--fs-surface);
   border-radius: var(--fs-radius);
   box-shadow: var(--fs-shadow);
+  backdrop-filter: blur(16px);
+  position: relative;
+  overflow: hidden;
 }
 
-.music-tag {
-  color: var(--fs-text-3);
-  font-family: var(--fs-mono);
-  font-size: 0.68rem;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+.deck-control-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--fs-accent), transparent);
+  opacity: 0.8;
 }
 
-.music-card-title {
-  margin: 0.35rem 0 0.25rem;
-  color: var(--fs-text);
-  font-size: 1.85rem;
-  font-weight: 700;
-}
-
-.music-card-desc {
-  margin: 0;
-  color: var(--fs-text-2);
-  font-size: 0.92rem;
-}
-
-.music-net-actions {
+.deck-card-top {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
-  gap: 1rem;
-  padding-top: 1rem;
-  border-top: 1px solid var(--fs-line);
+  gap: 1.2rem;
 }
 
-.music-btn-net {
+.deck-title-group h2 {
+  margin: 0 0 0.35rem;
+  color: var(--fs-text);
+  font-size: 1.65rem;
+  font-weight: 780;
+  letter-spacing: -0.01em;
+}
+
+.deck-title-group p {
+  margin: 0;
+  color: var(--fs-text-2);
+  font-size: 0.9rem;
+}
+
+.deck-account-btn {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.55rem 1rem;
+  gap: 0.6rem;
+  padding: 0.65rem 1.1rem;
   border: 1px solid var(--fs-line-strong);
-  background: transparent;
+  background: var(--fs-surface-2);
   color: var(--fs-text);
   font-family: var(--fs-mono);
   font-size: 0.78rem;
   font-weight: 600;
-  transition: all 180ms ease;
+  border-radius: var(--fs-radius);
+  transition: all 200ms ease;
+  white-space: nowrap;
 }
 
-.music-btn-net:hover {
+.deck-account-btn:hover {
   background: var(--fs-accent);
   border-color: var(--fs-accent);
   color: #0b0d0b;
+  box-shadow: 0 0 16px rgba(189, 255, 53, 0.35);
 }
 
-.music-input-group {
+.fa-spin-hover {
+  transition: transform 0.6s ease;
+}
+
+.deck-account-btn:hover .fa-spin-hover {
+  transform: rotate(180deg);
+}
+
+.deck-presets {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.65rem;
+  padding-top: 0.8rem;
+  border-top: 1px solid var(--fs-line);
 }
 
-.music-input-group input {
-  min-width: 220px;
-  padding: 0.5rem 0.8rem;
+.preset-title {
+  color: var(--fs-text-3);
+  font-family: var(--fs-mono);
+  font-size: 0.7rem;
+  margin-right: 0.2rem;
+}
+
+.preset-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.42rem 0.85rem;
   border: 1px solid var(--fs-line);
   background: var(--fs-bg);
+  color: var(--fs-text-2);
+  font-family: var(--fs-mono);
+  font-size: 0.75rem;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 180ms ease;
+}
+
+.preset-chip:hover {
+  border-color: var(--fs-text-2);
+  color: var(--fs-text);
+  transform: translateY(-1px);
+}
+
+.preset-chip.active {
+  background: var(--fs-text);
+  border-color: var(--fs-text);
+  color: var(--fs-bg);
+  font-weight: 600;
+}
+
+.preset-chip.active i {
+  color: var(--fs-accent);
+}
+
+.deck-input-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  margin-top: 0.2rem;
+}
+
+.deck-input-bar label {
+  color: var(--fs-text-3);
+  font-family: var(--fs-mono);
+  font-size: 0.68rem;
+  text-transform: uppercase;
+}
+
+.input-shell {
+  display: flex;
+  align-items: center;
+  border: 1px solid var(--fs-line-strong);
+  background: var(--fs-bg);
+  border-radius: var(--fs-radius);
+  overflow: hidden;
+  transition: border-color 180ms ease, box-shadow 180ms ease;
+}
+
+.input-shell:focus-within {
+  border-color: var(--fs-accent);
+  box-shadow: 0 0 12px rgba(189, 255, 53, 0.15);
+}
+
+.input-icon {
+  padding: 0 0.8rem;
+  color: var(--fs-text-3);
+  font-size: 0.82rem;
+}
+
+.input-shell input {
+  flex: 1;
+  min-width: 0;
+  padding: 0.65rem 0.5rem 0.65rem 0;
+  border: 0;
+  background: transparent;
   color: var(--fs-text);
   font-family: var(--fs-mono);
-  font-size: 0.78rem;
+  font-size: 0.82rem;
   outline: none;
-  transition: border-color 160ms ease;
 }
 
-.music-input-group input:focus {
-  border-color: var(--fs-accent);
-}
-
-.music-input-group button {
-  padding: 0.5rem 0.9rem;
+.input-shell button {
+  padding: 0.65rem 1.2rem;
   border: 0;
   background: var(--fs-text);
   color: var(--fs-bg);
   font-family: var(--fs-mono);
   font-size: 0.78rem;
-  font-weight: 600;
+  font-weight: 650;
   cursor: pointer;
-  transition: background-color 160ms ease;
+  transition: background-color 180ms ease, color 180ms ease;
 }
 
-.music-input-group button:hover {
+.input-shell button:hover {
   background: var(--fs-accent);
   color: #0b0d0b;
 }
 
-/* Official Netease Player Frame Box */
-.music-official-frame-box {
-  width: 100%;
-  overflow: hidden;
-  border: 1px solid var(--fs-line);
+/* Framed Player Console */
+.deck-player-frame {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--fs-line-strong);
   background: var(--fs-surface);
   border-radius: var(--fs-radius);
   box-shadow: var(--fs-shadow);
+  overflow: hidden;
+  transition: border-color 240ms ease;
 }
 
-.music-official-frame-box iframe {
+.frame-header-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.65rem 1.2rem;
+  background: var(--fs-surface-2);
+  border-bottom: 1px solid var(--fs-line);
+}
+
+.frame-dots {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.frame-dots span {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--fs-line-strong);
+  opacity: 0.6;
+}
+
+.frame-label {
+  color: var(--fs-text-3);
+  font-family: var(--fs-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.04em;
+}
+
+.frame-content iframe {
   display: block;
   width: 100%;
   height: 450px;
   border: 0;
+  background: var(--fs-surface);
 }
 
 #article-container .shuoshuo-item {
