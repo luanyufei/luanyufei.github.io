@@ -560,8 +560,8 @@ input:focus-visible {
 #page-header.post-bg {
   display: flex;
   align-items: flex-end;
-  min-height: 0 !important;
-  height: auto !important;
+  min-height: 220px;
+  height: auto;
   border-bottom: 1px solid var(--fs-line);
 }
 
