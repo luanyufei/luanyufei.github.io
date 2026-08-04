@@ -629,9 +629,9 @@
       const viewportPoint = new THREE.Vector3();
       const DRAG_MARGIN = 12;
 
-      const getPointerNdc = (event) => ({
-        x: (event.clientX / window.innerWidth) * 2 - 1,
-        y: -((event.clientY / window.innerHeight) * 2 - 1),
+      const getPointerNdc = (eventOrTouch) => ({
+        x: (eventOrTouch.clientX / window.innerWidth) * 2 - 1,
+        y: -((eventOrTouch.clientY / window.innerHeight) * 2 - 1),
       });
 
       const raycastLetters = (ndcX, ndcY) => {
@@ -811,16 +811,44 @@
       };
 
       const endDrag = (event) => {
-        if (event.pointerId !== dragPointerId) return;
+        if (event.pointerId !== dragPointerId && dragPointerId !== null) return;
         draggingLetter = null;
         dragPointerId = null;
         grabOffsetWorldX = 0;
         grabOffsetWorldY = 0;
-        if (hero.hasPointerCapture && hero.hasPointerCapture(event.pointerId)) {
+        if (event?.pointerId && hero.hasPointerCapture && hero.hasPointerCapture(event.pointerId)) {
           try { hero.releasePointerCapture(event.pointerId); } catch (error) {}
         }
         hero.style.cursor = '';
         requestRender();
+      };
+
+      const onTouchStart = (event) => {
+        if (!entranceDone || event.touches.length !== 1) return;
+        const touch = event.touches[0];
+        const ndc = getPointerNdc(touch);
+        const hit = raycastLetters(ndc.x, ndc.y);
+        if (hit) {
+          if (event.cancelable) {
+            event.preventDefault();
+          }
+        }
+      };
+
+      const onTouchMove = (event) => {
+        if (draggingLetter) {
+          if (event.cancelable) {
+            event.preventDefault();
+          }
+          if (event.touches.length === 1) {
+            const touch = event.touches[0];
+            targetX = (touch.clientX / window.innerWidth) * 2 - 1;
+            targetY = (touch.clientY / window.innerHeight) * 2 - 1;
+            dragNdcX = (touch.clientX / window.innerWidth) * 2 - 1;
+            dragNdcY = -((touch.clientY / window.innerHeight) * 2 - 1);
+            requestRender();
+          }
+        }
       };
 
       const clearCursor = () => {
@@ -841,6 +869,12 @@
       hero.addEventListener('pointerup', endDrag);
       hero.addEventListener('pointercancel', endDrag);
       hero.addEventListener('pointerleave', clearCursor, { passive: true });
+
+      hero.addEventListener('touchstart', onTouchStart, { passive: false });
+      hero.addEventListener('touchmove', onTouchMove, { passive: false });
+      hero.addEventListener('touchend', endDrag, { passive: true });
+      hero.addEventListener('touchcancel', endDrag, { passive: true });
+
       window.addEventListener('resize', resize, { passive: true });
       observer.observe(hero);
       themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
@@ -860,6 +894,12 @@
         hero.removeEventListener('pointerup', endDrag);
         hero.removeEventListener('pointercancel', endDrag);
         hero.removeEventListener('pointerleave', clearCursor);
+
+        hero.removeEventListener('touchstart', onTouchStart);
+        hero.removeEventListener('touchmove', onTouchMove);
+        hero.removeEventListener('touchend', endDrag);
+        hero.removeEventListener('touchcancel', endDrag);
+
         window.removeEventListener('resize', resize);
         observer.disconnect();
         themeObserver.disconnect();

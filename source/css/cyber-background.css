@@ -2631,6 +2631,12 @@ html.search-open body {
   z-index: 3;
 }
 
+.feespace-hero.webgl-ready .hero-statement {
+  position: relative;
+  z-index: 7;
+  pointer-events: none;
+}
+
 @keyframes editorial-word-in {
   from {
     opacity: 0;

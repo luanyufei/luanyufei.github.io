@@ -16,6 +16,10 @@ const HOME_HERO = `
       <span class="editorial-word" data-word="FEE">FEE</span>
       <span class="editorial-word editorial-word-space" data-word="SPACE">SPACE</span>
     </h1>
+    <div class="hero-statement">
+      <span class="hero-statement-index">SYSTEMS, NOTES &amp; SMALL TOOLS</span>
+      <p>A personal space for systems, tools, and observations.</p>
+    </div>
   </div>
   <div class="hero-footer">
     <span>ALAN NOON © 2026</span>
