@@ -560,7 +560,6 @@ input:focus-visible {
 #page-header.post-bg {
   display: flex;
   align-items: flex-end;
-  min-height: 220px;
   height: auto;
   border-bottom: 1px solid var(--fs-line);
 }
@@ -633,6 +632,10 @@ input:focus-visible {
   max-width: none;
   margin: 0 auto;
   padding: 6rem 0 8rem;
+}
+
+body:not(.is-home-page) #content-inner {
+  padding-top: 2.5rem;
 }
 
 .layout {
