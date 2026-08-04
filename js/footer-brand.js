@@ -9,15 +9,16 @@
 
   // Model credit list. Rendered sorted alphabetically (case-insensitive),
   // so the order here does not matter — new models can be appended anywhere.
+  // Each entry: { name, url }
   const AI_MODELS = [
-    'Claude Opus 4.6',
-    'DeepSeek V4 Flash',
-    'Gemini 3.1 Pro',
-    'Gemini 3.5 Flash',
-    'Gemini 3.6 Flash',
-    'GPT 5.6 Luna',
-    'GPT 5.6 Sol',
-    'GPT 5.6 Terra',
+    { name: 'Claude Opus 4.6',   url: 'https://claude.ai' },
+    { name: 'DeepSeek V4 Flash', url: 'https://chat.deepseek.com' },
+    { name: 'Gemini 3.1 Pro',    url: 'https://gemini.google.com' },
+    { name: 'Gemini 3.5 Flash',  url: 'https://gemini.google.com' },
+    { name: 'Gemini 3.6 Flash',  url: 'https://gemini.google.com' },
+    { name: 'GPT 5.6 Luna',      url: 'https://chatgpt.com' },
+    { name: 'GPT 5.6 Sol',       url: 'https://chatgpt.com' },
+    { name: 'GPT 5.6 Terra',     url: 'https://chatgpt.com' },
   ];
 
   function createBrandSection() {
@@ -50,7 +51,7 @@
     if (!frameworkInfo || document.querySelector('.powered-by-ai')) return;
 
     const models = AI_MODELS.slice().sort(
-      (a, b) => a.toLowerCase().localeCompare(b.toLowerCase(), 'en')
+      (a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase(), 'en')
     );
     const headline = models[0];
 
@@ -63,7 +64,7 @@
 
     const headlineEl = document.createElement('span');
     headlineEl.className = 'ai-model ai-model-headline';
-    headlineEl.textContent = headline;
+    headlineEl.textContent = headline.name;
 
     const toggle = document.createElement('button');
     toggle.type = 'button';
@@ -77,11 +78,19 @@
 
     const listEl = document.createElement('ul');
     listEl.className = 'ai-models-pop-list';
-    models.forEach((name) => {
+    models.forEach((model) => {
       const item = document.createElement('li');
       item.className = 'ai-models-pop-item';
-      item.textContent = name;
-      if (name === headline) item.classList.add('is-current');
+      if (model.name === headline.name) item.classList.add('is-current');
+
+      const link = document.createElement('a');
+      link.href = model.url;
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      link.textContent = model.name;
+      link.className = 'ai-model-link';
+
+      item.appendChild(link);
       listEl.appendChild(item);
     });
     pop.appendChild(listEl);
