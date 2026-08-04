@@ -9,28 +9,23 @@ const HOME_HERO = `
     <div class="grid-line line-v-right"></div>
   </div>
   <div class="hero-meta" aria-hidden="true">
-    <span>FEE SPACE / DIGITAL GARDEN</span>
     <span>CN · GMT+8</span>
   </div>
   <div class="hero-grid">
-    <p class="hero-intro">SYSTEMS, NOTES<br>& SMALL TOOLS</p>
     <h1 id="site-title" class="editorial-hero-title" aria-label="Fee Space">
       <span class="editorial-word" data-word="FEE">FEE</span>
       <span class="editorial-word editorial-word-space" data-word="SPACE">SPACE</span>
     </h1>
-    <div class="hero-statement">
-      <span class="hero-statement-index">001 / 004</span>
-      <p>A personal space for systems,<br>tools, and observations.</p>
-    </div>
   </div>
   <div class="hero-footer">
-    <span>DIGITAL CRAFTSMANSHIP © 2026</span>
+    <span>ALAN NOON © 2026</span>
     <div class="hero-links">
       <a href="https://github.com/luanyufei" target="_blank" rel="noopener">GitHub ↗</a>
       <a href="https://space.bilibili.com/3493130162669961" target="_blank" rel="noopener">Bilibili ↗</a>
       <a href="mailto:noonyjufee@gmail.com">Email ↗</a>
     </div>
   </div>
+  <span class="hero-pixel-note" aria-hidden="true">Notes, tools, observations &amp; more!</span>
 </div>
 <button id="scroll-down" type="button" aria-label="滚动到最近文章">
   <i class="fas fa-chevron-down" aria-hidden="true"></i>
@@ -85,6 +80,11 @@ hexo.extend.filter.register('after_render:html', (html) => {
   output = output.replace(/<div id="toggle-menu">[\s\S]*?<\/div>/, '');
 
   if (output.includes('<header class="full_page fixed" id="page-header"')) {
+    output = output.replace(
+      /<head>/,
+      '<head><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">'
+    );
+
     output = output.replace(
       /<div id="site-info">[\s\S]*?<div id="scroll-down">[\s\S]*?<\/div>/,
       HOME_HERO
