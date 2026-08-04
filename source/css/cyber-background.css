@@ -2579,8 +2579,44 @@ html.search-open body {
   opacity: 1;
 }
 
+/* Desktop (≥620px): hide 2D title by default so it doesn't flash before
+   3D loads. The .webgl-failed class is added by JS if WebGL init fails,
+   restoring the 2D title as fallback. Mobile (<620px) always shows 2D. */
+@media (min-width: 621px) {
+  .editorial-hero-title {
+    opacity: 0 !important;
+    pointer-events: none;
+    animation: none !important;
+  }
+  .editorial-hero-title .editorial-word {
+    animation: none !important;
+    opacity: 0 !important;
+  }
+  .editorial-hero-title .editorial-word-space::after {
+    animation: none !important;
+  }
+  /* If WebGL fails, restore the 2D title with a fade-in */
+  .feespace-hero.webgl-failed .editorial-hero-title {
+    opacity: 1 !important;
+    pointer-events: auto;
+    animation: editorial-2d-fadein 600ms var(--fs-ease) forwards !important;
+  }
+  .feespace-hero.webgl-failed .editorial-hero-title .editorial-word {
+    animation: editorial-word-in 800ms var(--fs-ease) forwards !important;
+    opacity: 0 !important;
+  }
+  .feespace-hero.webgl-failed .editorial-hero-title .editorial-word-space::after {
+    animation: editorial-mark-in 650ms 520ms var(--fs-ease) forwards !important;
+  }
+}
+
+@keyframes editorial-2d-fadein {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
 .feespace-hero.webgl-ready .editorial-hero-title {
-  opacity: 0;
+  opacity: 0 !important;
   pointer-events: none;
 }
 

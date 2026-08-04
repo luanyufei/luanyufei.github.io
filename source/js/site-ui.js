@@ -857,6 +857,7 @@
       };
     }).catch((error) => {
       canvas.hidden = true;
+      if (hero) hero.classList.add('webgl-failed');
       console.warn('3D title unavailable; using HTML title fallback.', error);
     });
 
