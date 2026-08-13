@@ -6,12 +6,15 @@
     "build": "hexo generate",
     "clean": "hexo clean",
     "deploy": "hexo deploy",
-    "server": "hexo server"
+    "server": "hexo server",
+    "admin": "node admin/server.js"
   },
   "hexo": {
     "version": "7.3.0"
   },
   "dependencies": {
+    "express": "^5.2.1",
+    "gray-matter": "^4.0.3",
     "hexo": "^7.3.0",
     "hexo-deployer-git": "^4.0.0",
     "hexo-generator-archive": "^2.0.0",

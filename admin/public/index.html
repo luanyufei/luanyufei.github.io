@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fee Admin</title>
+  <link rel="stylesheet" href="/vendor/prism/themes/prism-tomorrow.css">
+  <link rel="stylesheet" href="/app.css">
+</head>
+<body>
+  <aside class="sidebar">
+    <div class="brand"><span class="brand-mark">FA</span><div><b>FEE ADMIN</b><small>博客管理面板</small></div></div>
+    <nav>
+      <button class="nav-item" data-view="posts"><i>▤</i><span>文章</span></button>
+      <button class="nav-item" data-view="trend"><i>⚡</i><span>动态</span></button>
+      <button class="nav-item" data-view="links"><i>◎</i><span>链接</span></button>
+      <button class="nav-item" data-view="images"><i>🖼</i><span>图片</span></button>
+      <button class="nav-item" data-view="deploy"><i>⇪</i><span>部署</span></button>
+    </nav>
+    <div class="sidebar-foot"><a href="http://localhost:4000" target="_blank" rel="noopener">打开博客 ↗</a></div>
+  </aside>
+  <main id="main">
+    <section id="view-posts" class="view"></section>
+    <section id="view-trend" class="view hidden"></section>
+    <section id="view-links" class="view hidden"></section>
+    <section id="view-images" class="view hidden"></section>
+    <section id="view-deploy" class="view hidden"></section>
+  </main>
+  <div id="toast"></div>
+  <div id="modal-root"></div>
+  <script src="/vendor/marked.min.js"></script>
+  <script src="/vendor/prism.js"></script>
+  <script src="/vendor/prism/components/prism-bash.min.js"></script>
+  <script src="/vendor/prism/components/prism-yaml.min.js"></script>
+  <script src="/vendor/prism/components/prism-json.min.js"></script>
+  <script src="/vendor/prism/components/prism-python.min.js"></script>
+  <script src="/vendor/prism/components/prism-java.min.js"></script>
+  <script src="/vendor/prism/components/prism-c.min.js"></script>
+  <script src="/vendor/prism/components/prism-cpp.min.js"></script>
+  <script src="/vendor/prism/components/prism-sql.min.js"></script>
+  <script src="/vendor/prism/components/prism-diff.min.js"></script>
+  <script src="/vendor/prism/components/prism-ini.min.js"></script>
+  <script src="/app.js"></script>
+</body>
+</html>

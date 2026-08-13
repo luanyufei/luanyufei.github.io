@@ -3,7 +3,7 @@ Thumbs.db
 db.json
 *.log
 node_modules/
-public/
+/public/
 .deploy*/
 _multiconfig.yml
 .vercel
@@ -11,3 +11,5 @@ _multiconfig.yml
 GUIDANCE.md
 草稿箱/
 
+admin/.trash/
+admin/.backup/
