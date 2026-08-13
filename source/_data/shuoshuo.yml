@@ -1,6 +1,6 @@
 - author: 乱与狒
   date: '2026-08-03 21:02:00'
-  content: 最近一直用 Gemini 解答考研数学，就觉得它识图真牛逼，而且解答步骤也很精准。<br><br>一查 arena.ai，果不其然，Gemini 3.6 flash 的数学水平居然排第四，只有 opus 5 和 fable 5 超过了它。Google 还是有点水平的。<br><br>![Gemini 3.6 Flash 数学榜单](/image/gemini-3-6-flash-arena-math.png)
+  content: 最近一直用 Gemini 解答考研数学，就觉得它识图真牛逼，而且解答步骤也很精准。<br><br>一查 arena.ai，果不其然，Gemini 3.6 flash 的数学水平居然排第四，只有 opus 5 和 fable 5 超过了它。Google 还是有点水平的。<br><br>![Gemini 3.6 Flash 数学榜单](/image/gemini-3-6-flash-arena-math.webp)
   tags:
     - Gemini
     - AI

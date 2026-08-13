@@ -99,7 +99,7 @@
   link_list:
     - name: macOS icons
       link: https://macosicons.com/
-      avatar: /img/favicon.ico
+      avatar: /favicon.ico
       descr: macOS 风格图标资源站
     - name: Appstorrent
       link: https://appstorrent.ru/
@@ -107,11 +107,11 @@
       descr: macOS apps
     - name: MacKed
       link: https://macked.app/
-      avatar: /img/favicon.ico
+      avatar: /favicon.ico
       descr: macOS apps
     - name: Digit77
       link: https://www.digit77.com/
-      avatar: /img/favicon.ico
+      avatar: /favicon.ico
       descr: 在线工具与效率资源
     - name: Greasy Fork
       link: https://greasyfork.org/zh-CN

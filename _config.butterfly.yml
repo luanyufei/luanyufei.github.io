@@ -2,7 +2,7 @@ nav:
   fixed: true
   display_title: false
 
-favicon: /img/noon-avatar.png
+favicon: /img/noon-avatar.webp
 
 
 menu:
@@ -21,7 +21,7 @@ social:
   fas fa-music: https://music.163.com/#/user?id=1387620746 || 网易云 || '#f34038'
 
 avatar:
-  img: /img/touxiang.png
+  img: /img/touxiang.webp
   effect: false
 
 index_img: "#f3f6f2"
@@ -70,7 +70,7 @@ search:
 inject:
   head:
     - >-
-      <script>(function(){try{localStorage.removeItem('theme');var raw=sessionStorage.getItem('theme');var saved;if(raw){try{var parsed=JSON.parse(raw);saved=parsed.value}catch(e){saved=raw}}var mode=saved==='light'||saved==='dark'?saved:(window.matchMedia&&window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',mode);document.documentElement.classList.add('js')}catch(e){document.documentElement.setAttribute('data-theme','light')}})();</script>
+      <script>(function(){try{localStorage.removeItem('theme');var raw=sessionStorage.getItem('theme');var saved;if(raw){try{var parsed=JSON.parse(raw);saved=parsed.value}catch(e){saved=raw}}var mode=saved==='light'||saved==='dark'?saved:(window.matchMedia&&window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',mode);document.documentElement.classList.add('js');var m=document.querySelector('meta[name="theme-color"]');if(m){m.setAttribute('content',mode==='dark'?'#0f1111':'#f3f6f2')}}catch(e){document.documentElement.setAttribute('data-theme','light')}})();</script>
     - <link rel="stylesheet" href="/css/cyber-background.css">
     - <link rel="stylesheet" href="/css/footer-brand.css">
   bottom:
@@ -79,6 +79,11 @@ inject:
 
 translate:
   enable: false
+
+busuanzi:
+  site_uv: false
+  site_pv: false
+  page_pv: false
 
 darkmode:
   enable: true

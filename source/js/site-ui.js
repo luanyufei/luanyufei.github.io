@@ -45,6 +45,11 @@
     return getSystemTheme();
   };
 
+  const syncThemeColor = (actualTheme) => {
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.setAttribute('content', actualTheme === 'dark' ? '#0f1111' : '#f3f6f2');
+  };
+
   const updateThemeButton = (button, mode, actualTheme) => {
     if (!button) return;
 
@@ -86,6 +91,7 @@
     }
 
     if (persist) saveThemeMode(validMode);
+    syncThemeColor(actualTheme);
     updateThemeButton(document.querySelector('.site-theme-toggle'), validMode, actualTheme);
   };
 

@@ -5,7 +5,7 @@ date: 2025-02-12 21:20:42
 
 <section class="about-profile">
   <figure class="about-avatar-frame">
-    <img class="about-avatar no-lightbox" src="/img/noon-avatar.png" alt="乱与狒的头像">
+    <img class="about-avatar no-lightbox" src="/img/noon-avatar.webp" alt="乱与狒的头像">
     <figcaption>NOON / FEE SPACE</figcaption>
   </figure>
   <div class="about-profile-copy">

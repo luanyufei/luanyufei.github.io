@@ -100,7 +100,7 @@ EOF
 
 打开 **系统设置**，搜索 `profiles`，进入 **Device Management** 界面。双击 **Brave Debloat**，然后点 **Install** 安装。
 
-![系统设置中的 Brave Debloat 描述文件](/image/brave-debloat-profiles.png "在 Device Management 中安装 Brave Debloat 描述文件")
+![系统设置中的 Brave Debloat 描述文件](/image/brave-debloat-profiles.webp "在 Device Management 中安装 Brave Debloat 描述文件")
 
 ### Step 4：重启 Brave
 

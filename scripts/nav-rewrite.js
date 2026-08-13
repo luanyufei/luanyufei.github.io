@@ -1,6 +1,6 @@
 const HOME_HERO = `
 <div id="site-info" class="feespace-hero">
-  <script type="importmap" id="feespace-three-importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
+  <script type="importmap" id="feespace-three-importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.min.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
   <canvas id="feespace-hero-canvas" aria-hidden="true"></canvas>
   <div class="hero-grid-lines" aria-hidden="true">
     <div class="grid-line line-h-top"></div>
@@ -76,10 +76,17 @@ hexo.extend.filter.register('after_render:html', (html) => {
   output = output.replace(/<div id="search-button">[\s\S]*?<\/div>/, '');
   output = output.replace(/<div id="toggle-menu">[\s\S]*?<\/div>/, '');
 
+  // Lazy-load content images; strip lazy attrs from above-the-fold post covers.
+  output = output.replace(/<img (?![^>]*loading=)/g, '<img loading="lazy" decoding="async" ');
+  output = output.replace(
+    /(<div id="post-cover">[\s\S]*?<\/div>)/g,
+    (cover) => cover.replace(/ loading="lazy" decoding="async"/g, '')
+  );
+
   if (output.includes('<header class="full_page fixed" id="page-header"')) {
     output = output.replace(
       /<head>/,
-      '<head><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">'
+      '<head><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&text=Welcom%20tFESPAC!Ns%2Cbrvain%26Ddgh&display=swap" rel="stylesheet">'
     );
 
     output = output.replace(

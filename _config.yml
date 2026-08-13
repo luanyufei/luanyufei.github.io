@@ -117,3 +117,21 @@ search:
   field: post
   format: html
   limit: 10000
+
+# Sitemap
+sitemap:
+  path:
+    - sitemap.xml
+
+# RSS Feed
+feed:
+  enable: true
+  type:
+    - atom
+    - rss2
+  path:
+    - atom.xml
+    - rss2.xml
+  limit: 20
+  content: true
+  content_limit: 10000
