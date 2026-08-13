@@ -17,7 +17,12 @@
       <button class="nav-item" data-view="images"><i>🖼</i><span>图片</span></button>
       <button class="nav-item" data-view="deploy"><i>⇪</i><span>部署</span></button>
     </nav>
-    <div class="sidebar-foot"><a href="http://localhost:4000" target="_blank" rel="noopener">打开博客 ↗</a></div>
+    <div class="sidebar-foot">
+      <div class="foot-links">
+        <a href="http://localhost:4000" target="_blank" rel="noopener">打开博客 ↗</a>
+        <button class="quit-btn" id="btn-quit" title="关闭管理面板（退出 localhost 服务）">⏻ 退出面板</button>
+      </div>
+    </div>
   </aside>
   <main id="main">
     <section id="view-posts" class="view"></section>

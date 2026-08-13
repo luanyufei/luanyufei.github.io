@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="112" fill="#0f1111"/>
+  <rect x="12" y="12" width="488" height="488" rx="102" fill="none" stroke="#bdff35" stroke-width="7" opacity="0.3"/>
+  <rect x="28" y="28" width="456" height="456" rx="90" fill="#171a19"/>
+  <text x="256" y="322" font-family="Menlo, Monaco, monospace" font-size="196" font-weight="800" fill="#bdff35" text-anchor="middle">FA</text>
+  <rect x="176" y="360" width="160" height="10" rx="5" fill="#bdff35" opacity="0.55"/>
+</svg>

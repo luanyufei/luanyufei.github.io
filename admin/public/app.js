@@ -669,6 +669,18 @@
     switchView(btn.dataset.view);
   }));
 
+  const quitBtn = $('#btn-quit');
+  if (quitBtn) quitBtn.addEventListener('click', async () => {
+    if (!confirm('退出 Fee Admin？面板服务和本地预览都会关闭。再次启动请双击「Fee Admin」图标。')) return;
+    try {
+      await api('/api/quit', { method: 'POST' });
+      document.body.innerHTML = '<div style="display:grid;place-items:center;min-height:100vh;color:#8a948e;font-size:14px">Fee Admin 已退出，可以关闭此标签页。</div>';
+    } catch (error) {
+      toast('已退出，服务已关闭', true);
+      setTimeout(() => { document.body.innerHTML = '<div style="display:grid;place-items:center;min-height:100vh;color:#8a948e;font-size:14px">Fee Admin 已退出。</div>'; }, 400);
+    }
+  });
+
   marked.setOptions({ breaks: true, gfm: true });
   switchView('posts');
 })();

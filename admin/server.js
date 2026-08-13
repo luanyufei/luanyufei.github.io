@@ -95,6 +95,11 @@ app.post('/api/server/start', wrap(async (req, res) => res.json(await git.startS
 app.post('/api/server/stop', wrap(async (req, res) => res.json(await git.stopServer())));
 app.get('/api/server/state', wrap(async (req, res) => res.json(git.previewState())));
 
+app.post('/api/quit', async (req, res) => {
+  res.json({ ok: true, message: 'Fee Admin 正在退出…' });
+  setTimeout(() => process.exit(0), 300);
+});
+
 app.get('/api/logs', (req, res) => {
   res.writeHead(200, {
     'Content-Type': 'text/event-stream',
