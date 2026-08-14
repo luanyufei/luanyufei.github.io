@@ -624,14 +624,16 @@
       let dragPointerId = null;
       let dragNdcX = 0;
       let dragNdcY = 0;
-      let grabOffsetWorldX = 0;
-      let grabOffsetWorldY = 0;
+      let grabOffsetLocalX = 0;
+      let grabOffsetLocalY = 0;
 
       const raycaster = new THREE.Raycaster();
-      const dragPlane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
+      const edgeRaycaster = new THREE.Raycaster();
       const dragPoint = new THREE.Vector3();
-      const viewportPoint = new THREE.Vector3();
-      const DRAG_MARGIN = 12;
+      const ptLeft = new THREE.Vector3();
+      const ptRight = new THREE.Vector3();
+      const ptBottom = new THREE.Vector3();
+      const ptTop = new THREE.Vector3();
 
       const getPointerNdc = (eventOrTouch) => ({
         x: (eventOrTouch.clientX / window.innerWidth) * 2 - 1,
@@ -643,18 +645,6 @@
         raycaster.setFromCamera(new THREE.Vector2(ndcX, ndcY), camera);
         const hits = raycaster.intersectObjects(letterMeshes, false);
         return hits.length ? hits[0].object : null;
-      };
-
-      // Clamp a world point on the drag plane to the viewport bounds.
-      const clampToViewport = (worldPoint) => {
-        const ndc = worldPoint.clone().project(camera);
-        const marginX = DRAG_MARGIN / (window.innerWidth / 2);
-        const marginY = DRAG_MARGIN / (window.innerHeight / 2);
-        const x = Math.min(1 - marginX, Math.max(-1 + marginX, ndc.x));
-        const y = Math.min(1 - marginY, Math.max(-1 + marginY, ndc.y));
-        if (x === ndc.x && y === ndc.y) return worldPoint;
-        raycaster.setFromCamera(new THREE.Vector2(x, y), camera);
-        return raycaster.ray.intersectPlane(dragPlane, viewportPoint) ? viewportPoint : worldPoint;
       };
 
       const render = (time) => {
@@ -681,25 +671,57 @@
         titleGroup.position.y = layoutBaseY + Math.sin(seconds * 0.7) * 0.03;
         titleGroup.updateMatrixWorld();
 
+        const titlePlane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0).applyMatrix4(titleGroup.matrixWorld);
+
         letterMeshes.forEach((mesh, index) => {
           const data = mesh.userData;
           const entrance = clamp01((elapsed - START_DELAY - index * STAGGER) / RISE_DURATION);
           const eased = easeOutBack(entrance);
 
           if (mesh === draggingLetter) {
-            // Pin the grabbed letter to the pointer in world space so it keeps
-            // following even while the group tilts underneath it.
             raycaster.setFromCamera(new THREE.Vector2(dragNdcX, dragNdcY), camera);
-            if (raycaster.ray.intersectPlane(dragPlane, dragPoint)) {
-              const world = dragPoint.clone();
-              world.x += grabOffsetWorldX;
-              world.y += grabOffsetWorldY;
-              const clamped = clampToViewport(world);
-              titleGroup.worldToLocal(clamped);
-              data.layoutX = clamped.x;
-              data.layoutY = clamped.y;
-              mesh.position.x = clamped.x;
-              mesh.position.y = clamped.y;
+            if (raycaster.ray.intersectPlane(titlePlane, dragPoint)) {
+              const localTarget = dragPoint.clone();
+              titleGroup.worldToLocal(localTarget);
+              localTarget.x += grabOffsetLocalX;
+              localTarget.y += grabOffsetLocalY;
+
+              // Calculate visible viewport boundary on the title's 3D plane
+              edgeRaycaster.setFromCamera(new THREE.Vector2(-1.0, dragNdcY), camera);
+              edgeRaycaster.ray.intersectPlane(titlePlane, ptLeft);
+              titleGroup.worldToLocal(ptLeft);
+
+              edgeRaycaster.setFromCamera(new THREE.Vector2(1.0, dragNdcY), camera);
+              edgeRaycaster.ray.intersectPlane(titlePlane, ptRight);
+              titleGroup.worldToLocal(ptRight);
+
+              edgeRaycaster.setFromCamera(new THREE.Vector2(dragNdcX, -1.0), camera);
+              edgeRaycaster.ray.intersectPlane(titlePlane, ptBottom);
+              titleGroup.worldToLocal(ptBottom);
+
+              edgeRaycaster.setFromCamera(new THREE.Vector2(dragNdcX, 1.0), camera);
+              edgeRaycaster.ray.intersectPlane(titlePlane, ptTop);
+              titleGroup.worldToLocal(ptTop);
+
+              const box = mesh.geometry.boundingBox;
+              const boxMinX = box ? box.min.x : 0;
+              const boxMaxX = box ? box.max.x : 0;
+              const boxMinY = box ? box.min.y : 0;
+              const boxMaxY = box ? box.max.y : 0;
+
+              const minX = Math.min(ptLeft.x, ptRight.x) - boxMinX;
+              const maxX = Math.max(ptLeft.x, ptRight.x) - boxMaxX;
+              const minY = Math.min(ptBottom.y, ptTop.y) - boxMinY;
+              const maxY = Math.max(ptBottom.y, ptTop.y) - boxMaxY;
+
+              const clampedX = Math.max(minX, Math.min(maxX, localTarget.x));
+              const clampedY = Math.max(minY, Math.min(maxY, localTarget.y));
+
+              data.layoutX = clampedX;
+              data.layoutY = clampedY;
+              mesh.position.x = clampedX;
+              mesh.position.y = clampedY;
+              mesh.position.z = 0;
             }
             return;
           }
@@ -707,6 +729,7 @@
           if (entrance < 1) {
             mesh.position.x = data.layoutX;
             mesh.position.y = data.layoutY - RISE_DISTANCE * (1 - eased);
+            mesh.position.z = 0;
             mesh.rotation.x = -1.15 * (1 - eased);
             mesh.rotation.z = (index % 2 === 0 ? 0.32 : -0.32) * (1 - eased);
             mesh.scale.setScalar(0.86 + 0.14 * eased);
@@ -714,6 +737,7 @@
             const idleT = seconds + index * 1.1;
             mesh.position.x = data.layoutX;
             mesh.position.y = data.layoutY + Math.sin(idleT * 0.85) * 0.045;
+            mesh.position.z = 0;
             mesh.rotation.x = 0;
             mesh.rotation.z = Math.sin(idleT * 0.55 + 1.4) * 0.03;
             mesh.scale.setScalar(1);
@@ -762,8 +786,13 @@
         requestRender();
       };
 
+      const setGlobalCursor = (cursorStyle) => {
+        document.body.style.cursor = cursorStyle;
+        hero.style.cursor = cursorStyle;
+      };
+
       const onPointerDown = (event) => {
-        if (!entranceDone) return;
+        if (!entranceDone || !visible) return;
         const ndc = getPointerNdc(event);
         const hit = raycastLetters(ndc.x, ndc.y);
         if (!hit) return;
@@ -776,59 +805,66 @@
         dragPointerId = event.pointerId;
         dragNdcX = ndc.x;
         dragNdcY = ndc.y;
+        targetX = ndc.x;
+        targetY = ndc.y;
         hit.rotation.set(0, 0, 0);
         hit.scale.setScalar(1);
+
+        titleGroup.updateMatrixWorld();
+        const titlePlane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0).applyMatrix4(titleGroup.matrixWorld);
         raycaster.setFromCamera(new THREE.Vector2(ndc.x, ndc.y), camera);
-        if (raycaster.ray.intersectPlane(dragPlane, dragPoint)) {
-          const letterWorld = new THREE.Vector3();
-          hit.getWorldPosition(letterWorld);
-          grabOffsetWorldX = letterWorld.x - dragPoint.x;
-          grabOffsetWorldY = letterWorld.y - dragPoint.y;
+        if (raycaster.ray.intersectPlane(titlePlane, dragPoint)) {
+          const localHit = dragPoint.clone();
+          titleGroup.worldToLocal(localHit);
+          grabOffsetLocalX = hit.position.x - localHit.x;
+          grabOffsetLocalY = hit.position.y - localHit.y;
         } else {
-          grabOffsetWorldX = 0;
-          grabOffsetWorldY = 0;
+          grabOffsetLocalX = 0;
+          grabOffsetLocalY = 0;
         }
-        try { hero.setPointerCapture(event.pointerId); } catch (error) {}
+
         if (event.pointerType === 'mouse') {
-          hero.style.cursor = 'grabbing';
+          setGlobalCursor('grabbing');
         }
+        document.body.style.userSelect = 'none';
         requestRender();
       };
 
       const onPointerMove = (event) => {
+        const ndc = getPointerNdc(event);
         targetX = (event.clientX / window.innerWidth) * 2 - 1;
         targetY = (event.clientY / window.innerHeight) * 2 - 1;
-        const ndc = getPointerNdc(event);
 
-        if (draggingLetter && event.pointerId === dragPointerId) {
+        if (draggingLetter && (dragPointerId === null || event.pointerId === dragPointerId)) {
           if (event.cancelable) {
             event.preventDefault();
           }
           dragNdcX = ndc.x;
           dragNdcY = ndc.y;
-        } else {
-          if (event.pointerType === 'mouse') {
-            hero.style.cursor = raycastLetters(ndc.x, ndc.y) ? 'grab' : '';
+        } else if (!draggingLetter && event.pointerType === 'mouse') {
+          if (visible && entranceDone && raycastLetters(ndc.x, ndc.y)) {
+            setGlobalCursor('grab');
+          } else {
+            setGlobalCursor('');
           }
         }
         requestRender();
       };
 
       const endDrag = (event) => {
-        if (event.pointerId !== dragPointerId && dragPointerId !== null) return;
+        if (draggingLetter === null) return;
+        if (event?.pointerId !== undefined && dragPointerId !== null && event.pointerId !== dragPointerId) return;
         draggingLetter = null;
         dragPointerId = null;
-        grabOffsetWorldX = 0;
-        grabOffsetWorldY = 0;
-        if (event?.pointerId && hero.hasPointerCapture && hero.hasPointerCapture(event.pointerId)) {
-          try { hero.releasePointerCapture(event.pointerId); } catch (error) {}
-        }
-        hero.style.cursor = '';
+        grabOffsetLocalX = 0;
+        grabOffsetLocalY = 0;
+        setGlobalCursor('');
+        document.body.style.userSelect = '';
         requestRender();
       };
 
       const onTouchStart = (event) => {
-        if (!entranceDone || event.touches.length !== 1) return;
+        if (!entranceDone || !visible || event.touches.length !== 1) return;
         const touch = event.touches[0];
         const ndc = getPointerNdc(touch);
         const hit = raycastLetters(ndc.x, ndc.y);
@@ -836,31 +872,56 @@
           if (event.cancelable) {
             event.preventDefault();
           }
+          draggingLetter = hit;
+          dragPointerId = touch.identifier ?? 'touch';
+          dragNdcX = ndc.x;
+          dragNdcY = ndc.y;
+          targetX = ndc.x;
+          targetY = ndc.y;
+          hit.rotation.set(0, 0, 0);
+          hit.scale.setScalar(1);
+
+          titleGroup.updateMatrixWorld();
+          const titlePlane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0).applyMatrix4(titleGroup.matrixWorld);
+          raycaster.setFromCamera(new THREE.Vector2(ndc.x, ndc.y), camera);
+          if (raycaster.ray.intersectPlane(titlePlane, dragPoint)) {
+            const localHit = dragPoint.clone();
+            titleGroup.worldToLocal(localHit);
+            grabOffsetLocalX = hit.position.x - localHit.x;
+            grabOffsetLocalY = hit.position.y - localHit.y;
+          } else {
+            grabOffsetLocalX = 0;
+            grabOffsetLocalY = 0;
+          }
+          requestRender();
         }
       };
 
       const onTouchMove = (event) => {
-        if (draggingLetter) {
+        if (draggingLetter && event.touches.length === 1) {
           if (event.cancelable) {
             event.preventDefault();
           }
-          if (event.touches.length === 1) {
-            const touch = event.touches[0];
-            targetX = (touch.clientX / window.innerWidth) * 2 - 1;
-            targetY = (touch.clientY / window.innerHeight) * 2 - 1;
-            dragNdcX = (touch.clientX / window.innerWidth) * 2 - 1;
-            dragNdcY = -((touch.clientY / window.innerHeight) * 2 - 1);
-            requestRender();
-          }
+          const touch = event.touches[0];
+          targetX = (touch.clientX / window.innerWidth) * 2 - 1;
+          targetY = (touch.clientY / window.innerHeight) * 2 - 1;
+          dragNdcX = (touch.clientX / window.innerWidth) * 2 - 1;
+          dragNdcY = -((touch.clientY / window.innerHeight) * 2 - 1);
+          requestRender();
         }
       };
 
       const clearCursor = () => {
-        hero.style.cursor = '';
+        if (!draggingLetter) {
+          setGlobalCursor('');
+        }
       };
 
       const observer = new IntersectionObserver(([entry]) => {
         visible = entry.isIntersecting;
+        if (!visible) {
+          clearCursor();
+        }
         if (visible) requestRender();
       });
       const themeObserver = new MutationObserver(() => {
@@ -868,16 +929,16 @@
         requestRender();
       });
 
-      hero.addEventListener('pointerdown', onPointerDown);
-      hero.addEventListener('pointermove', onPointerMove, { passive: false });
-      hero.addEventListener('pointerup', endDrag);
-      hero.addEventListener('pointercancel', endDrag);
-      hero.addEventListener('pointerleave', clearCursor, { passive: true });
+      window.addEventListener('pointerdown', onPointerDown, { passive: false });
+      window.addEventListener('pointermove', onPointerMove, { passive: false });
+      window.addEventListener('pointerup', endDrag);
+      window.addEventListener('pointercancel', endDrag);
+      window.addEventListener('blur', endDrag);
 
-      hero.addEventListener('touchstart', onTouchStart, { passive: false });
-      hero.addEventListener('touchmove', onTouchMove, { passive: false });
-      hero.addEventListener('touchend', endDrag, { passive: true });
-      hero.addEventListener('touchcancel', endDrag, { passive: true });
+      window.addEventListener('touchstart', onTouchStart, { passive: false });
+      window.addEventListener('touchmove', onTouchMove, { passive: false });
+      window.addEventListener('touchend', endDrag, { passive: true });
+      window.addEventListener('touchcancel', endDrag, { passive: true });
 
       window.addEventListener('resize', resize, { passive: true });
       observer.observe(hero);
@@ -893,21 +954,22 @@
           window.cancelAnimationFrame(frame);
           frame = 0;
         }
-        hero.removeEventListener('pointerdown', onPointerDown);
-        hero.removeEventListener('pointermove', onPointerMove);
-        hero.removeEventListener('pointerup', endDrag);
-        hero.removeEventListener('pointercancel', endDrag);
-        hero.removeEventListener('pointerleave', clearCursor);
+        window.removeEventListener('pointerdown', onPointerDown);
+        window.removeEventListener('pointermove', onPointerMove);
+        window.removeEventListener('pointerup', endDrag);
+        window.removeEventListener('pointercancel', endDrag);
+        window.removeEventListener('blur', endDrag);
 
-        hero.removeEventListener('touchstart', onTouchStart);
-        hero.removeEventListener('touchmove', onTouchMove);
-        hero.removeEventListener('touchend', endDrag);
-        hero.removeEventListener('touchcancel', endDrag);
+        window.removeEventListener('touchstart', onTouchStart);
+        window.removeEventListener('touchmove', onTouchMove);
+        window.removeEventListener('touchend', endDrag);
+        window.removeEventListener('touchcancel', endDrag);
 
         window.removeEventListener('resize', resize);
         observer.disconnect();
         themeObserver.disconnect();
         hero.classList.remove('webgl-ready');
+        setGlobalCursor('');
         hero.style.cursor = '';
         letterGeometries.forEach((geometry) => geometry.dispose());
         textMaterial.dispose();

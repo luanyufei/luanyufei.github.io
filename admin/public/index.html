@@ -3,36 +3,163 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Fee Admin</title>
+  <title>Fee Admin · 控制面板</title>
+  <link rel="icon" type="image/svg+xml" href="/icon.svg">
   <link rel="stylesheet" href="/vendor/prism/themes/prism-tomorrow.css">
   <link rel="stylesheet" href="/app.css">
 </head>
 <body>
-  <aside class="sidebar">
-    <div class="brand"><span class="brand-mark">FA</span><div><b>FEE ADMIN</b><small>博客管理面板</small></div></div>
-    <nav>
-      <button class="nav-item" data-view="posts"><i>▤</i><span>文章</span></button>
-      <button class="nav-item" data-view="trend"><i>⚡</i><span>动态</span></button>
-      <button class="nav-item" data-view="links"><i>◎</i><span>链接</span></button>
-      <button class="nav-item" data-view="images"><i>🖼</i><span>图片</span></button>
-      <button class="nav-item" data-view="deploy"><i>⇪</i><span>部署</span></button>
-    </nav>
-    <div class="sidebar-foot">
-      <div class="foot-links">
-        <a href="http://localhost:4000" target="_blank" rel="noopener">打开博客 ↗</a>
-        <button class="quit-btn" id="btn-quit" title="关闭管理面板（退出 localhost 服务）">⏻ 退出面板</button>
+  <div class="app-layout">
+    <!-- 侧边导航栏 -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="brand-badge">
+          <div class="brand-logo">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+            </svg>
+          </div>
+          <div class="brand-info">
+            <div class="brand-title">FEE SPACE</div>
+            <div class="brand-subtitle">ADMIN CONSOLE</div>
+          </div>
+        </div>
       </div>
+
+      <nav class="sidebar-nav">
+        <div class="nav-section-label">管理模块</div>
+        <button class="nav-item active" data-view="posts">
+          <span class="nav-icon">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+              <line x1="16" y1="13" x2="8" y2="13"></line>
+              <line x1="16" y1="17" x2="8" y2="17"></line>
+              <polyline points="10 9 9 9 8 9"></polyline>
+            </svg>
+          </span>
+          <span class="nav-label">文章管理</span>
+          <span class="nav-badge" id="badge-posts">0</span>
+        </button>
+
+        <button class="nav-item" data-view="trend">
+          <span class="nav-icon">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+            </svg>
+          </span>
+          <span class="nav-label">动态快讯</span>
+          <span class="nav-badge" id="badge-trend">0</span>
+        </button>
+
+        <button class="nav-item" data-view="links">
+          <span class="nav-icon">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+              <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+            </svg>
+          </span>
+          <span class="nav-label">导航链接</span>
+          <span class="nav-badge" id="badge-links">0</span>
+        </button>
+
+        <button class="nav-item" data-view="images">
+          <span class="nav-icon">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+              <circle cx="8.5" cy="8.5" r="1.5"></circle>
+              <polyline points="21 15 16 10 5 21"></polyline>
+            </svg>
+          </span>
+          <span class="nav-label">图片转换</span>
+          <span class="nav-badge warning" id="badge-images">0</span>
+        </button>
+
+        <div class="nav-section-label" style="margin-top: 14px;">发布与构建</div>
+        <button class="nav-item" data-view="deploy">
+          <span class="nav-icon">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 17l6-6-6-6"></path>
+              <line x1="12" y1="19" x2="20" y2="19"></line>
+            </svg>
+          </span>
+          <span class="nav-label">构建与部署</span>
+          <span class="nav-indicator" id="indicator-git"></span>
+        </button>
+      </nav>
+
+      <!-- 侧边栏底部卡片 -->
+      <div class="sidebar-footer">
+        <div class="server-status-card" id="sidebar-server-card">
+          <div class="server-status-dot" id="server-dot"></div>
+          <div class="server-status-text">
+            <div class="status-title" id="server-status-label">本地预览：未启动</div>
+            <div class="status-sub">localhost:4000</div>
+          </div>
+          <button class="status-action-btn" id="sidebar-server-toggle" title="快速启停本地预览">启动</button>
+        </div>
+
+        <div class="sidebar-links">
+          <a href="https://luanyufei.cn" target="_blank" rel="noopener" class="sidebar-link-btn" title="在新标签页中访问线上博客 (luanyufei.cn)">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+              <polyline points="15 3 21 3 21 9"></polyline>
+              <line x1="10" y1="14" x2="21" y2="3"></line>
+            </svg>
+            <span>访问博客</span>
+          </a>
+          <button class="sidebar-quit-btn" id="btn-quit" title="安全退出 Fee Admin 并终止后台服务">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+              <line x1="12" y1="2" x2="12" y2="12"></line>
+            </svg>
+            <span>退出面板</span>
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- 主工作区 -->
+    <div class="main-wrapper">
+      <!-- 顶部轻量状态栏 -->
+      <header class="topbar">
+        <div class="topbar-left">
+          <span class="breadcrumb-root">FeeSpace</span>
+          <span class="breadcrumb-sep">/</span>
+          <span class="breadcrumb-curr" id="topbar-title">文章管理</span>
+        </div>
+        <div class="topbar-right">
+          <button class="theme-toggle-btn" id="theme-toggle" type="button" aria-label="切换深浅主题" title="外观：跟随系统">
+            <span class="theme-icon" id="theme-icon"></span>
+            <span class="theme-label" id="theme-label">跟随系统</span>
+          </button>
+          <div class="system-meta-badge">
+            <span class="meta-dot"></span>
+            <span class="meta-text" id="topbar-branch">Git: main</span>
+          </div>
+          <div class="shortcut-tip" title="快捷键帮助">
+            <kbd>⌘S</kbd> 保存
+            <kbd>/</kbd> 搜索
+          </div>
+        </div>
+      </header>
+
+      <!-- 视图容器 -->
+      <main id="main">
+        <section id="view-posts" class="view"></section>
+        <section id="view-trend" class="view hidden"></section>
+        <section id="view-links" class="view hidden"></section>
+        <section id="view-images" class="view hidden"></section>
+        <section id="view-deploy" class="view hidden"></section>
+      </main>
     </div>
-  </aside>
-  <main id="main">
-    <section id="view-posts" class="view"></section>
-    <section id="view-trend" class="view hidden"></section>
-    <section id="view-links" class="view hidden"></section>
-    <section id="view-images" class="view hidden"></section>
-    <section id="view-deploy" class="view hidden"></section>
-  </main>
+  </div>
+
   <div id="toast"></div>
   <div id="modal-root"></div>
+  <input type="file" id="image-upload-input" accept="image/*" style="display:none">
+  <input type="file" id="md-import-input" accept=".md,.markdown,text/markdown" style="display:none">
+
   <script src="/vendor/marked.min.js"></script>
   <script src="/vendor/prism.js"></script>
   <script src="/vendor/prism/components/prism-bash.min.js"></script>

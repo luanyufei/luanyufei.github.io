@@ -178,6 +178,32 @@ async function createPost(patch) {
   return { filename, type: 'post' };
 }
 
+async function importPost(rawContent, originalName, targetType = 'draft') {
+  const fallbackTitle = originalName ? originalName.replace(/\.md$/i, '') : '导入文章';
+  const { data, content } = parseFile(rawContent, fallbackTitle);
+  if (!data.title) data.title = fallbackTitle;
+  if (!data.date) data.date = todayStr();
+
+  const title = data.title;
+  let filename = `${sanitizeFilename(title)}.md`;
+  const dir = targetType === 'draft' ? DRAFTS_DIR : POSTS_DIR;
+
+  // 避免重名覆盖
+  let counter = 1;
+  while (true) {
+    try {
+      await fsp.access(path.join(dir, filename));
+      filename = `${sanitizeFilename(title)}-${counter++}.md`;
+    } catch (e) {
+      break;
+    }
+  }
+
+  const filePath = path.join(dir, filename);
+  await fsp.writeFile(filePath, stringify(data, content), 'utf8');
+  return { filename, type: targetType, data };
+}
+
 async function movePost(filename, fromType, toType, options = {}) {
   const from = resolvePost(filename, fromType);
   const to = resolvePost(filename, toType);
@@ -194,9 +220,196 @@ async function movePost(filename, fromType, toType, options = {}) {
 async function trashPost(filename, type) {
   const filePath = resolvePost(filename, type);
   const stamp = new Date().toISOString().replace(/[:.]/g, '-');
-  const dest = path.join(TRASH_DIR, `${path.basename(filename)}.${stamp}.trashed`);
+  await fsp.mkdir(TRASH_DIR, { recursive: true });
+  const dest = path.join(TRASH_DIR, `${path.basename(filename)}.${stamp}.${type}.trashed`);
   await fsp.rename(filePath, dest);
   return dest;
+}
+
+// 回收站管理
+async function getTrashList() {
+  await fsp.mkdir(TRASH_DIR, { recursive: true });
+  let names = [];
+  try {
+    names = await fsp.readdir(TRASH_DIR);
+  } catch (e) {
+    return [];
+  }
+  const items = [];
+  for (const name of names) {
+    if (!name.endsWith('.trashed')) continue;
+    const fullPath = path.join(TRASH_DIR, name);
+    try {
+      const stat = await fsp.stat(fullPath);
+      const raw = await fsp.readFile(fullPath, 'utf8');
+      // 解析文件名结构: [originalFilename].[stamp].[type].trashed
+      const parts = name.split('.');
+      const originalType = parts[parts.length - 2] === 'draft' ? 'draft' : 'post';
+      const originalFilename = parts.slice(0, parts.length - 3).join('.') || name.replace('.trashed', '');
+      const { data, content } = parseFile(raw, originalFilename);
+      items.push({
+        trashedFile: name,
+        originalFilename,
+        type: originalType,
+        title: data.title || originalFilename,
+        date: data.date || '',
+        trashedAt: stat.mtime.toISOString(),
+        wordCount: countWords(content),
+        size: stat.size,
+      });
+    } catch (e) { /* ignore broken files */ }
+  }
+  items.sort((a, b) => b.trashedAt.localeCompare(a.trashedAt));
+  return items;
+}
+
+async function restoreTrash(trashedFilename) {
+  const source = path.join(TRASH_DIR, path.basename(trashedFilename));
+  const parts = trashedFilename.split('.');
+  const originalType = parts[parts.length - 2] === 'draft' ? 'draft' : 'post';
+  const originalFilename = parts.slice(0, parts.length - 3).join('.') || 'restored.md';
+
+  const targetDir = originalType === 'draft' ? DRAFTS_DIR : POSTS_DIR;
+  let targetPath = path.join(targetDir, originalFilename);
+
+  // 如果原名已有文件存在，防止覆盖加后缀
+  let counter = 1;
+  while (true) {
+    try {
+      await fsp.access(targetPath);
+      const baseName = originalFilename.replace(/\.md$/, '');
+      targetPath = path.join(targetDir, `${baseName}-restored-${counter++}.md`);
+    } catch (e) {
+      break;
+    }
+  }
+
+  await fsp.rename(source, targetPath);
+  return { filename: path.basename(targetPath), type: originalType };
+}
+
+async function purgeTrash(trashedFilename) {
+  await fsp.mkdir(TRASH_DIR, { recursive: true });
+  if (trashedFilename) {
+    const filePath = path.join(TRASH_DIR, path.basename(trashedFilename));
+    await fsp.unlink(filePath).catch(() => {});
+    return { ok: true, deleted: [trashedFilename] };
+  } else {
+    // 清空全部回收站
+    const files = await fsp.readdir(TRASH_DIR);
+    const deleted = [];
+    for (const f of files) {
+      if (f.endsWith('.trashed')) {
+        await fsp.unlink(path.join(TRASH_DIR, f)).catch(() => {});
+        deleted.push(f);
+      }
+    }
+    return { ok: true, count: deleted.length };
+  }
+}
+
+// 历史修订版本
+async function getRevisions(filename, type) {
+  const dir = path.join(BACKUP_DIR, type);
+  await fsp.mkdir(dir, { recursive: true });
+  let files = [];
+  try {
+    files = await fsp.readdir(dir);
+  } catch (e) {
+    return [];
+  }
+  const prefix = `${path.basename(filename)}.`;
+  const matched = files.filter((f) => f.startsWith(prefix) && f.endsWith('.bak'));
+  const revisions = [];
+  for (const f of matched) {
+    try {
+      const fullPath = path.join(dir, f);
+      const stat = await fsp.stat(fullPath);
+      const raw = await fsp.readFile(fullPath, 'utf8');
+      const { data, content } = parseFile(raw, filename);
+      revisions.push({
+        backupFile: f,
+        timestamp: stat.mtime.toISOString(),
+        title: data.title || filename,
+        date: data.date || '',
+        wordCount: countWords(content),
+        size: stat.size,
+        content,
+        raw,
+      });
+    } catch (e) {}
+  }
+  revisions.sort((a, b) => b.timestamp.localeCompare(a.timestamp));
+  return revisions;
+}
+
+async function restoreRevision(filename, type, backupFileStr) {
+  const backupPath = path.join(BACKUP_DIR, type, path.basename(backupFileStr));
+  const targetPath = resolvePost(filename, type);
+  // 先对当前文件做一份新备份
+  await backupFile(targetPath, type);
+  const raw = await fsp.readFile(backupPath, 'utf8');
+  await fsp.writeFile(targetPath, raw, 'utf8');
+  return getPost(filename, type);
+}
+
+// 全站创作热力图与统计大盘数据
+async function getActivityStats() {
+  const [posts, drafts] = await Promise.all([readPosts(POSTS_DIR), readPosts(DRAFTS_DIR)]);
+  let shuoshuoList = [];
+  try {
+    const raw = await fsp.readFile(path.join(ROOT, 'source', '_data', 'shuoshuo.yml'), 'utf8');
+    const parsed = matter(raw);
+    shuoshuoList = Array.isArray(parsed.data) ? parsed.data : (Array.isArray(matter(raw)) ? matter(raw) : []);
+  } catch (e) {}
+
+  const dateMap = {};
+  const addCount = (dateStr, weight = 1) => {
+    if (!dateStr) return;
+    const d = String(dateStr).slice(0, 10);
+    if (/^\d{4}-\d{2}-\d{2}$/.test(d)) {
+      dateMap[d] = (dateMap[d] || 0) + weight;
+    }
+  };
+
+  // 统计文章与草稿
+  const categoriesMap = {};
+  const tagsMap = {};
+  let totalWords = 0;
+
+  for (const p of posts) {
+    addCount(p.date, 2);
+    totalWords += (p.wordCount || 0);
+    const cats = Array.isArray(p.categories) ? p.categories : (p.categories ? [p.categories] : ['未分类']);
+    for (const c of cats) {
+      if (!c) continue;
+      categoriesMap[c] = (categoriesMap[c] || 0) + 1;
+    }
+    for (const t of p.tags || []) {
+      if (t) tagsMap[t] = (tagsMap[t] || 0) + 1;
+    }
+  }
+
+  for (const d of drafts) {
+    addCount(d.date, 1);
+    const cats = Array.isArray(d.categories) ? d.categories : (d.categories ? [d.categories] : ['草稿']);
+    for (const c of cats) if (c) categoriesMap[c] = (categoriesMap[c] || 0) + 1;
+  }
+
+  // 统计动态
+  for (const s of shuoshuoList) {
+    if (s.date) addCount(s.date, 1);
+  }
+
+  return {
+    heatmap: dateMap,
+    categories: Object.entries(categoriesMap).map(([name, count]) => ({ name, count })).sort((a, b) => b.count - a.count),
+    tags: Object.entries(tagsMap).map(([name, count]) => ({ name, count })).sort((a, b) => b.count - a.count),
+    postsCount: posts.length,
+    draftsCount: drafts.length,
+    totalWords,
+    avgWords: posts.length ? Math.round(totalWords / posts.length) : 0,
+  };
 }
 
 async function getAllTags() {
@@ -204,6 +417,16 @@ async function getAllTags() {
   const set = new Set();
   for (const p of [...posts, ...drafts]) {
     for (const t of p.tags || []) if (t) set.add(t);
+  }
+  return [...set].sort((a, b) => a.localeCompare(b, 'zh'));
+}
+
+async function getAllCategories() {
+  const [posts, drafts] = await Promise.all([readPosts(POSTS_DIR), readPosts(DRAFTS_DIR)]);
+  const set = new Set();
+  for (const p of [...posts, ...drafts]) {
+    const cats = Array.isArray(p.categories) ? p.categories : (p.categories ? [p.categories] : []);
+    for (const c of cats) if (c) set.add(c);
   }
   return [...set].sort((a, b) => a.localeCompare(b, 'zh'));
 }
@@ -216,9 +439,17 @@ module.exports = {
   getPost,
   savePost,
   createPost,
+  importPost,
   movePost,
   trashPost,
+  getTrashList,
+  restoreTrash,
+  purgeTrash,
+  getRevisions,
+  restoreRevision,
+  getActivityStats,
   getAllTags,
+  getAllCategories,
   countWords,
   todayStr,
 };

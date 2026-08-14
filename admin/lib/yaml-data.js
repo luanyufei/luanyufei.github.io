@@ -1,5 +1,7 @@
 const fsp = require('fs').promises;
 const path = require('path');
+const http = require('http');
+const https = require('https');
 const yaml = require('js-yaml');
 const { ROOT } = require('./posts');
 
@@ -81,4 +83,69 @@ async function saveLinks(list) {
   return clean;
 }
 
-module.exports = { readShuoshuo, saveShuoshuo, readLinks, saveLinks };
+// 友链死链与健康度探测
+async function checkLinkUrl(urlStr, timeoutMs = 7000) {
+  return new Promise((resolve) => {
+    try {
+      const parsed = new URL(urlStr);
+      const mod = parsed.protocol === 'https:' ? https : http;
+      const opt = {
+        method: 'GET',
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        },
+        timeout: timeoutMs,
+        rejectUnauthorized: false,
+      };
+      const req = mod.request(urlStr, opt, (res) => {
+        const code = res.statusCode || 0;
+        resolve({
+          url: urlStr,
+          status: code,
+          ok: code >= 200 && code < 400,
+          redirect: code >= 300 && code < 400,
+          location: res.headers.location || null,
+        });
+        res.destroy();
+      });
+      req.on('timeout', () => {
+        req.destroy();
+        resolve({ url: urlStr, status: 408, ok: false, error: '超时未响应' });
+      });
+      req.on('error', (err) => {
+        resolve({ url: urlStr, status: 0, ok: false, error: err.code || '连接失败' });
+      });
+      req.end();
+    } catch (e) {
+      resolve({ url: urlStr, status: 0, ok: false, error: '非法URL' });
+    }
+  });
+}
+
+async function checkAllLinks() {
+  const groups = await readLinks();
+  const allUrls = [];
+  for (const g of groups) {
+    for (const l of g.link_list || []) {
+      if (l.link) allUrls.push(l.link);
+    }
+  }
+  const uniqueUrls = [...new Set(allUrls)];
+  const results = {};
+  // 6 个并发探测
+  for (let i = 0; i < uniqueUrls.length; i += 6) {
+    const batch = uniqueUrls.slice(i, i + 6);
+    const batchResults = await Promise.all(batch.map((u) => checkLinkUrl(u)));
+    for (const r of batchResults) results[r.url] = r;
+  }
+  return results;
+}
+
+module.exports = {
+  readShuoshuo,
+  saveShuoshuo,
+  readLinks,
+  saveLinks,
+  checkAllLinks,
+};

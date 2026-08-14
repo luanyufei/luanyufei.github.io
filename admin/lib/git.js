@@ -123,6 +123,32 @@ process.on('exit', () => {
   }
 });
 
+const http = require('http');
+
+function checkReady(port = 4000) {
+  return new Promise((resolve) => {
+    const req = http.get(`http://127.0.0.1:${port}/`, (res) => {
+      resolve(true);
+    });
+    req.on('error', () => resolve(false));
+    req.setTimeout(800, () => {
+      req.destroy();
+      resolve(false);
+    });
+  });
+}
+
+async function waitForReady(port = 4000, timeoutMs = 25000) {
+  const start = Date.now();
+  while (Date.now() - start < timeoutMs) {
+    if (!previewProc) return false;
+    const ok = await checkReady(port);
+    if (ok) return true;
+    await new Promise((r) => setTimeout(r, 400));
+  }
+  return false;
+}
+
 module.exports = {
   bus,
   gitStatus,
@@ -133,4 +159,6 @@ module.exports = {
   stopServer,
   previewState,
   currentBusy,
+  checkReady,
+  waitForReady,
 };
