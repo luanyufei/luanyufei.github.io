@@ -2737,7 +2737,11 @@ html.search-open body {
     text-shadow: 1.5px 1.5px 0 rgba(0, 0, 0, 0.7);
   }
 
-  .feespace-hero,
+  .feespace-hero {
+    min-width: 0;
+    overflow: visible;
+  }
+
   .hero-grid {
     min-width: 0;
     overflow: hidden;
