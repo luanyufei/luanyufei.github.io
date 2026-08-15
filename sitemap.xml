@@ -2,6 +2,24 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>https://luanyufei.cn/projects/index.html</loc>
+    
+    <lastmod>2026-08-15</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://luanyufei.cn/about/index.html</loc>
+    
+    <lastmod>2026-08-15</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
     <loc>https://luanyufei.cn/2026/07/18/Win11%E4%BC%98%E5%8C%96%E6%96%B9%E6%A1%88/</loc>
     
     <lastmod>2026-08-14</lastmod>
@@ -21,15 +39,6 @@
   
   <url>
     <loc>https://luanyufei.cn/2026/07/18/Brave%E6%B5%8F%E8%A7%88%E5%99%A8%E5%8E%BB%E9%99%A4%E6%97%A0%E7%94%A8%E5%8A%9F%E8%83%BD/</loc>
-    
-    <lastmod>2026-08-13</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>https://luanyufei.cn/about/index.html</loc>
     
     <lastmod>2026-08-13</lastmod>
     
@@ -157,14 +166,14 @@
 
   
   <url>
-    <loc>https://luanyufei.cn/categories/FeeFee%E7%94%B5%E5%AD%90%E6%89%AB%E7%9B%B2/</loc>
+    <loc>https://luanyufei.cn/categories/%E5%AE%9E%E7%94%A8%E6%8A%80%E5%B7%A7/</loc>
     <lastmod>2026-08-15</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
-    <loc>https://luanyufei.cn/categories/%E5%AE%9E%E7%94%A8%E6%8A%80%E5%B7%A7/</loc>
+    <loc>https://luanyufei.cn/categories/FeeFee%E7%94%B5%E5%AD%90%E6%89%AB%E7%9B%B2/</loc>
     <lastmod>2026-08-15</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>

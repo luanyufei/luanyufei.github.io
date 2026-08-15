@@ -1197,9 +1197,13 @@
       tag = 'LINK DIRECTORY';
       title = '狒狒导航';
       document.body.classList.add('is-link-page');
+    } else if (path.startsWith('/projects')) {
+      tag = 'PORTFOLIO & SHOWCASE';
+      title = '项目';
+      document.body.classList.add('is-projects-page');
     } else if (path.startsWith('/about')) {
-      tag = 'ABOUT & PROFILE';
-      title = '关于';
+      tag = 'CURRICULUM VITAE';
+      title = '个人履历';
       document.body.classList.add('is-about-page');
     } else if (path.startsWith('/music')) {
       tag = 'MUSIC & SOUNDTRACKS';
