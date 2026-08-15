@@ -75,6 +75,32 @@
           <span class="nav-badge warning" id="badge-images">0</span>
         </button>
 
+        <button class="nav-item" data-view="projects">
+          <span class="nav-icon">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+              <polyline points="2 17 12 22 22 17"></polyline>
+              <polyline points="2 12 12 17 22 12"></polyline>
+            </svg>
+          </span>
+          <span class="nav-label">项目管理</span>
+          <span class="nav-badge" id="badge-projects">0</span>
+        </button>
+
+        <button class="nav-item" data-view="resume">
+          <span class="nav-icon">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+              <line x1="16" y1="13" x2="8" y2="13"></line>
+              <line x1="16" y1="17" x2="8" y2="17"></line>
+              <line x1="10" y1="9" x2="8" y2="9"></line>
+            </svg>
+          </span>
+          <span class="nav-label">简历管理</span>
+          <span class="nav-badge" id="badge-resume">✓</span>
+        </button>
+
         <div class="nav-section-label" style="margin-top: 14px;">发布与构建</div>
         <button class="nav-item" data-view="deploy">
           <span class="nav-icon">
@@ -150,6 +176,8 @@
         <section id="view-trend" class="view hidden"></section>
         <section id="view-links" class="view hidden"></section>
         <section id="view-images" class="view hidden"></section>
+        <section id="view-projects" class="view hidden"></section>
+        <section id="view-resume" class="view hidden"></section>
         <section id="view-deploy" class="view hidden"></section>
       </main>
     </div>

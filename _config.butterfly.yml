@@ -7,6 +7,7 @@ favicon: /img/noon-avatar.webp
 
 menu:
   首页: / || fas fa-home
+  项目: /projects/ || fas fa-code
   文章:
     全部文章: /archives/ || fas fa-layer-group
     分类: /categories/ || fas fa-folder-open

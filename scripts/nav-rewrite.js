@@ -43,6 +43,7 @@ const SITE_NAV = `
   <div id="menus">
     <div class="menus_items">
       <div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span>首页</span></a></div>
+      <div class="menus_item"><a class="site-page" href="/projects/"><i class="fa-fw fas fa-code"></i><span>项目</span></a></div>
       <div class="menus_item menus_item-article">
         <a class="site-page" href="/archives/" aria-haspopup="true" aria-expanded="false">
           <i class="fa-fw fas fa-layer-group"></i><span>文章</span><i class="menu-caret fas fa-chevron-down" aria-hidden="true"></i>
@@ -110,8 +111,10 @@ hexo.extend.filter.register('after_render:html', (html) => {
           tag = 'MOMENTS & SHORTS';
         } else if (cleanTitle === '狒狒导航' || cleanTitle.includes('链接') || cleanTitle.includes('导航')) {
           tag = 'LINK DIRECTORY';
-        } else if (cleanTitle === '关于' || cleanTitle.includes('About')) {
-          tag = 'ABOUT & PROFILE';
+        } else if (cleanTitle.includes('项目') || cleanTitle.includes('代表作') || cleanTitle.includes('Projects')) {
+          tag = 'PORTFOLIO & SHOWCASE';
+        } else if (cleanTitle.includes('履历') || cleanTitle.includes('简历') || cleanTitle.includes('关于') || cleanTitle.includes('About')) {
+          tag = 'CURRICULUM VITAE';
         } else if (cleanTitle.includes('文章') || cleanTitle.includes('归档')) {
           tag = 'ARCHIVES / COLLECTION';
         } else if (cleanTitle.includes('分类')) {

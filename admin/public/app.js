@@ -94,6 +94,8 @@
     trend: '动态快讯',
     links: '导航链接',
     images: '图片转换',
+    projects: '精选项目管理',
+    resume: '简历与个人档案',
     deploy: '构建与部署',
   };
 
@@ -112,6 +114,8 @@
     if (name === 'trend') renderTrend();
     if (name === 'links') renderLinks();
     if (name === 'images') renderImages();
+    if (name === 'projects') renderProjects();
+    if (name === 'resume') renderResume();
     if (name === 'deploy') renderDeploy();
 
     refreshGlobalBadges();
@@ -119,12 +123,13 @@
 
   async function refreshGlobalBadges() {
     try {
-      const [posts, drafts, trend, links, images, git, trash] = await Promise.allSettled([
+      const [posts, drafts, trend, links, images, projects, git, trash] = await Promise.allSettled([
         api('/api/posts'),
         api('/api/drafts'),
         api('/api/trend'),
         api('/api/links'),
         api('/api/images'),
+        api('/api/projects'),
         api('/api/git/status'),
         api('/api/trash'),
       ]);
@@ -150,6 +155,12 @@
         const totalLinks = state.links.reduce((sum, g) => sum + (g.link_list || []).length, 0);
         const b = $('#badge-links');
         if (b) b.textContent = `${totalLinks}`;
+      }
+
+      if (projects.status === 'fulfilled') {
+        state.projects = projects.value;
+        const b = $('#badge-projects');
+        if (b) b.textContent = `${(state.projects?.projects || []).length}`;
       }
 
       if (images.status === 'fulfilled') {
@@ -1782,6 +1793,695 @@
     } catch (error) { toast(error.message, true); }
   }
 
+  // ==================== 项目管理 (projects.yml & projects/index.md 渲染) ====================
+  async function renderProjects() {
+    const container = $('#view-projects');
+    container.innerHTML = `
+      <div class="view-head">
+        <div class="view-title-group">
+          <div class="view-title">精选项目管理</div>
+          <div class="view-sub">source/_data/projects.yml · 独立同步渲染至前台 /projects 页面</div>
+        </div>
+        <div class="toolbar">
+          <button class="btn" id="projects-preview-btn" title="在新标签页中查看 /projects 页面">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+            <span>预览前台项目页</span>
+          </button>
+          <button class="btn primary" id="projects-save-btn">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+            <span>保存全部更改 (⌘S)</span>
+          </button>
+        </div>
+      </div>
+      <div class="resume-editor-wrap" id="projects-editor-content">
+        <div class="empty-state"><div class="empty-title">正在载入项目列表…</div></div>
+      </div>`;
+
+    try {
+      state.projects = await api('/api/projects');
+      renderProjectsEditor();
+    } catch (e) {
+      $('#projects-editor-content').innerHTML = `<div class="empty-state"><div class="empty-title">加载失败：${esc(e.message)}</div></div>`;
+    }
+
+    $('#projects-preview-btn').addEventListener('click', () => {
+      window.open('http://localhost:4000/projects/', '_blank');
+    });
+
+    $('#projects-save-btn').addEventListener('click', saveProjects);
+  }
+
+  function renderProjectsEditor() {
+    const wrap = $('#projects-editor-content');
+    if (!wrap || !state.projects) return;
+
+    const list = Array.isArray(state.projects.projects) ? state.projects.projects : [];
+
+    wrap.innerHTML = `
+      <div style="display:flex;flex-direction:column;gap:16px">
+        ${list.map((proj, pi) => {
+          const isFeatured = !!proj.featured;
+          const links = Array.isArray(proj.links) ? proj.links : [];
+          return `
+          <div class="resume-section-box project-box" data-pi="${pi}">
+            <div class="resume-box-header" style="background:var(--surface)">
+              <div class="resume-box-title-group" style="cursor:pointer" data-pi="${pi}" data-pa="toggle-card">
+                <div class="resume-icon-circle" style="background:${isFeatured ? 'rgba(189,255,53,0.18)' : 'rgba(249,115,22,0.15)'};color:${isFeatured ? '#111412' : '#f97316'};font-weight:800;font-size:12px">
+                  #${pi + 1}
+                </div>
+                <div style="display:flex;flex-direction:column;gap:2px">
+                  <div style="display:flex;align-items:center;gap:8px">
+                    <span style="font-size:15px;font-weight:700;color:var(--text)">${esc(proj.title || '未命名项目')}</span>
+                    ${isFeatured ? `<span style="font-size:11px;font-weight:700;background:var(--accent);color:#0b0d0b;padding:1px 6px;border-radius:3px">★ 推荐精选</span>` : ''}
+                  </div>
+                  <div style="font-size:12px;color:var(--text-secondary);font-family:var(--font-mono)">
+                    ${esc(proj.category || '未分类')} ${proj.time ? `· ${esc(proj.time)}` : ''}
+                  </div>
+                </div>
+              </div>
+              <div class="resume-box-actions">
+                <button class="btn sm" data-pi="${pi}" data-pa="up" title="上移项目" ${pi === 0 ? 'disabled' : ''}>↑</button>
+                <button class="btn sm" data-pi="${pi}" data-pa="down" title="下移项目" ${pi === list.length - 1 ? 'disabled' : ''}>↓</button>
+                <button class="btn sm danger" data-pi="${pi}" data-pa="del" title="删除此项目">
+                  <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path></svg>
+                </button>
+                <button class="btn sm" data-pi="${pi}" data-pa="toggle-card" title="折叠/展开">
+                  <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                </button>
+              </div>
+            </div>
+
+            <div class="resume-box-body collapsed" id="proj-body-${pi}">
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+                <div class="fm-field">
+                  <label>项目名称 / 标题</label>
+                  <input type="text" data-pi="${pi}" data-pf="title" value="${esc(proj.title || '')}" placeholder="例如：Fee Space 博客管理控制台">
+                </div>
+                <div class="fm-field">
+                  <label>项目分类 / 架构标签</label>
+                  <input type="text" data-pi="${pi}" data-pf="category" value="${esc(proj.category || '')}" placeholder="例如：全栈工程 / 架构设计">
+                </div>
+                <div class="fm-field">
+                  <label>起止时间</label>
+                  <input type="text" data-pi="${pi}" data-pf="time" value="${esc(proj.time || '')}" placeholder="例如：2026.02 - 至今">
+                </div>
+                <div class="fm-field" style="display:flex;align-items:center;gap:8px;padding-top:22px">
+                  <label style="display:flex;align-items:center;gap:6px;cursor:pointer;margin:0;font-size:13px">
+                    <input type="checkbox" data-pi="${pi}" data-pf="featured" ${isFeatured ? 'checked' : ''}>
+                    <span>设为首推精选代表作（高亮边框与样式）</span>
+                  </label>
+                </div>
+                <div class="fm-field form-full">
+                  <label>核心技术栈标签 (逗号分隔)</label>
+                  <input type="text" data-pi="${pi}" data-pf="tags" value="${esc((proj.tags || []).join(', '))}" placeholder="例如：Node.js, Express 5, Vanilla JS, Hexo">
+                </div>
+                <div class="fm-field form-full">
+                  <label>项目概述 / 详细描述</label>
+                  <textarea data-pi="${pi}" data-pf="desc" style="min-height:75px">${esc(proj.desc || '')}</textarea>
+                </div>
+                <div class="fm-field form-full">
+                  <label>核心工程亮点清单 (每行一条)</label>
+                  <textarea data-pi="${pi}" data-pf="highlights" style="min-height:70px" placeholder="每行输入一条亮点，例如：\n剪贴板（⌘V）与拖拽图片秒级直传\n52 周创作活动热力图与分类词云">${esc((proj.highlights || []).join('\n'))}</textarea>
+                </div>
+              </div>
+
+              <!-- 链接按钮列表 -->
+              <div style="margin-top:8px;padding-top:12px;border-top:1px dashed var(--border)">
+                <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:8px;display:flex;align-items:center;justify-content:space-between">
+                  <span>底部跳转链接与按钮</span>
+                  <button class="btn sm" data-pi="${pi}" data-pa="add-link" style="font-size:11px">+ 添加链接</button>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:8px">
+                  ${links.map((lnk, li) => `
+                    <div style="display:grid;grid-template-columns:140px 1fr 140px auto;gap:8px;align-items:center;background:var(--surface-input);padding:8px;border-radius:4px;border:1px solid var(--border)">
+                      <input type="text" data-pi="${pi}" data-li="${li}" data-lf="label" value="${esc(lnk.label || '')}" placeholder="按钮文字 (如 GitHub 源码 ↗)">
+                      <input type="text" data-pi="${pi}" data-li="${li}" data-lf="url" value="${esc(lnk.url || '')}" placeholder="链接地址 (如 https://... 或 /about/)">
+                      <input type="text" data-pi="${pi}" data-li="${li}" data-lf="icon" value="${esc(lnk.icon || '')}" placeholder="图标 (如 fab fa-github)">
+                      <button class="btn sm danger" data-pi="${pi}" data-li="${li}" data-pa="del-link" title="删除链接">✕</button>
+                    </div>
+                  `).join('')}
+                </div>
+              </div>
+            </div>
+          </div>`;
+        }).join('')}
+
+        <!-- 新增项目按钮 -->
+        <button class="resume-add-section-dashed" id="btn-add-project" style="margin-top:4px">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+          <span>新增一个精选项目卡片</span>
+        </button>
+      </div>
+    `;
+
+    // 绑定项目表单输入事件
+    $$('input[data-pf], textarea[data-pf]', wrap).forEach((el) => {
+      el.addEventListener('input', () => {
+        const pi = Number(el.dataset.pi);
+        const f = el.dataset.pf;
+        const item = state.projects.projects[pi];
+        if (!item) return;
+
+        if (f === 'tags') {
+          item.tags = el.value.split(/[,，]/).map(s => s.trim()).filter(Boolean);
+        } else if (f === 'highlights') {
+          item.highlights = el.value.split('\n').map(s => s.trim()).filter(Boolean);
+        } else if (f === 'featured') {
+          item.featured = el.checked;
+        } else {
+          item[f] = el.value;
+        }
+      });
+    });
+
+    $$('input[data-pf="featured"]', wrap).forEach((el) => {
+      el.addEventListener('change', () => {
+        const pi = Number(el.dataset.pi);
+        const item = state.projects.projects[pi];
+        if (item) item.featured = el.checked;
+      });
+    });
+
+    // 绑定链接输入事件
+    $$('input[data-lf]', wrap).forEach((el) => {
+      el.addEventListener('input', () => {
+        const pi = Number(el.dataset.pi);
+        const li = Number(el.dataset.li);
+        const f = el.dataset.lf;
+        const lnk = state.projects.projects[pi].links[li];
+        if (lnk) lnk[f] = el.value;
+      });
+    });
+
+    // 绑定项目操作按钮
+    $$('button[data-pa]', wrap).forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const pi = Number(btn.dataset.pi);
+        const pa = btn.dataset.pa;
+        const list = state.projects.projects;
+
+        if (pa === 'up' && pi > 0) {
+          [list[pi - 1], list[pi]] = [list[pi], list[pi - 1]];
+          renderProjectsEditor();
+        } else if (pa === 'down' && pi < list.length - 1) {
+          [list[pi + 1], list[pi]] = [list[pi], list[pi + 1]];
+          renderProjectsEditor();
+        } else if (pa === 'del') {
+          if (confirm(`确定删除项目「${list[pi].title || '此项目'}」？`)) {
+            list.splice(pi, 1);
+            renderProjectsEditor();
+          }
+        } else if (pa === 'toggle-card') {
+          $(`#proj-body-${pi}`).classList.toggle('collapsed');
+        } else if (pa === 'add-link') {
+          list[pi].links = list[pi].links || [];
+          list[pi].links.push({ label: '新链接 ↗', url: 'https://', icon: 'fas fa-link', primary: false });
+          renderProjectsEditor();
+          $(`#proj-body-${pi}`).classList.remove('collapsed');
+        } else if (pa === 'del-link') {
+          const li = Number(btn.dataset.li);
+          list[pi].links.splice(li, 1);
+          renderProjectsEditor();
+          $(`#proj-body-${pi}`).classList.remove('collapsed');
+        }
+      });
+    });
+
+    // 绑定头部点击折叠
+    $$('.resume-box-title-group[data-pa="toggle-card"]', wrap).forEach((hdr) => {
+      hdr.addEventListener('click', () => {
+        const pi = Number(hdr.dataset.pi);
+        $(`#proj-body-${pi}`).classList.toggle('collapsed');
+      });
+    });
+
+    // 绑定新增项目
+    $('#btn-add-project').addEventListener('click', () => {
+      state.projects.projects = state.projects.projects || [];
+      state.projects.projects.push({
+        id: `proj-${Date.now()}`,
+        title: '新建精选项目',
+        category: '全栈工程 / 架构设计',
+        time: '2026.01 - 至今',
+        featured: false,
+        desc: '在此输入项目的核心背景与架构设计概述…',
+        tags: ['JavaScript', 'Node.js'],
+        highlights: ['实现了核心架构与功能模块设计', '优化了系统性能与用户体验'],
+        links: [
+          { label: 'GitHub 源码 ↗', url: 'https://github.com/luanyufei', icon: 'fab fa-github', primary: true }
+        ]
+      });
+      renderProjectsEditor();
+      const lastBody = $(`#proj-body-${state.projects.projects.length - 1}`);
+      if (lastBody) lastBody.classList.remove('collapsed');
+      toast('✓ 已添加新项目卡片');
+    });
+  }
+
+  async function saveProjects() {
+    try {
+      const res = await api('/api/projects', { method: 'PUT', body: state.projects });
+      state.projects = res;
+      toast('✓ 项目列表已成功保存并重新渲染至 /projects 页面！');
+    } catch (e) {
+      toast(e.message, true);
+    }
+  }
+
+  // ==================== 简历管理 (resume.yml & about 渲染) ====================
+  async function renderResume() {
+    const container = $('#view-resume');
+    container.innerHTML = `
+      <div class="view-head">
+        <div class="view-title-group">
+          <div class="view-title">简历与个人档案</div>
+          <div class="view-sub">source/_data/resume.yml · 实时同步渲染至 /about 个人履历页面</div>
+        </div>
+        <div class="toolbar">
+          <button class="btn" id="resume-preview-btn" title="在新标签页中查看 /about 页面">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+            <span>预览前台关于页</span>
+          </button>
+          <button class="btn primary" id="resume-save-btn">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+            <span>保存全部更改 (⌘S)</span>
+          </button>
+        </div>
+      </div>
+      <div class="resume-editor-wrap" id="resume-editor-content">
+        <div class="empty-state"><div class="empty-title">正在载入简历配置…</div></div>
+      </div>`;
+
+    try {
+      state.resume = await api('/api/resume');
+      renderResumeEditor();
+    } catch (e) {
+      $('#resume-editor-content').innerHTML = `<div class="empty-state"><div class="empty-title">加载失败：${esc(e.message)}</div></div>`;
+    }
+
+    $('#resume-preview-btn').addEventListener('click', () => {
+      window.open('http://localhost:4000/about/', '_blank');
+    });
+
+    $('#resume-save-btn').addEventListener('click', saveResume);
+  }
+
+  function renderResumeEditor() {
+    const wrap = $('#resume-editor-content');
+    if (!wrap || !state.resume) return;
+
+    const basic = state.resume.basic || {};
+    const sections = state.resume.sections || [];
+
+    wrap.innerHTML = `
+      <!-- 基本信息 -->
+      <div class="resume-section-box" id="box-basic">
+        <div class="resume-box-header">
+          <div class="resume-box-title-group">
+            <div class="resume-icon-circle">👤</div>
+            <h3 class="resume-box-title">基本信息</h3>
+          </div>
+          <div class="resume-box-actions">
+            <button class="btn sm" id="btn-toggle-basic" title="展开/收起">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </button>
+          </div>
+        </div>
+        <div class="resume-box-body" id="body-basic">
+          <div class="resume-item-card" style="background:var(--surface-input)">
+            <div class="resume-item-header" style="cursor:default">
+              <div class="resume-item-info">
+                <div class="resume-item-headline">${esc(basic.name || '未填姓名')}</div>
+                <div class="resume-item-subline">${esc(basic.phone || '无电话')} | ${esc(basic.email || '无邮箱')}</div>
+              </div>
+            </div>
+            <div class="resume-item-form" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:10px">
+              <div class="fm-field">
+                <label>姓名</label>
+                <input type="text" data-bf="name" value="${esc(basic.name || '')}" placeholder="例如：栾宇飞">
+              </div>
+              <div class="fm-field">
+                <label>英文名 / 别名</label>
+                <input type="text" data-bf="englishName" value="${esc(basic.englishName || '')}" placeholder="例如：Noon Yjufee / Alan Noon">
+              </div>
+              <div class="fm-field">
+                <label>联系电话</label>
+                <input type="text" data-bf="phone" value="${esc(basic.phone || '')}" placeholder="198...">
+              </div>
+              <div class="fm-field">
+                <label>电子邮箱</label>
+                <input type="text" data-bf="email" value="${esc(basic.email || '')}" placeholder="...@qq.com">
+              </div>
+              <div class="fm-field">
+                <label>所在城市 / 地点</label>
+                <input type="text" data-bf="location" value="${esc(basic.location || '')}" placeholder="例如：保定 / 北京">
+              </div>
+              <div class="fm-field">
+                <label>意向职位 / 核心标签</label>
+                <input type="text" data-bf="title" value="${esc(basic.title || '')}" placeholder="例如：通信工程 · 全栈开发 / 嵌入式与 AI">
+              </div>
+              <div class="fm-field form-full">
+                <label>GitHub 用户名 (不加前缀)</label>
+                <input type="text" data-bf="github" value="${esc(basic.github || '')}" placeholder="例如：luanyufei">
+              </div>
+              <div class="fm-field form-full">
+                <label>个人概述 / 简介</label>
+                <textarea data-bf="bio" style="min-height:70px">${esc(basic.bio || '')}</textarea>
+              </div>
+              <div class="fm-field form-full">
+                <label>PDF 简历外链 (可选，留空则不显示下载按钮)</label>
+                <input type="text" data-bf="pdfResumeUrl" value="${esc(basic.pdfResumeUrl || '')}" placeholder="https://... 或 /file/resume.pdf">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 板块列表 -->
+      ${sections.map((sec, si) => {
+        const isSkills = sec.type === 'skills';
+        return `
+        <div class="resume-section-box" data-si="${si}">
+          <div class="resume-box-header">
+            <div class="resume-box-title-group">
+              <div class="resume-icon-circle">${sec.icon || '📌'}</div>
+              <h3 class="resume-box-title">
+                <span class="sec-title-text">${esc(sec.title || '自定义板块')}</span>
+                <button class="resume-title-edit-btn" data-si="${si}" data-sa="edit-title" title="修改板块名称与图标">✎</button>
+              </h3>
+            </div>
+            <div class="resume-box-actions">
+              <button class="btn sm" data-si="${si}" data-sa="up" title="上移板块" ${si === 0 ? 'disabled' : ''}>↑</button>
+              <button class="btn sm" data-si="${si}" data-sa="down" title="下移板块" ${si === sections.length - 1 ? 'disabled' : ''}>↓</button>
+              <button class="btn sm danger" data-si="${si}" data-sa="del-sec" title="删除此板块">
+                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path></svg>
+              </button>
+              <button class="btn sm" data-si="${si}" data-sa="toggle-sec" title="折叠/展开">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
+              </button>
+            </div>
+          </div>
+          <div class="resume-box-body" id="sec-body-${si}">
+            ${!isSkills ? `
+              <!-- 教育 / 项目 / 自定义经历条目 -->
+              ${(sec.items || []).map((item, ii) => `
+                <div class="resume-item-card" data-si="${si}" data-ii="${ii}">
+                  <div class="resume-item-header" data-si="${si}" data-ii="${ii}">
+                    <div class="resume-item-info">
+                      <div class="resume-item-headline">${esc(item.title || '未命名条目')}</div>
+                      <div class="resume-item-subline">${esc(item.subtitle || '')} ${item.time ? `| ${esc(item.time)}` : ''}</div>
+                    </div>
+                    <div class="resume-item-actions">
+                      <button class="btn sm" data-si="${si}" data-ii="${ii}" data-ia="up-item" title="上移此条目" ${ii === 0 ? 'disabled' : ''}>↑</button>
+                      <button class="btn sm" data-si="${si}" data-ii="${ii}" data-ia="down-item" title="下移此条目" ${ii === (sec.items || []).length - 1 ? 'disabled' : ''}>↓</button>
+                      <button class="btn sm danger" data-si="${si}" data-ii="${ii}" data-ia="del-item" title="删除此项">
+                        <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path></svg>
+                      </button>
+                      <button class="btn sm" data-si="${si}" data-ii="${ii}" data-ia="toggle-item" title="展开编辑">
+                        <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                      </button>
+                    </div>
+                  </div>
+                  <div class="resume-item-form collapsed" id="item-form-${si}-${ii}">
+                    <div class="fm-field">
+                      <label>主标题 / 学校 / 项目名称</label>
+                      <input type="text" data-si="${si}" data-ii="${ii}" data-if="title" value="${esc(item.title || '')}" placeholder="例如：河北大学 / 项目名称">
+                    </div>
+                    <div class="fm-field">
+                      <label>副标题 / 学历专业 / 角色</label>
+                      <input type="text" data-si="${si}" data-ii="${ii}" data-if="subtitle" value="${esc(item.subtitle || '')}" placeholder="例如：通信工程 · 学士学位">
+                    </div>
+                    <div class="fm-field">
+                      <label>起止时间</label>
+                      <input type="text" data-si="${si}" data-ii="${ii}" data-if="time" value="${esc(item.time || '')}" placeholder="例如：2022.09 - 2026.06">
+                    </div>
+                    <div class="fm-field">
+                      <label>技术栈 / 标签 (逗号分隔)</label>
+                      <input type="text" data-si="${si}" data-ii="${ii}" data-if="tags" value="${esc((item.tags || []).join(', '))}" placeholder="例如：Node.js, Express, Hexo">
+                    </div>
+                    <div class="fm-field form-full">
+                      <label>详细描述 / 主修课程 / 核心亮点</label>
+                      <textarea data-si="${si}" data-ii="${ii}" data-if="desc" style="min-height:65px">${esc(item.details || item.desc || '')}</textarea>
+                    </div>
+                  </div>
+                </div>
+              `).join('')}
+              <button class="resume-add-item-btn" data-si="${si}" data-sa="add-item">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
+                <span>添加一段${esc(sec.title || '经历')}</span>
+              </button>
+            ` : `
+              <!-- 专业技能组 -->
+              ${(sec.items || []).map((group, gi) => `
+                <div class="resume-item-card" data-si="${si}" data-gi="${gi}">
+                  <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px">
+                    <div class="fm-field" style="flex:1;margin:0">
+                      <label style="font-size:11px">技能分类名</label>
+                      <input type="text" data-si="${si}" data-gi="${gi}" data-gf="category" value="${esc(group.category || '')}" placeholder="例如：开发语言与核心">
+                    </div>
+                    <div style="display:flex;align-items:center;gap:4px;align-self:flex-end;margin-bottom:2px">
+                      <button class="btn sm" data-si="${si}" data-gi="${gi}" data-ga="up-group" title="上移此分类" ${gi === 0 ? 'disabled' : ''}>↑</button>
+                      <button class="btn sm" data-si="${si}" data-gi="${gi}" data-ga="down-group" title="下移此分类" ${gi === (sec.items || []).length - 1 ? 'disabled' : ''}>↓</button>
+                      <button class="btn sm danger" data-si="${si}" data-gi="${gi}" data-ga="del-group" title="删除此组">
+                        <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path></svg>
+                      </button>
+                    </div>
+                  </div>
+                  <div class="fm-field">
+                    <label style="font-size:11px">包含技能 (逗号分隔)</label>
+                    <input type="text" data-si="${si}" data-gi="${gi}" data-gf="list" value="${esc((group.list || []).join(', '))}" placeholder="例如：C / C++, JavaScript, Python">
+                  </div>
+                </div>
+              `).join('')}
+              <button class="resume-add-item-btn" data-si="${si}" data-sa="add-skill-group">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
+                <span>添加技能分类组</span>
+              </button>
+            `}
+          </div>
+        </div>`;
+      }).join('')}
+
+      <!-- 新增自定义板块按钮 -->
+      <button class="resume-add-section-dashed" id="btn-add-section">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+        <span>新增自定义板块（如：工作/实习经历、荣誉奖项、个人作品等）</span>
+      </button>
+    `;
+
+    // 绑定基本信息输入事件
+    $$('input[data-bf], textarea[data-bf]', wrap).forEach((el) => {
+      el.addEventListener('input', () => {
+        const f = el.dataset.bf;
+        state.resume.basic = state.resume.basic || {};
+        state.resume.basic[f] = el.value;
+      });
+    });
+
+    // 绑定基本信息收缩
+    $('#btn-toggle-basic').addEventListener('click', () => {
+      $('#body-basic').classList.toggle('collapsed');
+    });
+
+    // 绑定条目输入事件
+    $$('input[data-if], textarea[data-if]', wrap).forEach((el) => {
+      el.addEventListener('input', () => {
+        const si = Number(el.dataset.si);
+        const ii = Number(el.dataset.ii);
+        const f = el.dataset.if;
+        const item = state.resume.sections[si].items[ii];
+        if (f === 'tags') {
+          item.tags = el.value.split(/[,，]/).map(s => s.trim()).filter(Boolean);
+        } else if (f === 'desc') {
+          item.desc = el.value;
+          item.details = el.value;
+        } else {
+          item[f] = el.value;
+        }
+      });
+    });
+
+    // 绑定技能分类输入事件
+    $$('input[data-gf]', wrap).forEach((el) => {
+      el.addEventListener('input', () => {
+        const si = Number(el.dataset.si);
+        const gi = Number(el.dataset.gi);
+        const f = el.dataset.gf;
+        const grp = state.resume.sections[si].items[gi];
+        if (f === 'list') {
+          grp.list = el.value.split(/[,，]/).map(s => s.trim()).filter(Boolean);
+        } else {
+          grp.category = el.value;
+        }
+      });
+    });
+
+    // 绑定板块操作
+    $$('button[data-sa]', wrap).forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const si = Number(btn.dataset.si);
+        const sa = btn.dataset.sa;
+        const sec = state.resume.sections[si];
+
+        if (sa === 'up' && si > 0) {
+          [state.resume.sections[si - 1], state.resume.sections[si]] = [state.resume.sections[si], state.resume.sections[si - 1]];
+          renderResumeEditor();
+        } else if (sa === 'down' && si < state.resume.sections.length - 1) {
+          [state.resume.sections[si + 1], state.resume.sections[si]] = [state.resume.sections[si], state.resume.sections[si + 1]];
+          renderResumeEditor();
+        } else if (sa === 'del-sec') {
+          if (confirm(`确定删除板块「${sec.title}」及其全部内容？`)) {
+            state.resume.sections.splice(si, 1);
+            renderResumeEditor();
+          }
+        } else if (sa === 'toggle-sec') {
+          $(`#sec-body-${si}`).classList.toggle('collapsed');
+        } else if (sa === 'edit-title') {
+          const newTitle = prompt('请输入新的板块标题：', sec.title || '');
+          if (newTitle && newTitle.trim()) {
+            sec.title = newTitle.trim();
+            const newIcon = prompt('请输入板块图标 Emoji（如 🎓, 💼, ⚡, 🏢, 🏆, 📜）：', sec.icon || '📌');
+            if (newIcon && newIcon.trim()) sec.icon = newIcon.trim();
+            renderResumeEditor();
+          }
+        } else if (sa === 'add-item') {
+          sec.items = sec.items || [];
+          sec.items.push({
+            title: `新${sec.title.slice(0, 2)}名称`,
+            subtitle: '',
+            time: '2026.01 - 至今',
+            tags: [],
+            desc: '',
+          });
+          renderResumeEditor();
+          const newForm = $(`#item-form-${si}-${sec.items.length - 1}`);
+          if (newForm) newForm.classList.remove('collapsed');
+        } else if (sa === 'add-skill-group') {
+          sec.items = sec.items || [];
+          sec.items.push({ category: '新建技能分类', list: [] });
+          renderResumeEditor();
+        }
+      });
+    });
+
+    // 绑定条目操作（排序、删除与展开）
+    $$('button[data-ia]', wrap).forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const si = Number(btn.dataset.si);
+        const ii = Number(btn.dataset.ii);
+        const ia = btn.dataset.ia;
+        const items = state.resume.sections[si].items;
+
+        if (ia === 'up-item' && ii > 0) {
+          [items[ii - 1], items[ii]] = [items[ii], items[ii - 1]];
+          renderResumeEditor();
+        } else if (ia === 'down-item' && ii < items.length - 1) {
+          [items[ii + 1], items[ii]] = [items[ii], items[ii + 1]];
+          renderResumeEditor();
+        } else if (ia === 'del-item') {
+          if (confirm('确定删除此经历条目？')) {
+            items.splice(ii, 1);
+            renderResumeEditor();
+          }
+        } else if (ia === 'toggle-item') {
+          $(`#item-form-${si}-${ii}`).classList.toggle('collapsed');
+        }
+      });
+    });
+
+    // 绑定条目头部点击展开
+    $$('.resume-item-header', wrap).forEach((hdr) => {
+      hdr.addEventListener('click', (e) => {
+        if (e.target.closest('.resume-item-actions')) return;
+        const si = Number(hdr.dataset.si);
+        const ii = Number(hdr.dataset.ii);
+        $(`#item-form-${si}-${ii}`).classList.toggle('collapsed');
+      });
+    });
+
+    // 绑定技能组排序与删除
+    $$('button[data-ga]', wrap).forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const si = Number(btn.dataset.si);
+        const gi = Number(btn.dataset.gi);
+        const ga = btn.dataset.ga;
+        const items = state.resume.sections[si].items;
+        if (ga === 'up-group' && gi > 0) {
+          [items[gi - 1], items[gi]] = [items[gi], items[gi - 1]];
+          renderResumeEditor();
+        } else if (ga === 'down-group' && gi < items.length - 1) {
+          [items[gi + 1], items[gi]] = [items[gi], items[gi + 1]];
+          renderResumeEditor();
+        } else if (ga === 'del-group') {
+          if (confirm('确定删除此技能分类？')) {
+            items.splice(gi, 1);
+            renderResumeEditor();
+          }
+        }
+      });
+    });
+
+    // 绑定新增自定义板块
+    $('#btn-add-section').addEventListener('click', () => {
+      openModal(`
+        <h2>新增自定义板块</h2>
+        <div class="fm-field" style="margin-bottom:12px">
+          <label>板块标题 (例如：工作实习经历、荣誉与奖项)</label>
+          <input type="text" id="nsec-title" placeholder="输入板块名称…" autofocus>
+        </div>
+        <div class="fm-field" style="margin-bottom:12px">
+          <label>板块图标 Emoji</label>
+          <input type="text" id="nsec-icon" value="🏢" placeholder="例如：🏢, 🏆, 📜, 🌟, 💡">
+        </div>
+        <div class="fm-field" style="margin-bottom:16px">
+          <label>板块呈现类型</label>
+          <select id="nsec-type" style="width:100%;height:36px;background:var(--surface-input);border:1px solid var(--border);border-radius:4px;color:var(--text);padding:0 8px">
+            <option value="custom">时间轴 / 经历卡片列表 (类似项目/教育)</option>
+            <option value="skills">技能分类标签组</option>
+          </select>
+        </div>
+        <div class="modal-actions">
+          <button class="btn" id="nsec-cancel">取消</button>
+          <button class="btn primary" id="nsec-create">立即添加</button>
+        </div>
+      `);
+
+      $('#nsec-cancel').addEventListener('click', closeModal);
+      $('#nsec-create').addEventListener('click', () => {
+        const title = $('#nsec-title').value.trim();
+        if (!title) return toast('请输入板块标题', true);
+        const icon = $('#nsec-icon').value.trim() || '📌';
+        const type = $('#nsec-type').value;
+
+        state.resume.sections.push({
+          id: `sec_${Date.now()}`,
+          type,
+          title,
+          icon,
+          items: type === 'skills' ? [{ category: '分类名', list: [] }] : [{ title: `第一条${title}`, subtitle: '', time: '', desc: '' }],
+        });
+
+        closeModal();
+        renderResumeEditor();
+        toast(`✓ 已添加「${title}」板块`);
+      });
+    });
+  }
+
+  async function saveResume() {
+    try {
+      const res = await api('/api/resume', { method: 'PUT', body: state.resume });
+      state.resume = res;
+      toast('✓ 简历已成功保存并重新渲染至关于页！');
+    } catch (e) {
+      toast(e.message, true);
+    }
+  }
+
   // ==================== 构建与部署 ====================
   function renderDeploy() {
     const container = $('#view-deploy');
@@ -1817,15 +2517,14 @@
             <label>Commit 提交信息 (可选)</label>
             <input type="text" id="commit-msg" placeholder="留空使用默认：update: YYYY-MM-DD HH:mm" style="font-family:var(--font-mono)">
           </div>
-          <div style="display:flex;gap:10px;margin-top:auto">
-            <button class="btn primary" id="dep-vercel" style="flex:1">
-              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 22 22 22"></polygon></svg>
-              <span>部署 Vercel (Push main)</span>
+          <div style="display:flex;flex-direction:column;gap:8px;margin-top:auto">
+            <button class="btn primary" id="dep-all" style="width:100%;font-size:13.5px;font-weight:700;padding:10px 16px;display:flex;align-items:center;justify-content:center;gap:8px">
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2"><polygon points="12 2 2 22 22 22"></polygon></svg>
+              <span>一键全平台部署 (Vercel &amp; GitHub Pages)</span>
             </button>
-            <button class="btn" id="dep-pages" style="flex:1">
-              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1 4-10z"></path></svg>
-              <span>部署 GitHub Pages</span>
-            </button>
+            <div style="font-size:11.5px;color:var(--text-tertiary);text-align:center;line-height:1.4">
+              推送源码至 main（触发 Vercel 自动构建）+ 同步发布至 GitHub Pages
+            </div>
           </div>
         </div>
 
@@ -1848,13 +2547,9 @@
     $('#dep-clear-log').addEventListener('click', () => { $('#console').innerHTML = ''; });
     $('#dep-server-btn').addEventListener('click', toggleServer);
     $('#dep-build-btn').addEventListener('click', () => runOp('/api/build', '构建'));
-    $('#dep-vercel').addEventListener('click', () => {
-      if (!confirm('确认提交并推送到 GitHub main 分支？\nVercel 将自动拉取并完成构建发布。')) return;
-      runOp('/api/deploy/vercel', '部署 Vercel', { message: $('#commit-msg').value });
-    });
-    $('#dep-pages').addEventListener('click', () => {
-      if (!confirm('确认部署到 GitHub Pages？\n将执行 Hexo 清理、生成并推送到 gh-pages 分支。')) return;
-      runOp('/api/deploy/pages', '部署 GitHub Pages');
+    $('#dep-all').addEventListener('click', () => {
+      if (!confirm('确认一键部署到全平台？\n将自动提交并推送至 GitHub main 分支（触发 Vercel 自动构建发布），并同时执行 Hexo 静态生成与部署至 GitHub Pages。')) return;
+      runOp('/api/deploy/all', '一键全平台部署', { message: $('#commit-msg').value });
     });
 
     loadGitStatus();
@@ -2094,7 +2789,7 @@
   window.addEventListener('keydown', (e) => {
     if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 's') {
       e.preventDefault();
-      const saveBtn = $('#ed-save') || $('#trend-save') || $('#links-save');
+      const saveBtn = $('#ed-save') || $('#trend-save') || $('#links-save') || $('#projects-save-btn') || $('#resume-save-btn');
       if (saveBtn) saveBtn.click();
     }
     if (e.key === '/' && !['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) {
@@ -2564,7 +3259,7 @@
       }
     }
     state.editing = null;
-    const validViews = ['posts', 'trend', 'links', 'images', 'deploy'];
+    const validViews = ['posts', 'trend', 'links', 'images', 'projects', 'resume', 'deploy'];
     const target = validViews.includes(hash) ? hash : 'posts';
     switchView(target, false);
   }

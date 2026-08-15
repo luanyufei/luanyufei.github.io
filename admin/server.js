@@ -4,6 +4,7 @@ const posts = require('./lib/posts');
 const yamlData = require('./lib/yaml-data');
 const images = require('./lib/images');
 const git = require('./lib/git');
+const resume = require('./lib/resume');
 
 const PORT = 4321;
 const app = express();
@@ -109,6 +110,30 @@ app.get('/api/links', wrap(async (req, res) => res.json(await yamlData.readLinks
 app.put('/api/links', wrap(async (req, res) => res.json(await yamlData.saveLinks(req.body || []))));
 app.get('/api/links/check', wrap(async (req, res) => res.json(await yamlData.checkAllLinks())));
 
+// 简历管理
+app.get('/api/resume', wrap(async (req, res) => {
+  delete require.cache[require.resolve('./lib/resume')];
+  const r = require('./lib/resume');
+  res.json(await r.readResume());
+}));
+app.put('/api/resume', wrap(async (req, res) => {
+  delete require.cache[require.resolve('./lib/resume')];
+  const r = require('./lib/resume');
+  res.json(await r.saveResume(req.body || {}));
+}));
+
+// 项目管理
+app.get('/api/projects', wrap(async (req, res) => {
+  delete require.cache[require.resolve('./lib/projects')];
+  const p = require('./lib/projects');
+  res.json(await p.readProjects());
+}));
+app.put('/api/projects', wrap(async (req, res) => {
+  delete require.cache[require.resolve('./lib/projects')];
+  const p = require('./lib/projects');
+  res.json(await p.saveProjects(req.body || {}));
+}));
+
 // 图片管理与上传
 app.get('/api/images', wrap(async (req, res) => res.json(await images.scanImages())));
 app.post('/api/images/convert', wrap(async (req, res) => {
@@ -137,6 +162,10 @@ app.post('/api/images/orphans/delete', wrap(async (req, res) => {
 app.get('/api/git/status', wrap(async (req, res) => res.json(await git.gitStatus())));
 app.post('/api/build', wrap(async (req, res) => {
   await git.build();
+  res.json({ ok: true });
+}));
+app.post('/api/deploy/all', wrap(async (req, res) => {
+  await git.deployAll(req.body?.message);
   res.json({ ok: true });
 }));
 app.post('/api/deploy/vercel', wrap(async (req, res) => {

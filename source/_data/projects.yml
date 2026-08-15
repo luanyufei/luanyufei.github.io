@@ -1,0 +1,67 @@
+projects:
+  - id: fee-space
+    title: Fee Space & Fee Admin 博客管理控制台
+    category: 全栈工程 / 架构设计
+    time: 2026.02 - 至今
+    featured: true
+    desc: 基于 Node.js 独立研发的轻量级博客全生命周期本地管理控制台。构建了双栏 AST 实时预览编辑器、自动化 WebP 图片转换与引用清洗管线、6 并发全网死链健康探测、近 365 天 GitHub 风格创作热力图，以及具备版本快照对比与回收站恢复机制的轻量数据治理架构。
+    tags:
+      - Node.js
+      - Express 5
+      - Vanilla JS
+      - cwebp Pipeline
+      - Hexo
+      - SSE Live Stream
+    highlights:
+      - 剪贴板（⌘V）与拖拽图片秒级直传并自动无损转换为 WebP
+      - 52 周创作活动热力图与分类词云数据大盘
+      - 全异步死链并发健康探测与状态标签反馈
+    links:
+      - label: GitHub 源码 ↗
+        url: https://github.com/luanyufei
+        icon: fab fa-github
+        primary: true
+      - label: 在个人履历中查看 ↗
+        url: /about/
+        icon: fas fa-user-circle
+        primary: false
+  - id: gan-faceswap
+    title: 基于 GAN 网络的高分辨率图像换脸软件实现
+    category: 深度学习 / 计算机视觉
+    time: 2026.01 - 2026.05
+    featured: false
+    desc: 基于生成对抗网络（GAN）构建高保真面部特征解耦与特征融合管线。实现多姿态与不同光照条件下的高分辨率面部属性迁移与边缘平滑融合，设计了多尺度判别器与身份保持损失（Identity-Preserving Loss）以提升换脸真实感与细节保真度。
+    tags:
+      - Python
+      - PyTorch
+      - GAN
+      - OpenCV
+      - CUDA
+    highlights:
+      - 实现了人脸关键点对齐与面部特征解耦编码架构
+      - 融合泊松边缘融合算法，消除了换脸拼接色差与伪影
+    links:
+      - label: 了解背景详情 ↗
+        url: /about/
+        icon: fas fa-info-circle
+        primary: false
+  - id: stc89c52-clock
+    title: 基于 STC89C52 的高精度电子万年历设计
+    category: 嵌入式硬件 / 单片机
+    time: 2025.03 - 2025.05
+    featured: false
+    desc: 基于 STC89C52 单片机与 DS1302 实时时钟芯片独立设计高精度万年历硬件系统。涵盖单片机最小系统搭建、DS1302 时钟总线时序驱动编写、LCD1602 字符液晶屏动态刷新与按键中断控制，完成了 PCB 原理图绘制、元器件焊接与低功耗固件调优。
+    tags:
+      - C语言
+      - STC89C52
+      - DS1302 时钟
+      - LCD1602
+      - PCB 原理图
+    highlights:
+      - 严格时序控制，时间偏差每月小于 ±5 秒
+      - 支持闹钟、公农历换算与掉电时间保持
+    links:
+      - label: 了解背景详情 ↗
+        url: /about/
+        icon: fas fa-info-circle
+        primary: false

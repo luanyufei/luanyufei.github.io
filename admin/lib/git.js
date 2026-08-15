@@ -60,6 +60,34 @@ async function gitStatus() {
   });
 }
 
+async function deployAll(message) {
+  return withLock('一键全平台部署 (Vercel & GitHub Pages)', async () => {
+    const msg = String(message || '').trim() || `update: ${new Date().toISOString().slice(0, 16)}`;
+    
+    emit('info', '==================================================');
+    emit('info', '🚀 [阶段 1/2] 正在提交 Git 并推送至 main 分支 (Vercel 自动部署)...');
+    emit('info', '==================================================');
+    await run('git', ['add', '-A'], 'git add');
+    try {
+      await run('git', ['commit', '-m', msg], 'git commit');
+    } catch (e) {
+      emit('info', '工作区暂无新变动或已全部提交，继续执行推送…');
+    }
+    await run('git', ['push', 'origin', 'main'], 'git push');
+
+    emit('info', '');
+    emit('info', '==================================================');
+    emit('info', '📦 [阶段 2/2] 正在清理、重新生成并部署至 GitHub Pages (gh-pages)...');
+    emit('info', '==================================================');
+    await run('npx', ['hexo', 'clean'], 'hexo clean');
+    await run('npx', ['hexo', 'generate'], 'hexo generate');
+    await run('npx', ['hexo', 'deploy'], 'hexo deploy');
+
+    emit('info', '');
+    emit('info', '🎉 全平台双端部署全部完成！Vercel 与 GitHub Pages 已同步更新上线。');
+  });
+}
+
 async function deployVercel(message) {
   return withLock('部署 Vercel', async () => {
     const msg = String(message || '').trim() || `update: ${new Date().toISOString().slice(0, 16)}`;
@@ -152,6 +180,7 @@ async function waitForReady(port = 4000, timeoutMs = 25000) {
 module.exports = {
   bus,
   gitStatus,
+  deployAll,
   deployVercel,
   deployPages,
   build,
