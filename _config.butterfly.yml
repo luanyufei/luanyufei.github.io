@@ -71,11 +71,11 @@ inject:
   head:
     - >-
       <script>(function(){try{localStorage.removeItem('theme');var raw=sessionStorage.getItem('theme');var saved;if(raw){try{var parsed=JSON.parse(raw);saved=parsed.value}catch(e){saved=raw}}var mode=saved==='light'||saved==='dark'?saved:(window.matchMedia&&window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',mode);document.documentElement.classList.add('js');var m=document.querySelector('meta[name="theme-color"]');if(m){m.setAttribute('content',mode==='dark'?'#0f1111':'#f3f6f2')}}catch(e){document.documentElement.setAttribute('data-theme','light')}})();</script>
-    - <link rel="stylesheet" href="/css/cyber-background.css">
-    - <link rel="stylesheet" href="/css/footer-brand.css">
+    - <link rel="stylesheet" href="/css/cyber-background.css?v=20260815a">
+    - <link rel="stylesheet" href="/css/footer-brand.css?v=20260815a">
   bottom:
-    - <script src="/js/site-ui.js" defer></script>
-    - <script src="/js/footer-brand.js" defer></script>
+    - <script src="/js/site-ui.js?v=20260815a" defer></script>
+    - <script src="/js/footer-brand.js?v=20260815a" defer></script>
 
 translate:
   enable: false
