@@ -19,8 +19,6 @@ tags:
 
 但如果仅仅将 `gemini.google.com` 指向解锁节点，往往会遇到无限加载、图片无法生成或频繁提示“当前地区不受支持”。本文先剖析此类故障的底层成因，随后提供适用于 **Shadowrocket** 与 **Clash (Mihomo)** 的完整可落地配置方案。
 
----
-
 ## 场景模型定义
 
 为了便于直接套用，本文设定以下通用场景模型：
@@ -35,8 +33,6 @@ tags:
   - 角色定位：仅用于分流规则中指定的 AI 请求。
 
 **目标**：从订阅 B 中筛选出可用的新加坡/支持地区节点（避开不支持 Gemini 的香港节点），组成名为 `AI-Services` 的自动测速策略组；其余所有非 AI 流量全部走订阅 A。
-
----
 
 ## 核心故障成因剖析
 
@@ -63,8 +59,6 @@ Google Gemini 至今未对中国香港地区开放服务。若策略组对订阅
 ### 4. IPv6 真实地址泄漏
 
 当本地网络支持 IPv6 且客户端未做防护时，浏览器发起的 AAAA 查询若未被代理内核接管，流量可能通过本地运营商网络直连，暴露出真实 IP 归属地。
-
----
 
 ## 一、 Shadowrocket 配置方案
 
@@ -135,8 +129,6 @@ GEOIP,CN,DIRECT
 RULE-SET,https://raw.githubusercontent.com/Loyalsoldier/surge-rules/release/ruleset/tld-not-cn.list,PROXY
 FINAL,PROXY
 ```
-
----
 
 ## 二、 Clash (Mihomo) 配置方案
 
@@ -359,8 +351,6 @@ function main(config, profileName) {
   return config;
 }
 ```
-
----
 
 ## 三、 规则扩展与维护
 
