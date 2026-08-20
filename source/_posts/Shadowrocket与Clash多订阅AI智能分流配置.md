@@ -119,6 +119,7 @@ DOMAIN-SUFFIX,youtubei.googleapis.com,PROXY
 DOMAIN-SUFFIX,yt3.ggpht.com,PROXY
 
 # 3. AI 资产与底层通信全量闭环（路由至 AI-Services 专线策略组）
+DOMAIN-KEYWORD,antigravity,AI-Services
 DOMAIN-KEYWORD,gemini,AI-Services
 DOMAIN-KEYWORD,colab,AI-Services
 DOMAIN-KEYWORD,deepmind,AI-Services
@@ -336,6 +337,7 @@ function main(config, profileName) {
 
   // ③ AI 专属规则与底层通信闭环（全量路由至 专线策略组）
   const aiRules = [
+    `DOMAIN-KEYWORD,antigravity,${AI_GROUP_NAME}`,
     `DOMAIN-KEYWORD,gemini,${AI_GROUP_NAME}`,
     `DOMAIN-KEYWORD,colab,${AI_GROUP_NAME}`,
     `DOMAIN-KEYWORD,deepmind,${AI_GROUP_NAME}`,
