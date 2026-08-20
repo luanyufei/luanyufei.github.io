@@ -108,27 +108,32 @@ AND,((DEST-PORT,443),(PROTOCOL,UDP),(DOMAIN-SUFFIX,google.com)),REJECT
 AND,((DEST-PORT,443),(PROTOCOL,UDP),(DOMAIN-SUFFIX,googleapis.com)),REJECT
 AND,((DEST-PORT,443),(PROTOCOL,UDP),(DOMAIN-SUFFIX,gstatic.com)),REJECT
 AND,((DEST-PORT,443),(PROTOCOL,UDP),(DOMAIN-SUFFIX,googleusercontent.com)),REJECT
+AND,((DEST-PORT,443),(PROTOCOL,UDP),(DOMAIN-SUFFIX,googlevideo.com)),REJECT
 
-# 2. AI 资产全量闭环（置顶最高优先级，路由至 AI-Services 策略组）
+# 2. YouTube 视频与普通服务前置（优先走主力机场 PROXY，不耗专线）
+DOMAIN-SUFFIX,googlevideo.com,PROXY
+DOMAIN-SUFFIX,youtube.com,PROXY
+DOMAIN-SUFFIX,youtu.be,PROXY
+DOMAIN-SUFFIX,ytimg.com,PROXY
+DOMAIN-SUFFIX,youtubei.googleapis.com,PROXY
+DOMAIN-SUFFIX,yt3.ggpht.com,PROXY
+
+# 3. AI 资产与底层通信全量闭环（路由至 AI-Services 专线策略组）
+DOMAIN-KEYWORD,gemini,AI-Services
+DOMAIN-KEYWORD,colab,AI-Services
+DOMAIN-KEYWORD,deepmind,AI-Services
 DOMAIN-SUFFIX,gemini.google.com,AI-Services
 DOMAIN-SUFFIX,bard.google.com,AI-Services
-DOMAIN-SUFFIX,generativelanguage.googleapis.com,AI-Services
-DOMAIN-SUFFIX,ai.google.dev,AI-Services
 DOMAIN-SUFFIX,aistudio.google.com,AI-Services
-DOMAIN-SUFFIX,alkalimakersuite-pa.clients6.google.com,AI-Services
+DOMAIN-SUFFIX,ai.google.dev,AI-Services
 DOMAIN-SUFFIX,makersuite.google.com,AI-Services
 DOMAIN-SUFFIX,deepmind.google,AI-Services
 DOMAIN-SUFFIX,deepmind.com,AI-Services
 DOMAIN-SUFFIX,clients6.google.com,AI-Services
 DOMAIN-SUFFIX,googleusercontent.com,AI-Services
-DOMAIN-SUFFIX,proactivebackend-pa.googleapis.com,AI-Services
-DOMAIN-SUFFIX,geller-pa.googleapis.com,AI-Services
-DOMAIN-SUFFIX,cloudaicompanion-pa.googleapis.com,AI-Services
-DOMAIN-SUFFIX,waa-pa.clients6.google.com,AI-Services
-DOMAIN-KEYWORD,gemini,AI-Services
-DOMAIN-KEYWORD,colab,AI-Services
+DOMAIN-SUFFIX,googleapis.com,AI-Services
 
-# 3. Loyalsoldier 远程精细分流规则集（日常流量与订阅 A 兜底，走 jsDelivr CDN 加速）
+# 4. Loyalsoldier 远程精细分流规则集（日常流量与订阅 A 兜底，走 jsDelivr CDN 加速）
 RULE-SET,https://cdn.jsdelivr.net/gh/Loyalsoldier/surge-rules@release/private.txt,DIRECT
 RULE-SET,https://cdn.jsdelivr.net/gh/Loyalsoldier/surge-rules@release/reject.txt,REJECT
 RULE-SET,https://cdn.jsdelivr.net/gh/Loyalsoldier/surge-rules@release/icloud.txt,DIRECT
@@ -315,33 +320,40 @@ function main(config, profileName) {
     "AND,((DST-PORT,443),(NETWORK,UDP),(DOMAIN-SUFFIX,google.com)),REJECT",
     "AND,((DST-PORT,443),(NETWORK,UDP),(DOMAIN-SUFFIX,googleapis.com)),REJECT",
     "AND,((DST-PORT,443),(NETWORK,UDP),(DOMAIN-SUFFIX,gstatic.com)),REJECT",
-    "AND,((DST-PORT,443),(NETWORK,UDP),(DOMAIN-SUFFIX,googleusercontent.com)),REJECT"
+    "AND,((DST-PORT,443),(NETWORK,UDP),(DOMAIN-SUFFIX,googleusercontent.com)),REJECT",
+    "AND,((DST-PORT,443),(NETWORK,UDP),(DOMAIN-SUFFIX,googlevideo.com)),REJECT"
   ];
 
-  // ② AI 专属规则（路由至 AI-Services）
+  // ② YouTube 视频与普通服务前置保护（走主力机场，不消耗专线）
+  const youtubeRules = [
+    `DOMAIN-SUFFIX,googlevideo.com,${mainProxyGroupName}`,
+    `DOMAIN-SUFFIX,youtube.com,${mainProxyGroupName}`,
+    `DOMAIN-SUFFIX,youtu.be,${mainProxyGroupName}`,
+    `DOMAIN-SUFFIX,ytimg.com,${mainProxyGroupName}`,
+    `DOMAIN-SUFFIX,youtubei.googleapis.com,${mainProxyGroupName}`,
+    `DOMAIN-SUFFIX,yt3.ggpht.com,${mainProxyGroupName}`
+  ];
+
+  // ③ AI 专属规则与底层通信闭环（全量路由至 专线策略组）
   const aiRules = [
+    `DOMAIN-KEYWORD,gemini,${AI_GROUP_NAME}`,
+    `DOMAIN-KEYWORD,colab,${AI_GROUP_NAME}`,
+    `DOMAIN-KEYWORD,deepmind,${AI_GROUP_NAME}`,
     `DOMAIN-SUFFIX,gemini.google.com,${AI_GROUP_NAME}`,
     `DOMAIN-SUFFIX,bard.google.com,${AI_GROUP_NAME}`,
-    `DOMAIN-SUFFIX,generativelanguage.googleapis.com,${AI_GROUP_NAME}`,
     `DOMAIN-SUFFIX,ai.google.dev,${AI_GROUP_NAME}`,
     `DOMAIN-SUFFIX,aistudio.google.com,${AI_GROUP_NAME}`,
     `DOMAIN-SUFFIX,makersuite.google.com,${AI_GROUP_NAME}`,
     `DOMAIN-SUFFIX,deepmind.google,${AI_GROUP_NAME}`,
     `DOMAIN-SUFFIX,deepmind.com,${AI_GROUP_NAME}`,
-    `DOMAIN-SUFFIX,alkalimakersuite-pa.clients6.google.com,${AI_GROUP_NAME}`,
+    `GEOSITE,google-gemini,${AI_GROUP_NAME}`,
+    `GEOSITE,google-deepmind,${AI_GROUP_NAME}`,
     `DOMAIN-SUFFIX,clients6.google.com,${AI_GROUP_NAME}`,
     `DOMAIN-SUFFIX,googleusercontent.com,${AI_GROUP_NAME}`,
-    `DOMAIN-SUFFIX,proactivebackend-pa.googleapis.com,${AI_GROUP_NAME}`,
-    `DOMAIN-SUFFIX,geller-pa.googleapis.com,${AI_GROUP_NAME}`,
-    `DOMAIN-SUFFIX,cloudaicompanion-pa.googleapis.com,${AI_GROUP_NAME}`,
-    `DOMAIN-SUFFIX,waa-pa.clients6.google.com,${AI_GROUP_NAME}`,
-    `DOMAIN-KEYWORD,gemini,${AI_GROUP_NAME}`,
-    `DOMAIN-KEYWORD,colab,${AI_GROUP_NAME}`,
-    `GEOSITE,google-gemini,${AI_GROUP_NAME}`,
-    `GEOSITE,google-deepmind,${AI_GROUP_NAME}`
+    `DOMAIN-SUFFIX,googleapis.com,${AI_GROUP_NAME}`
   ];
 
-  // ③ 日常流量规则（对接主力机场）
+  // ④ 日常流量规则（对接主力机场）
   const loyalRules = [
     "RULE-SET,applications,DIRECT",
     "RULE-SET,private,DIRECT",
@@ -361,7 +373,7 @@ function main(config, profileName) {
     `MATCH,${mainProxyGroupName}`
   ];
 
-  config.rules = [...quicBlockRules, ...aiRules, ...loyalRules];
+  config.rules = [...quicBlockRules, ...youtubeRules, ...aiRules, ...loyalRules];
   return config;
 }
 ```
