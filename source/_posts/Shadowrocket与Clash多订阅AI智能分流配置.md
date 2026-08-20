@@ -60,6 +60,14 @@ Google Gemini 至今未对中国香港地区开放服务。若策略组对订阅
 
 当本地网络支持 IPv6 且客户端未做防护时，浏览器发起的 AAAA 查询若未被代理内核接管，流量可能通过本地运营商网络直连，暴露出真实 IP 归属地。
 
+### 5. DNS 解析错位导致国内流量误入代理
+
+有些配置会把客户端 DNS 强行指定为 `8.8.8.8` 或 `1.1.1.1` 并关闭系统 DNS。在国内网络环境下，向 `8.8.8.8` 发起 UDP 53 查询极易受到污染；即便未被污染，海外公共 DNS 在解析微信、抖音、网易云等大厂服务时，往往会分配它们位于海外（如新加坡或日本）的 CDN 节点。这直接导致下游的 `GEOIP,CN` 规则判定失效，让本该直连的国内流量一路滑落到底部的 `FINAL,PROXY`。
+
+### 6. 远程规则集拉取失败与静默回退
+
+Shadowrocket 与 Clash 在拉取远程规则集失败时（例如规则源路径写错返回 404，或国内网络直连 `raw.githubusercontent.com` 超时），通常不会弹出报错提示，而是将该规则集静默置空。这意味着写在配置里的数万条域名白名单可能根本没有加载进内存。引用远程规则时，建议使用国内可稳定直连的 CDN 镜像（如 jsDelivr），并确认文件路径与扩展名准确无误。
+
 ## 一、 Shadowrocket 配置方案
 
 ### 操作步骤
@@ -77,9 +85,17 @@ Google Gemini 至今未对中国香港地区开放服务。若策略组对订阅
 bypass-system = true
 skip-proxy = 192.168.0.0/16, 10.0.0.0/8, 172.16.0.0/12, localhost, *.local, captive.apple.com
 tun-excluded-routes = 10.0.0.0/8, 100.64.0.0/10, 127.0.0.0/8, 169.254.0.0/16, 172.16.0.0/12, 192.0.0.0/24, 192.0.2.0/24, 192.88.99.0/24, 192.168.0.0/16, 198.51.100.0/24, 203.0.113.0/24, 224.0.0.0/4, 255.255.255.255/32, 239.255.255.250/32
-dns-server = 223.5.5.5, 119.29.29.29, 114.114.114.114
+dns-server = system, 223.5.5.5, 119.29.29.29
+fallback-dns-server = 8.8.8.8, 1.1.1.1
 ipv6 = false
 prefer-ipv6 = false
+dns-fallback-system = false
+dns-direct-system = true
+icmp-auto-reply = true
+always-reject-url-rewrite = false
+private-ip-answer = true
+dns-direct-fallback-proxy = true
+udp-policy-not-supported-behaviour = REJECT
 
 [Proxy Group]
 # 策略组：通过 policy-regex-filter 筛选订阅 B 中包含“新加坡”的节点，每 5 分钟测速并选取最快节点
@@ -112,21 +128,19 @@ DOMAIN-SUFFIX,waa-pa.clients6.google.com,AI-Services
 DOMAIN-KEYWORD,gemini,AI-Services
 DOMAIN-KEYWORD,colab,AI-Services
 
-# 3. Loyalsoldier 远程精细分流规则集（日常流量与订阅 A 兜底）
-RULE-SET,https://raw.githubusercontent.com/Loyalsoldier/surge-rules/release/ruleset/applications.list,DIRECT
-RULE-SET,https://raw.githubusercontent.com/Loyalsoldier/surge-rules/release/ruleset/private.list,DIRECT
-RULE-SET,https://raw.githubusercontent.com/Loyalsoldier/surge-rules/release/ruleset/reject.list,REJECT
-RULE-SET,https://raw.githubusercontent.com/Loyalsoldier/surge-rules/release/ruleset/icloud.list,DIRECT
-RULE-SET,https://raw.githubusercontent.com/Loyalsoldier/surge-rules/release/ruleset/apple.list,PROXY
-RULE-SET,https://raw.githubusercontent.com/Loyalsoldier/surge-rules/release/ruleset/proxy.list,PROXY
-RULE-SET,https://raw.githubusercontent.com/Loyalsoldier/surge-rules/release/ruleset/gfw.list,PROXY
-RULE-SET,https://raw.githubusercontent.com/Loyalsoldier/surge-rules/release/ruleset/greatfire.list,PROXY
-RULE-SET,https://raw.githubusercontent.com/Loyalsoldier/surge-rules/release/ruleset/telegramcidr.list,PROXY,no-resolve
-RULE-SET,https://raw.githubusercontent.com/Loyalsoldier/surge-rules/release/ruleset/direct.list,DIRECT
-RULE-SET,https://raw.githubusercontent.com/Loyalsoldier/surge-rules/release/ruleset/lancidr.list,DIRECT,no-resolve
-RULE-SET,https://raw.githubusercontent.com/Loyalsoldier/surge-rules/release/ruleset/cncidr.list,DIRECT,no-resolve
+# 3. Loyalsoldier 远程精细分流规则集（日常流量与订阅 A 兜底，走 jsDelivr CDN 加速）
+RULE-SET,https://cdn.jsdelivr.net/gh/Loyalsoldier/surge-rules@release/private.txt,DIRECT
+RULE-SET,https://cdn.jsdelivr.net/gh/Loyalsoldier/surge-rules@release/reject.txt,REJECT
+RULE-SET,https://cdn.jsdelivr.net/gh/Loyalsoldier/surge-rules@release/icloud.txt,DIRECT
+RULE-SET,https://cdn.jsdelivr.net/gh/Loyalsoldier/surge-rules@release/apple.txt,PROXY
+RULE-SET,https://cdn.jsdelivr.net/gh/Loyalsoldier/surge-rules@release/proxy.txt,PROXY
+RULE-SET,https://cdn.jsdelivr.net/gh/Loyalsoldier/surge-rules@release/gfw.txt,PROXY
+RULE-SET,https://cdn.jsdelivr.net/gh/Loyalsoldier/surge-rules@release/greatfire.txt,PROXY
+RULE-SET,https://cdn.jsdelivr.net/gh/Loyalsoldier/surge-rules@release/telegramcidr.txt,PROXY,no-resolve
+RULE-SET,https://cdn.jsdelivr.net/gh/Loyalsoldier/surge-rules@release/direct.txt,DIRECT
+RULE-SET,https://cdn.jsdelivr.net/gh/Loyalsoldier/surge-rules@release/cncidr.txt,DIRECT,no-resolve
 GEOIP,CN,DIRECT
-RULE-SET,https://raw.githubusercontent.com/Loyalsoldier/surge-rules/release/ruleset/tld-not-cn.list,PROXY
+RULE-SET,https://cdn.jsdelivr.net/gh/Loyalsoldier/surge-rules@release/tld-not-cn.txt,PROXY
 FINAL,PROXY
 ```
 
@@ -204,91 +218,91 @@ function main(config, profileName) {
     reject: {
       type: "http",
       behavior: "domain",
-      url: "https://raw.githubusercontent.com/Loyalsoldier/clash-rules/release/reject.txt",
+      url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/reject.txt",
       path: "./ruleset/loyalsoldier/reject.yaml",
       interval: 86400
     },
     icloud: {
       type: "http",
       behavior: "domain",
-      url: "https://raw.githubusercontent.com/Loyalsoldier/clash-rules/release/icloud.txt",
+      url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/icloud.txt",
       path: "./ruleset/loyalsoldier/icloud.yaml",
       interval: 86400
     },
     apple: {
       type: "http",
       behavior: "domain",
-      url: "https://raw.githubusercontent.com/Loyalsoldier/clash-rules/release/apple.txt",
+      url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/apple.txt",
       path: "./ruleset/loyalsoldier/apple.yaml",
       interval: 86400
     },
     proxy: {
       type: "http",
       behavior: "domain",
-      url: "https://raw.githubusercontent.com/Loyalsoldier/clash-rules/release/proxy.txt",
+      url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/proxy.txt",
       path: "./ruleset/loyalsoldier/proxy.yaml",
       interval: 86400
     },
     direct: {
       type: "http",
       behavior: "domain",
-      url: "https://raw.githubusercontent.com/Loyalsoldier/clash-rules/release/direct.txt",
+      url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/direct.txt",
       path: "./ruleset/loyalsoldier/direct.yaml",
       interval: 86400
     },
     private: {
       type: "http",
       behavior: "domain",
-      url: "https://raw.githubusercontent.com/Loyalsoldier/clash-rules/release/private.txt",
+      url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/private.txt",
       path: "./ruleset/loyalsoldier/private.yaml",
       interval: 86400
     },
     gfw: {
       type: "http",
       behavior: "domain",
-      url: "https://raw.githubusercontent.com/Loyalsoldier/clash-rules/release/gfw.txt",
+      url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/gfw.txt",
       path: "./ruleset/loyalsoldier/gfw.yaml",
       interval: 86400
     },
     greatfire: {
       type: "http",
       behavior: "domain",
-      url: "https://raw.githubusercontent.com/Loyalsoldier/clash-rules/release/greatfire.txt",
+      url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/greatfire.txt",
       path: "./ruleset/loyalsoldier/greatfire.yaml",
       interval: 86400
     },
     "tld-not-cn": {
       type: "http",
       behavior: "domain",
-      url: "https://raw.githubusercontent.com/Loyalsoldier/clash-rules/release/tld-not-cn.txt",
+      url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/tld-not-cn.txt",
       path: "./ruleset/loyalsoldier/tld-not-cn.yaml",
       interval: 86400
     },
     telegramcidr: {
       type: "http",
       behavior: "ipcidr",
-      url: "https://raw.githubusercontent.com/Loyalsoldier/clash-rules/release/telegramcidr.txt",
+      url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/telegramcidr.txt",
       path: "./ruleset/loyalsoldier/telegramcidr.yaml",
       interval: 86400
     },
     cncidr: {
       type: "http",
       behavior: "ipcidr",
-      url: "https://raw.githubusercontent.com/Loyalsoldier/clash-rules/release/cncidr.txt",
+      url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/cncidr.txt",
       path: "./ruleset/loyalsoldier/cncidr.yaml",
       interval: 86400
     },
     lancidr: {
       type: "http",
       behavior: "ipcidr",
-      url: "https://raw.githubusercontent.com/Loyalsoldier/clash-rules/release/lancidr.txt",
+      url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/lancidr.txt",
       path: "./ruleset/loyalsoldier/lancidr.yaml",
       interval: 86400
     },
     applications: {
       type: "http",
       behavior: "classical",
-      url: "https://raw.githubusercontent.com/Loyalsoldier/clash-rules/release/applications.txt",
+      url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/applications.txt",
       path: "./ruleset/loyalsoldier/applications.yaml",
       interval: 86400
     }
