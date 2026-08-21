@@ -12,13 +12,13 @@
   <rights>All rights reserved 2026, 乱与狒</rights>
   <subtitle>乱与狒的Blog</subtitle>
   <title>Fee Space</title>
-  <updated>2026-08-20T07:48:55.868Z</updated>
+  <updated>2026-08-21T02:09:08.520Z</updated>
   <entry>
     <author>
       <name>乱与狒</name>
       <email>noonyjufee@gmail.com</email>
     </author>
-    <category term="实用技巧" scheme="https://luanyufei.cn/categories/%E5%AE%9E%E7%94%A8%E6%8A%80%E5%B7%A7/"/>
+    <category term="开发记录" scheme="https://luanyufei.cn/categories/%E5%BC%80%E5%8F%91%E8%AE%B0%E5%BD%95/"/>
     <category term="macOS" scheme="https://luanyufei.cn/tags/macOS/"/>
     <category term="Swift" scheme="https://luanyufei.cn/tags/Swift/"/>
     <category term="逆向工程" scheme="https://luanyufei.cn/tags/%E9%80%86%E5%90%91%E5%B7%A5%E7%A8%8B/"/>
@@ -99,7 +99,7 @@
 <p>当提供真实的代码上下文与反编译目标后，大模型基于代码语义与时序逻辑的精细排查，能够大幅提升逆向工程与协议还原的效率。</p>]]>
     </summary>
     <title>用几个不同的大模型接力，我写了个原生的 macOS 版 WO Mic</title>
-    <updated>2026-08-20T07:48:55.868Z</updated>
+    <updated>2026-08-21T02:09:08.520Z</updated>
   </entry>
   <entry>
     <author>

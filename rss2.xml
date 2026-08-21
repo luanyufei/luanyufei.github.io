@@ -6,7 +6,7 @@
     <description>乱与狒的Blog</description>
     <language>zh-CN</language>
     <copyright>All rights reserved 2026, 乱与狒</copyright>
-    <lastBuildDate>Thu, 20 Aug 2026 07:48:55 GMT</lastBuildDate>
+    <lastBuildDate>Fri, 21 Aug 2026 02:09:08 GMT</lastBuildDate>
     <generator>Hexo</generator>
     <image>
       <url>https://www.gravatar.com/avatar/c290a591cab174a68b6fe48e2da30018</url>
@@ -86,7 +86,7 @@
 <p>当提供真实的代码上下文与反编译目标后，大模型基于代码语义与时序逻辑的精细排查，能够大幅提升逆向工程与协议还原的效率。</p>]]>
       </description>
       <author>noonyjufee@gmail.com (乱与狒)</author>
-      <category domain="https://luanyufei.cn/categories/%E5%AE%9E%E7%94%A8%E6%8A%80%E5%B7%A7/">实用技巧</category>
+      <category domain="https://luanyufei.cn/categories/%E5%BC%80%E5%8F%91%E8%AE%B0%E5%BD%95/">开发记录</category>
       <category domain="https://luanyufei.cn/tags/macOS/">macOS</category>
       <category domain="https://luanyufei.cn/tags/Swift/">Swift</category>
       <category domain="https://luanyufei.cn/tags/%E9%80%86%E5%90%91%E5%B7%A5%E7%A8%8B/">逆向工程</category>
