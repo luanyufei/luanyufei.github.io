@@ -2,6 +2,15 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>https://luanyufei.cn/about/index.html</loc>
+    
+    <lastmod>2026-08-21</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
     <loc>https://luanyufei.cn/2026/08/20/%E7%94%A8%E5%87%A0%E4%B8%AA%E4%B8%8D%E5%90%8C%E7%9A%84%E5%A4%A7%E6%A8%A1%E5%9E%8B%E6%8E%A5%E5%8A%9B%EF%BC%8C%E6%88%91%E5%86%99%E4%BA%86%E4%B8%AA%E5%8E%9F%E7%94%9F%E7%9A%84%20macOS%20%E7%89%88%20WO%20Mic/</loc>
     
     <lastmod>2026-08-21</lastmod>
@@ -30,15 +39,6 @@
   
   <url>
     <loc>https://luanyufei.cn/projects/index.html</loc>
-    
-    <lastmod>2026-08-15</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>https://luanyufei.cn/about/index.html</loc>
     
     <lastmod>2026-08-15</lastmod>
     
