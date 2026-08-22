@@ -217,6 +217,20 @@
   </url>
   
   <url>
+    <loc>https://luanyufei.cn/tags/Android/</loc>
+    <lastmod>2026-08-22</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
+    <loc>https://luanyufei.cn/tags/iOS/</loc>
+    <lastmod>2026-08-22</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
     <loc>https://luanyufei.cn/tags/macOS/</loc>
     <lastmod>2026-08-22</lastmod>
     <changefreq>weekly</changefreq>
