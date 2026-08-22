@@ -1,5 +1,5 @@
 ---
-title: Shadowrocket & Clash 进阶分流指南：多订阅 AI 调度与排坑实践
+title: Shadowrocket & Clash 进阶优化指南
 date: 2026-08-19 09:30:00
 categories: 实用技巧
 tags:
@@ -8,90 +8,96 @@ tags:
   - Mihomo
   - 代理分流
   - AI
+  - Android
+  - iOS
+  - macOS
 ---
 
-日常使用代理服务时，单套订阅往往很难兼顾所有场景：
+机场默认提供的订阅配置通常只做最基础的粗粒度分流，直接拿来日常主力使用往往会遇到各种体验瓶颈：
 
-- **主力日常机场**：流量多、带宽足、看高码率视频流畅，但节点出口多为机房数据中心 IP，极易触发 Google Gemini、Claude 等严格的风控限制；
-- **专线/解锁机场**：节点干净，能稳定访问各类 AI 服务，但单价高、流量有限，全量拿来跑日常下载和刷视频太浪费。
+- **节点纯净度与流量成本冲突**：大流量机场看视频流畅、价格便宜，但出口多为数据中心 IP，访问 Gemini、Claude 等平台极易触发风控拦截；专线节点纯净度高，但单价昂贵且流量有限，拿来跑日常下载十分浪费。
+- **协议与 DNS 握手卡顿**：Google 资产的 QUIC (UDP 443) 协议容易在代理链路中丢包转圈；DNS 如果死锁海外公共地址，还会导致国内微信、抖音等应用分到海外 CDN，拖慢直连体验。
+- **移动端配置脆弱易丢**：自建的分流规则在手机客户端（如 Android Clash Meta）一旦触发定时刷新，容易被远端订阅直接覆盖冲掉。
 
-通过客户端的策略组（Proxy Group / Proxy Provider）与分流规则，我们可以把两套订阅结合起来：**日常网页、视频与下载走主力机场，AI 相关请求自动走专线解锁节点，国内流量完全直连。**
+本文从**协议层防护、DNS 本地化、多订阅流量调度、规则集加速以及多端持久化**五个维度，整理一套通用的进阶优化体系，并提供 iOS、macOS/Windows 以及 Android 的完整落地配置。
 
-但如果只是简单地把 `gemini.google.com` 指向解锁节点，经常会遇到页面无限转圈、图片无法生成或频繁提示“当前地区不受支持”。这里先整理八个常见排坑点，随后提供适用于 **Shadowrocket** 与 **Clash (Mihomo)** 的完整配置方案。
+## 进阶优化体系
 
-## 分流架构设计
-
-为了便于直接套用，本文设定两套通用订阅模型：
-
-- **订阅 A（主力日常机场）**：
-  - 角色定位：作为全局默认的 `PROXY` 出口，承载绝大部分日常流量与 4K 视频。
-- **订阅 B（AI 专线 / 解锁机场）**：
-  - 角色定位：仅用于分流规则中指定的 AI 请求与鉴权通信。
+整个优化体系聚焦于网络传输质量、分流精确度与客户端稳定性：
 
 ```
-                       ┌─── [国内流量] ───────> DIRECT 直连
-                       │
-[全部网络请求] ───────┼─── [YouTube/普通网页] ──> 订阅 A (主力日常机场)
-                       │
-                       └─── [Gemini/Antigravity/AI API] ──> 订阅 B (新加坡专线)
+[全部出站流量]
+      │
+      ├── 1. 协议与防泄漏 ────> 拦截 UDP 443 (降级 TCP) / 屏蔽 IPv6
+      │
+      ├── 2. DNS 与直连优化 ──> 国内系统 DNS 解析 + Loyalsoldier 白名单直连 (国内应用)
+      │
+      ├── 3. 视频大流量前置 ──> YouTube / 视频服务直通主力日常机场 (省专线)
+      │
+      ├── 4. AI 资产全域闭环 ──> Gemini / Claude / ChatGPT / Google API 全量路由至专线
+      │
+      └── 5. 兜底与日常代理 ──> 主力机场承载其余未知海外流量
 ```
 
-整个分流链条分为四个层级：
-1. **顶层协议拦截**：阻断目标域名的 UDP 443 (QUIC)，强制回退至稳定的 TCP；
-2. **大流量视频前置**：将 `googlevideo.com`、`youtube.com` 等前置指向主力机场，防止看视频消耗昂贵的专线流量；
-3. **AI 资产全域闭环**：将 Gemini、Antigravity 及底层通信接口（`clients6.google.com`、`googleapis.com` 等）统一收拢至专线策略组；
-4. **精细化直连与兜底**：通过 Loyalsoldier 规则库保障国内流量直连，其余流量由主力机场兜底。
+## 核心机制与排坑实践
 
-## 八大底层陷阱与排坑复盘
+### 1. 协议降级：阻断 QUIC (UDP 443) 规避丢包卡顿
 
-### 1. 会话撕裂与底层接口漏网
+Chromium 内核浏览器与移动端 App 访问 Google 资产时，默认优先走基于 UDP 443 端口的 QUIC 协议。由于绝大多数代理节点对 UDP 转发的优化有限，极易发生握手挂起或高丢包，导致页面白屏转圈。
 
-Gemini 并非单一网页，而是由前端界面与多组后端 API 协同通信：
-- 前端页面接入：`gemini.google.com`
-- 模型推理与生成式接口：`generativelanguage.googleapis.com`、`appsgenaiserver-pa.googleapis.com`
-- 核心鉴权与账号状态：`clients6.google.com`、`oauth2.googleapis.com`
-- 多模态图片渲染：`googleusercontent.com`
-- 开发者与关联平台：`aistudio.google.com`、`ai.google.dev`、`deepmind.google`
+**解决策略**：在规则链顶层显式拦截目标域名的 UDP 443 请求。浏览器在 UDP 握手超时前收到 REJECT 响应后，会毫秒级平滑降级到稳定的 TCP (HTTPS) 通道。
 
-若规则列表中仅配置了 `gemini.google.com`，页面交互时后台发起的 `oauth2` 或 `clients6` 请求会落入兜底规则，被送往未解锁的主力机场。服务端检测到同一会话内存在未解锁 IP，便会直接中断连接或判定地区受限。因此必须将底层 API 进行全域收拢。
+### 2. DNS 防污染与 CDN 本地化：防止国内流量误入代理
 
-### 2. QUIC (HTTP/3) 握手挂起
+很多配置为了防污染，把客户端 DNS 强行指向 `8.8.8.8` 或 `1.1.1.1` 并关闭了本地系统解析。这在国内网络环境下会带来两个问题：
+1. 向境外公共 DNS 发起纯文本 UDP 53 查询极易被劫持；
+2. 境外的 Anycast DNS 在解析微信、抖音、淘宝等大厂服务时，会将其解析到位于新加坡或日本的海外 CDN 节点，导致下游的 `GEOIP,CN` 规则误判失效，让国内流量白白绕道代理。
 
-Chromium 内核浏览器与 Safari 访问 Google 服务时，默认优先发起基于 UDP 443 端口的 QUIC 连接。多数代理节点在转发 UDP 流量时的稳定性不如 TCP，极易发生丢包或握手超时，导致页面长时间空白。在规则顶层拦截目标域名的 UDP 443 请求，可促使浏览器快速降级至稳定的 TCP (HTTPS) 通道。
+**解决策略**：保留国内公共 DNS（如阿里 `223.5.5.5`、腾讯 `119.29.29.29`）或系统 DNS 负责国内域名解析，海外域名交由代理节点远程解析或经由加密 DNS (DoH/DoT) 解析。
 
-### 3. 香港节点的地区黑洞
+### 3. 多订阅协同：主力日常 + 专线 AI 流量分层
 
-Google Gemini 至今未对中国香港地区开放服务。若策略组对订阅 B 的全部节点进行无差别测速，香港节点通常因物理距离近、延迟低而胜出，导致请求被送往不支持的地区。在策略组中必须配置正则过滤，强制仅保留新加坡、日本或美国等受支持地区的节点。
+设定两套订阅角色：
+- **订阅 A（主力日常）**：承载日常网页浏览、大文件下载与 YouTube 4K 视频；
+- **订阅 B（专线 / 解锁）**：仅用于分流规则中指定的 AI 与鉴权请求。
 
-### 4. IPv6 真实地址泄漏
+为了防止看 YouTube 视频把昂贵的专线流量耗尽，必须把 `googlevideo.com`、`youtube.com` 等视频域名在规则链中前置并绑定到主力机场；随后再将 Gemini 相关规则收拢到专线策略组。
 
-当本地网络支持 IPv6 且客户端未做防护时，浏览器发起的 AAAA 查询若未被代理内核接管，流量可能通过本地运营商网络直连，暴露出真实 IP 归属地。建议在代理配置中全局关闭 IPv6 解析。
+### 4. AI 会话闭环：底层鉴权与推理接口全量收拢
 
-### 5. DNS 解析错位导致国内流量误入代理
+Gemini、Claude 等并非单一域名服务，而是由多组后端分布式接口协同工作。以 Google Gemini 为例：
+- 前端交互：`gemini.google.com`
+- 推理与生成式接口：`generativelanguage.googleapis.com`
+- 鉴权与账号状态：`clients6.google.com`、`oauth2.googleapis.com`
+- 渲染素材与多模态资源：`googleusercontent.com`
 
-有些配置会把客户端 DNS 强行指定为 `8.8.8.8` 或 `1.1.1.1` 并关闭系统 DNS。在国内网络环境下，向 `8.8.8.8` 发起 UDP 53 查询极易受到污染；即便未被污染，海外公共 DNS 在解析微信、抖音、网易云等大厂服务时，往往会分配它们位于海外（如新加坡或日本）的 CDN 节点。这直接导致下游的 `GEOIP,CN` 规则判定失效，让本该直连的国内流量一路滑落到底部的 `FINAL,PROXY`。保留国内/系统 DNS 来处理直连解析才是正确的做法。
+如果规则只写了 `gemini.google.com`，页面通信时发起的后台鉴权 API 会滑落到兜底规则并走主力机场。服务端检测到同一会话存在未解锁的 IP 地址，便会判定会话异常并直接中断。因此必须对关联的底层 API 进行全量规则闭环。
 
-### 6. 远程规则集拉取失败与静默回退
+### 5. 节点池净化：剔除机场虚拟提示节点
 
-Shadowrocket 与 Clash 在拉取远程规则集失败时（例如规则源路径写错返回 404，或国内网络直连 `raw.githubusercontent.com` 超时），通常不会弹出报错提示，而是将该规则集静默置空。这意味着写在配置里的数万条域名白名单可能根本没有加载进内存。引用远程规则时，建议使用国内可稳定直连的 CDN 镜像（如 jsDelivr），并确认文件路径与扩展名准确无误。
+很多机场订阅会在节点列表顶部插入形如 `剩余流量：985.3 GB`、`距离下次重置剩余：27 天` 的提示性虚拟节点。如果直接把节点列表全量填入 `自动选择` 或 `故障转移` 策略组，一旦用户消耗了流量或跨越了日期，机场服务端返回的节点名称就会变化。策略组找不到旧名称时，内核会抛出 `'剩余流量：xxx' not found` 错误并拒绝启动。
 
-### 7. 移动端订阅更新覆盖自建分流规则
+**解决策略**：在静态策略组中过滤掉包含 `剩余流量`、`到期`、`重置`、`官网` 等关键词的提示节点，只保留真实的代理服务器。
 
-桌面端的 Clash Verge Rev 可以通过扩展脚本在订阅更新后动态注入规则，但安卓端（如 Clash Meta for Android）默认缺少这种后处理层。如果在安卓客户端中将主订阅作为在线 URL 导入后直接修改本地的 `config.yaml`，一旦触发定时更新或手动刷新，客户端就会重新下载机场的原始配置，直接把自建的 AI 规则和 `proxy-providers` 覆盖成空白。处理这类客户端时，需要将配置转存为本地文件（File 模式）来切断远端全量覆盖，同时将副订阅（AI 专线）交由配置内部的 `proxy-providers` 进行后台独立更新。
+### 6. 移动端本地化持久：防止订阅更新覆盖自建分流
 
-### 8. 机场虚拟提示节点导致策略组解析崩溃
+桌面端可以通过扩展脚本（如 `Script.js`）在每次订阅更新后自动注入自定义规则，但移动端（如 Android 版 Clash Meta）默认没有脚本后处理层。如果将主订阅作为在线 URL 导入并直接修改本地 `config.yaml`，客户端一旦执行定时刷新，就会重新下载机场的原始裸配置，把我们辛辛苦苦改好的 AI 规则全量冲掉。
 
-许多机场订阅会在节点列表中塞入形如 `剩余流量：985.3 GB`、`距离下次重置剩余：27 天` 的提示性虚拟节点。如果直接将节点全量填入 `自动选择` 或 `故障转移` 策略组，一旦用户消耗了流量或跨越了日期，机场服务端返回的节点名称就会发生变动。由于策略组中记录的旧节点名失效，Clash 内核在校验时会抛出 `'剩余流量：xxx' not found` 错误并直接拒绝启动。在配置静态策略组时，必须剔除这类包含流量或到期关键词的非代理节点。
+**解决策略**：将移动端配置转存为本地文件（`File` 模式），切断客户端从 URL 自动下载覆盖主配置的通道；同时在配置内部配置 `proxy-providers`，把副订阅（AI 专线）交由内核在后台独立静默更新。
 
-## 一、 Shadowrocket（iOS / iPadOS）配置方案
+### 7. 规则库加速：使用国内 CDN 镜像防静默失效
+
+Shadowrocket 与 Clash 在拉取远程规则集失败时（如规则源路径写错返回 404，或国内网络直连 GitHub 超时），通常不会报错打断，而是将该规则集静默置空，导致大量分流规则失效。引用开源规则库（如 Loyalsoldier）时，建议统一使用 jsDelivr 等国内可稳定直连的 CDN 镜像源。
+
+## 一、 iOS / iPadOS：Shadowrocket 配置
 
 ### 操作步骤
 
 1. 打开 Shadowrocket，点击右上角 `+`，类型选择 `Subscribe`，分别添加订阅 A 和订阅 B；
 2. 进入底栏 **“设置” -> “订阅”**，开启“打开时更新”与“自动后台更新”；
-3. 进入底栏 **“配置”**，点击当前使用的配置文件（如 `default.conf`）右侧的 `(i)` -> 点击 **“编辑纯文本”**；
+3. 进入底栏 **“配置”**，点击当前配置文件右侧的 `(i)` -> 点击 **“编辑纯文本”**；
 4. 清空原有内容，粘贴下方完整配置并保存；
-5. 回到小火箭首页，全局路由选择 **“配置”**，在节点列表中选中订阅 A 的某个节点作为主力节点。
+5. 回到小火箭首页，全局路由选择 **“配置”**，节点列表选中订阅 A 的主力节点。
 
 ### 完整配置文件（`.conf`）
 
@@ -113,18 +119,18 @@ dns-direct-fallback-proxy = true
 udp-policy-not-supported-behaviour = REJECT
 
 [Proxy Group]
-# 策略组：通过 policy-regex-filter 筛选订阅 B 中包含“新加坡”的节点，每 5 分钟测速并选取最快节点
+# 筛选订阅 B 中包含“新加坡”的可用节点，每 5 分钟自动测速优选
 AI-Services = url-test, url = http://www.gstatic.com/generate_204, interval = 300, tolerance = 50, policy-regex-filter=新加坡|🇸🇬|SG
 
 [Rule]
-# 1. 协议阻断：拦截 Google UDP 443，强制回退至稳定 TCP
+# 1. 协议阻断：拦截 Google UDP 443，强制回退 TCP
 AND,((DEST-PORT,443),(PROTOCOL,UDP),(DOMAIN-SUFFIX,google.com)),REJECT
 AND,((DEST-PORT,443),(PROTOCOL,UDP),(DOMAIN-SUFFIX,googleapis.com)),REJECT
 AND,((DEST-PORT,443),(PROTOCOL,UDP),(DOMAIN-SUFFIX,gstatic.com)),REJECT
 AND,((DEST-PORT,443),(PROTOCOL,UDP),(DOMAIN-SUFFIX,googleusercontent.com)),REJECT
 AND,((DEST-PORT,443),(PROTOCOL,UDP),(DOMAIN-SUFFIX,googlevideo.com)),REJECT
 
-# 2. YouTube 视频与普通服务前置（优先走主力机场 PROXY，不耗专线）
+# 2. YouTube 视频大流量前置（走主力机场 PROXY，不耗专线）
 DOMAIN-SUFFIX,googlevideo.com,PROXY
 DOMAIN-SUFFIX,youtube.com,PROXY
 DOMAIN-SUFFIX,youtu.be,PROXY
@@ -132,7 +138,7 @@ DOMAIN-SUFFIX,ytimg.com,PROXY
 DOMAIN-SUFFIX,youtubei.googleapis.com,PROXY
 DOMAIN-SUFFIX,yt3.ggpht.com,PROXY
 
-# 3. AI 资产与底层通信全量闭环（路由至 AI-Services 专线策略组）
+# 3. AI 资产与底层 API 闭环（路由至 AI-Services 策略组）
 DOMAIN-KEYWORD,antigravity,AI-Services
 DOMAIN-KEYWORD,gemini,AI-Services
 DOMAIN-KEYWORD,colab,AI-Services
@@ -148,7 +154,7 @@ DOMAIN-SUFFIX,clients6.google.com,AI-Services
 DOMAIN-SUFFIX,googleusercontent.com,AI-Services
 DOMAIN-SUFFIX,googleapis.com,AI-Services
 
-# 4. Loyalsoldier 远程精细分流规则集（日常流量与订阅 A 兜底，走 jsDelivr CDN 加速）
+# 4. Loyalsoldier 远程精细分流规则库（jsDelivr CDN 加速）
 RULE-SET,https://cdn.jsdelivr.net/gh/Loyalsoldier/surge-rules@release/private.txt,DIRECT
 RULE-SET,https://cdn.jsdelivr.net/gh/Loyalsoldier/surge-rules@release/reject.txt,REJECT
 RULE-SET,https://cdn.jsdelivr.net/gh/Loyalsoldier/surge-rules@release/icloud.txt,DIRECT
@@ -164,36 +170,34 @@ RULE-SET,https://cdn.jsdelivr.net/gh/Loyalsoldier/surge-rules@release/tld-not-cn
 FINAL,PROXY
 ```
 
-## 二、 Clash Verge Rev (Mihomo) 配置方案
+## 二、 macOS / Windows：Clash Verge Rev 扩展脚本
 
-在 Clash Verge Rev（或采用 Mihomo 内核的各类桌面客户端）中，利用 **扩展脚本 (Script)** 可以在不破坏订阅原文件的前提下，动态注入解锁节点池与分流规则。
-
-无论在界面上切换到哪个主力机场，脚本均能自动识别当前的主策略组，无需反复手动修改配置文件。
+桌面端使用 Clash Verge Rev（Mihomo 内核）时，利用**扩展脚本 (Script)** 可以实现配置与规则解耦：订阅更新后，Verge 会自动执行脚本重新注入规则，无需手动反复修改。
 
 ### 操作步骤
 
-1. 在客户端中正常导入订阅 A（设为主力激活订阅）和订阅 B；
-2. 进入 **“订阅 (Profiles)”** -> 找到主力订阅 A，右键选择 **“脚本 (Script)”**；
-3. 将下方代码复制进去，将其中的 `UNLOCK_SUB_URL` 替换为真实的订阅 B 链接；
-4. 保存脚本后，右键点击订阅 A 选择 **“启用”** 或刷新即可生效。
+1. 在客户端中正常导入订阅 A（设为主力激活配置）和订阅 B；
+2. 进入 **“订阅 (Profiles)”** -> 右键主力订阅 A -> 选择 **“脚本 (Script)”**；
+3. 粘贴下方代码，将 `UNLOCK_SUB_URL` 替换为真实的订阅 B 链接；
+4. 保存后右键点击订阅 A 选择 **“刷新”** 即可生效。
 
 ### 扩展脚本代码（`Script.js`）
 
 ```javascript
 function main(config, profileName) {
-  // 1. 全局防泄漏设置
+  // 1. 防泄漏与 DNS 规则遵从
   config["ipv6"] = false;
   if (config["dns"]) {
     config["dns"]["ipv6"] = false;
     config["dns"]["respect-rules"] = true;
   }
 
-  // 2. 自定义参数区（请将 UNLOCK_SUB_URL 替换为真实的订阅 B 链接）
+  // 2. 自定义参数（替换为真实的专线订阅链接）
   const UNLOCK_SUB_URL = "https://sub-b.com/link";
   const AI_GROUP_NAME = "AI-Services";
-  const NODE_FILTER = "新加坡|🇸🇬|SG"; // 筛选解锁节点的正则表达式
+  const NODE_FILTER = "新加坡|🇸🇬|SG";
 
-  // 3. 注入 proxy-providers（仅加载订阅 B 中匹配正则的解锁节点）
+  // 3. 注入 proxy-providers（按正则过滤专线节点池）
   config["proxy-providers"] = config["proxy-providers"] || {};
   config["proxy-providers"]["ai-provider"] = {
     type: "http",
@@ -209,11 +213,9 @@ function main(config, profileName) {
   };
 
   config["proxy-groups"] = config["proxy-groups"] || [];
-
-  // 清除历史策略组避免重名
   config["proxy-groups"] = config["proxy-groups"].filter(g => g.name !== AI_GROUP_NAME);
 
-  // 4. 自动探测当前主力机场的主策略组名称
+  // 4. 自动探测主力机场的代理策略组名称
   let mainProxyGroupName = "PROXY";
   const detectedGroup = config["proxy-groups"].find(
     g => g.type === "select" && g.name !== "GLOBAL" && g.name !== AI_GROUP_NAME
@@ -232,7 +234,7 @@ function main(config, profileName) {
     use: ["ai-provider"]
   });
 
-  // 6. 引入 Loyalsoldier 远程高精度规则库 (走 jsDelivr CDN 加速)
+  // 6. 引入 Loyalsoldier 远程精细规则库 (jsDelivr CDN)
   config["rule-providers"] = config["rule-providers"] || {};
   const loyalProviders = {
     reject: {
@@ -339,7 +341,7 @@ function main(config, profileName) {
     "AND,((DST-PORT,443),(NETWORK,UDP),(DOMAIN-SUFFIX,googlevideo.com)),REJECT"
   ];
 
-  // ② YouTube 视频与普通服务前置保护（走主力机场，不消耗专线）
+  // ② YouTube 视频前置（走主力机场）
   const youtubeRules = [
     `DOMAIN-SUFFIX,googlevideo.com,${mainProxyGroupName}`,
     `DOMAIN-SUFFIX,youtube.com,${mainProxyGroupName}`,
@@ -349,7 +351,7 @@ function main(config, profileName) {
     `DOMAIN-SUFFIX,yt3.ggpht.com,${mainProxyGroupName}`
   ];
 
-  // ③ AI 专属规则与底层通信闭环（全量路由至 专线策略组）
+  // ③ AI 专属规则与底层 API 闭环（路由至 AI-Services）
   const aiRules = [
     `DOMAIN-KEYWORD,antigravity,${AI_GROUP_NAME}`,
     `DOMAIN-KEYWORD,gemini,${AI_GROUP_NAME}`,
@@ -394,9 +396,101 @@ function main(config, profileName) {
 }
 ```
 
-## 三、 规则扩展与多模型适配
+## 三、 Android：Clash Meta 本地持久化配置
 
-若需要分流其他主流 AI 平台，可在配置中将相关域名直接追加至 AI 规则区（Shadowrocket 对应 `[Rule]` 顶层，Clash 对应 `aiRules` 数组）：
+安卓端客户端（如 Clash Meta for Android、Flclash）没有桌面端的扩展脚本环境。为了避免订阅自动刷新时冲掉自建分流规则，需要采用 **本地配置（File 模式）+ 内核级 Provider 自动更新** 的组合拳。
+
+### 操作步骤
+
+1. 在客户端中新建一个配置，类型选择 **“本地文件 (File)”**（若已有 URL 订阅，可在应用内导出为本地文件）；
+2. 剔除主力节点列表中包含 `剩余流量`、`到期时间` 等提示性虚拟节点，防止策略组解析报错；
+3. 将副订阅（AI 专线）作为 `proxy-providers` 写入本地 YAML，由 Mihomo 内核每隔 5 分钟在后台静默更新节点；
+4. 激活该本地配置。
+
+### 核心配置结构模板（`config.yaml` 关键片段）
+
+```yaml
+# 1. 专线节点池：内核后台独立拉取，不依赖客户端 UI 刷新
+proxy-providers:
+  ai-provider:
+    type: http
+    url: "https://sub-b.com/link"
+    interval: 86400
+    path: ./proxy_providers/ai_nodes.yaml
+    filter: "新加坡|🇸🇬|SG"
+    health-check:
+      enable: true
+      interval: 300
+      url: http://www.gstatic.com/generate_204
+
+# 2. 策略组结构（净化提示节点）
+proxy-groups:
+  - name: AI-Services
+    type: url-test
+    url: http://www.gstatic.com/generate_204
+    interval: 300
+    tolerance: 50
+    use:
+      - ai-provider
+  - name: 主力代理
+    type: select
+    proxies:
+      - 自动选择
+      - 故障转移
+      # 此处填入主力机场的真实节点名，切勿包含“剩余流量”等虚拟节点
+      - 🇯🇵日本-01
+      - 🇺🇸美国-01
+  - name: 自动选择
+    type: url-test
+    url: http://www.gstatic.com/generate_204
+    interval: 300
+    tolerance: 50
+    proxies:
+      - 🇯🇵日本-01
+      - 🇺🇸美国-01
+
+# 3. 规则部分：注入 QUIC 阻断、YouTube 前置、AI 闭环与 Loyalsoldier 规则库
+rules:
+  # ① QUIC 阻断
+  - AND,((DST-PORT,443),(NETWORK,UDP),(DOMAIN-SUFFIX,google.com)),REJECT
+  - AND,((DST-PORT,443),(NETWORK,UDP),(DOMAIN-SUFFIX,googleapis.com)),REJECT
+  - AND,((DST-PORT,443),(NETWORK,UDP),(DOMAIN-SUFFIX,gstatic.com)),REJECT
+  - AND,((DST-PORT,443),(NETWORK,UDP),(DOMAIN-SUFFIX,googleusercontent.com)),REJECT
+  - AND,((DST-PORT,443),(NETWORK,UDP),(DOMAIN-SUFFIX,googlevideo.com)),REJECT
+  # ② YouTube 前置走主力
+  - DOMAIN-SUFFIX,googlevideo.com,主力代理
+  - DOMAIN-SUFFIX,youtube.com,主力代理
+  - DOMAIN-SUFFIX,youtu.be,主力代理
+  - DOMAIN-SUFFIX,ytimg.com,主力代理
+  # ③ AI 全量闭环走专线
+  - DOMAIN-KEYWORD,antigravity,AI-Services
+  - DOMAIN-KEYWORD,gemini,AI-Services
+  - DOMAIN-KEYWORD,colab,AI-Services
+  - DOMAIN-KEYWORD,deepmind,AI-Services
+  - DOMAIN-SUFFIX,gemini.google.com,AI-Services
+  - DOMAIN-SUFFIX,bard.google.com,AI-Services
+  - DOMAIN-SUFFIX,ai.google.dev,AI-Services
+  - DOMAIN-SUFFIX,aistudio.google.com,AI-Services
+  - DOMAIN-SUFFIX,clients6.google.com,AI-Services
+  - DOMAIN-SUFFIX,googleusercontent.com,AI-Services
+  - DOMAIN-SUFFIX,googleapis.com,AI-Services
+  # ④ Loyalsoldier 国内直连与主力兜底
+  - RULE-SET,applications,DIRECT
+  - RULE-SET,private,DIRECT
+  - RULE-SET,reject,REJECT
+  - RULE-SET,icloud,DIRECT
+  - RULE-SET,apple,主力代理
+  - RULE-SET,proxy,主力代理
+  - RULE-SET,gfw,主力代理
+  - RULE-SET,direct,DIRECT
+  - GEOIP,LAN,DIRECT,no-resolve
+  - GEOIP,CN,DIRECT
+  - MATCH,主力代理
+```
+
+## 四、 规则扩展与多模型适配
+
+若后续需要将分流规则扩展至其他主流 AI 平台，只需在各端的 AI 规则区追加相应域名即可：
 
 ### 1. Claude (Anthropic)
 ```text
