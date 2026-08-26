@@ -373,6 +373,29 @@
     const toc = document.querySelector('#card-toc .toc-content');
     if (!toc) return;
 
+    // Decouple TOC container scrolling from page scrolling:
+    // Prevent Butterfly theme scripts from programmatically jumping/auto-scrolling the TOC
+    // so the user can independently browse long TOCs without scroll resets.
+    try {
+      const origDescriptor = Object.getOwnPropertyDescriptor(Element.prototype, 'scrollTop');
+      if (origDescriptor && origDescriptor.get) {
+        Object.defineProperty(toc, 'scrollTop', {
+          get() {
+            return origDescriptor.get.call(this);
+          },
+          set(_val) {
+            // Ignore programmatic autoScrollToc overrides triggered on page scroll
+          },
+          configurable: true,
+        });
+      }
+      toc.scrollTo = function() {};
+      toc.scroll = function() {};
+      toc.scrollBy = function() {};
+    } catch (_e) {
+      // Fallback
+    }
+
     toc.classList.add('is-expand', 'is-user-collapsible');
 
     toc.querySelectorAll('.toc-item').forEach((item, index) => {
