@@ -551,7 +551,7 @@
         backdrop.classList.remove('show');
       });
 
-      // Handle TOC link clicks on mobile: smooth jump to heading and auto close
+      // Handle TOC link clicks on desktop and mobile: scroll accurately below navigation bar
       cardToc.addEventListener('click', (e) => {
         const link = e.target.closest('.toc-link');
         if (!link) return;
@@ -562,10 +562,24 @@
           const targetElement = document.getElementById(targetId);
           if (targetElement) {
             e.preventDefault();
-            targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            e.stopPropagation();
+
+            const nav = document.getElementById('nav');
+            const navHeight = nav ? nav.offsetHeight : 72;
+            const targetTop = targetElement.getBoundingClientRect().top + window.pageYOffset - navHeight - 20;
+
+            window.scrollTo({
+              top: Math.max(0, targetTop),
+              behavior: 'smooth'
+            });
+
             // update active link state
             cardToc.querySelectorAll('.toc-link').forEach((l) => l.classList.remove('active'));
             link.classList.add('active');
+
+            if (history.pushState) {
+              history.pushState(null, '', href);
+            }
           }
         }
 

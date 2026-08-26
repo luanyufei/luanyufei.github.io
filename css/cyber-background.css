@@ -928,6 +928,7 @@ body.is-home-page #content-inner {
 #article-container h4,
 #article-container h5,
 #article-container h6 {
+  scroll-margin-top: calc(var(--fs-nav-height) + 1.25rem) !important;
   color: var(--fs-text) !important;
   font-weight: 700;
   letter-spacing: 0;
@@ -2392,8 +2393,15 @@ html.search-open body {
 }
 
 .site-toc-toggle,
-.mobile-toc-backdrop {
-  display: none;
+.mobile-toc-backdrop,
+#rightside #rightside-config-hide,
+#rightside #rightside-config,
+#rightside #readmode,
+#rightside #hide-aside-btn,
+#rightside #darkmode,
+#rightside #translateLink,
+#rightside #mobile-toc-button {
+  display: none !important;
 }
 
 .reading-progress {
@@ -2426,7 +2434,6 @@ html.search-open body {
   transform: none !important;
 }
 
-#rightside #rightside-config-hide,
 #rightside #rightside-config-show {
   display: flex !important;
   flex-direction: column !important;
@@ -2454,10 +2461,6 @@ html.search-open body {
   background: var(--fs-accent) !important;
   color: #0b0d0b !important;
   transform: translateY(-2px) !important;
-}
-
-#rightside #mobile-toc-button {
-  display: inline-flex !important;
 }
 
 #pagination,
@@ -2602,33 +2605,36 @@ html.search-open body {
     position: fixed;
     inset: var(--fs-nav-height) 0 auto;
     z-index: -1;
-    display: block;
+    display: none !important;
     width: 100% !important;
     max-width: none !important;
     padding: 0.75rem 1rem 1rem;
     border-bottom: 1px solid var(--fs-line);
     background: var(--fs-bg);
     opacity: 0;
-    visibility: hidden;
-    pointer-events: none;
+    visibility: hidden !important;
+    pointer-events: none !important;
     transform: translateY(-12px);
     transition: opacity 180ms ease, visibility 180ms ease, transform 220ms var(--fs-ease);
   }
 
-  #nav.hide-menu #menus {
-    display: block !important;
-  }
-
-  #nav.hide-menu #menus .menus_items {
-    display: grid !important;
-    visibility: visible !important;
+  #menus,
+  #menus * {
+    pointer-events: none !important;
   }
 
   #nav.menu-open #menus {
+    display: block !important;
     opacity: 1;
-    visibility: visible;
-    pointer-events: auto;
+    visibility: visible !important;
+    pointer-events: auto !important;
     transform: translateY(0);
+    z-index: 100;
+  }
+
+  #nav.menu-open #menus,
+  #nav.menu-open #menus * {
+    pointer-events: auto !important;
   }
 
   #nav .menus_items {
