@@ -369,6 +369,75 @@
     update();
   };
 
+  const hasHeadingIndex = (rawText) => {
+    if (!rawText) return false;
+    const text = String(rawText)
+      .replace(/&amp;/g, '&')
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'")
+      .replace(/&nbsp;/g, ' ')
+      .trim();
+    if (!text) return false;
+
+    // 1. Chinese section/step prefixes: 第一章, 第1节, 第 2 部分, 步骤 1, 步骤一, 篇一, 其一
+    if (/^(?:第\s*[0-9一二三四五六七八九十百千]+\s*[章节部分篇点条步次项]|步骤\s*[0-9一二三四五六七八九十]+|篇\s*[0-9一二三四五六七八九十]+|其\s*[一二三四五六七八九十]+)/i.test(text)) {
+      return true;
+    }
+
+    // 2. English step/part/case/section prefixes: Step 1, Step 01, Part 1, Case 1, Section 1
+    if (/^(?:Step|Part|Case|Section|Item|Phase)\s*[0-9]+[.:：、\s]/i.test(text)) {
+      return true;
+    }
+
+    // 3. Chinese numerals with brackets or pause mark/dot/colon: 一、, 一., （一）, (一), 【一】, [一]
+    if (/^[（(【\[]\s*[一二三四五六七八九十]+\s*[）)】\]]/.test(text)) {
+      return true;
+    }
+    if (/^[一二三四五六七八九十百千万]+[、.．:：\s]/.test(text)) {
+      return true;
+    }
+
+    // 4. Bracketed digits/letters/Roman: (1), （1）, [1], 【1】, (1.1), (A), [IV]
+    if (/^[（(【\[]\s*(?:[0-9]+(?:\.[0-9]+)*|[a-zA-Z]|[ivxIVX]+)\s*[）)】\]][、.．:：\s]?/.test(text)) {
+      return true;
+    }
+
+    // 5. Circled numbers: ①, ②, ⑴, ⒈
+    if (/^[①②③④⑤⑥⑦⑧⑨⑩⑴⑵⑶⑷⑸⑹⑺⑻⑼⑽⒈⒉⒊⒋⒌]/.test(text)) {
+      return true;
+    }
+
+    // 6. Roman numerals with delimiter: I., II., III., IV., i.
+    if (/^(?:[IVXLCDMivxlcdm]+)[.、．:：]\s+/.test(text)) {
+      return true;
+    }
+
+    // 7. Single letter with delimiter: A., B., A、, a.
+    if (/^[A-Za-z][.、．:：]\s+/.test(text)) {
+      return true;
+    }
+
+    // 8. Hierarchical decimal numbers: 1.1, 1.1.1, 2.4.1 (must NOT be followed by units/words like %, K, M, G, px)
+    if (/^[0-9]+(?:\.[0-9]+)+[.、．:：\s]/.test(text)) {
+      return true;
+    }
+    if (/^[0-9]+(?:\.[0-9]+)+$/.test(text)) {
+      return true;
+    }
+
+    // 9. Single integer with delimiter: 1., 1、, 1:, 1 - (must NOT be 100%, 2K, 3D, 1080P, etc.)
+    if (/^[0-9]+[、.．:：]\s*/.test(text)) {
+      return true;
+    }
+    if (/^[0-9]+\s*-\s*[0-9]+/.test(text)) {
+      return true;
+    }
+
+    return false;
+  };
+
   const initTocCollapsing = () => {
     const toc = document.querySelector('#card-toc .toc-content');
     if (!toc) return;
@@ -395,6 +464,21 @@
     } catch (_e) {
       // Fallback
     }
+
+    // Deduplicate and complete TOC numbering:
+    // If the heading text itself already starts with a recognized index/number, remove redundant toc-number.
+    toc.querySelectorAll('.toc-link').forEach((link) => {
+      const numberSpan = link.querySelector('.toc-number');
+      const textSpan = link.querySelector('.toc-text');
+      if (!textSpan) return;
+
+      const rawText = textSpan.textContent || '';
+      if (hasHeadingIndex(rawText)) {
+        if (numberSpan) {
+          numberSpan.remove();
+        }
+      }
+    });
 
     toc.classList.add('is-expand', 'is-user-collapsible');
 

@@ -75,7 +75,7 @@ inject:
     - <link rel="stylesheet" href="/css/cyber-background.css?v=20260815_v3">
     - <link rel="stylesheet" href="/css/footer-brand.css?v=20260815_v3">
   bottom:
-    - <script src="/js/site-ui.js?v=20260826_v4" defer></script>
+    - <script src="/js/site-ui.js?v=20260826_v5" defer></script>
     - <script src="/js/footer-brand.js?v=20260815_v3" defer></script>
 
 translate:
