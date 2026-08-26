@@ -84,6 +84,9 @@ hexo.extend.filter.register('after_render:html', (html) => {
     (cover) => cover.replace(/ loading="lazy" decoding="async"/g, '')
   );
 
+  // Unwrap <p> around <figure> to keep HTML semantic and clean
+  output = output.replace(/<p>\s*(<figure[\s\S]*?<\/figure>)\s*<\/p>/g, '$1');
+
   if (output.includes('<header class="full_page fixed" id="page-header"')) {
     output = output.replace(
       /<head>/,
