@@ -22,57 +22,6 @@
       </categories>
   </entry>
   <entry>
-    <title>Windows 11 优化方案</title>
-    <url>/2026/07/18/windows-11-optimization-guide/</url>
-    <content><![CDATA[<p>Windows 11 自带了大量臃肿功能和恼人的 UI 变动。以下是一套完整的优化方案，涵盖精简系统、还原经典界面、激活、禁用更新等。</p>
-<h2 id="精简系统镜像"><a href="#精简系统镜像" class="headerlink" title="精简系统镜像"></a>精简系统镜像</h2><p>与其装完再删，不如一开始就用精简版镜像。GitHub 上有两个知名项目：</p>
-<ul>
-<li><strong>Tiny11</strong> — 删除了大部分无用系统组件，保留核心功能，适合大多数人</li>
-<li><strong>nano11</strong> — 比 Tiny11 更激进的精简方案，适合追求极致精简的用户</li>
-</ul>
-<p>在 GitHub 搜索 <code>Tiny11</code> 或 <code>nano11</code> 即可找到。配合 <strong>Rufus</strong>（开源刷机工具）制作启动 U 盘进行安装。</p>
-<h2 id="还原经典开始菜单和任务栏"><a href="#还原经典开始菜单和任务栏" class="headerlink" title="还原经典开始菜单和任务栏"></a>还原经典开始菜单和任务栏</h2><p>Win11 的开始菜单和任务栏改动很大，如果你更习惯 Win10 的风格，可以使用 <strong>StartAllBack</strong> 一键还原。</p>
-<p>下载地址：<a href="https://www.ghxi.com/startallback.html">https://www.ghxi.com/startallback.html</a></p>
-<h2 id="还原经典右键菜单"><a href="#还原经典右键菜单" class="headerlink" title="还原经典右键菜单"></a>还原经典右键菜单</h2><p>Win11 的右键菜单默认只显示几个选项，完整菜单被折叠了。用以下方法可以恢复 Win10 样式的完整右键菜单。</p>
-<p>以<strong>管理员身份</strong>打开 CMD 或 PowerShell，输入：</p>
-<figure class="highlight powershell"><table><tr><td class="code"><pre><span class="line">reg add <span class="string">&quot;HKCU\Software\Classes\CLSID\&#123;86ca1aa0-34aa-4e8b-a509-50c905bae2a2&#125;\InprocServer32&quot;</span> /f /ve</span><br></pre></td></tr></table></figure>
-
-<p>然后重启资源管理器即可生效。</p>
-<p>如果想恢复回 Win11 默认右键菜单：</p>
-<figure class="highlight powershell"><table><tr><td class="code"><pre><span class="line">reg delete <span class="string">&quot;HKCU\Software\Classes\CLSID\&#123;86ca1aa0-34aa-4e8b-a509-50c905bae2a2&#125;&quot;</span> /f</span><br></pre></td></tr></table></figure>
-
-<h2 id="关闭动画和半透明效果"><a href="#关闭动画和半透明效果" class="headerlink" title="关闭动画和半透明效果"></a>关闭动画和半透明效果</h2><p>打开 <strong>设置 → 辅助功能 → 视觉效果</strong>，关闭以下两项：</p>
-<ul>
-<li><strong>动画效果</strong> — 关闭</li>
-<li><strong>透明效果</strong> — 关闭</li>
-</ul>
-<p>关闭后系统响应会更跟手，尤其对低配机器提升明显。</p>
-<h2 id="激活-Windows-和-Office"><a href="#激活-Windows-和-Office" class="headerlink" title="激活 Windows 和 Office"></a>激活 Windows 和 Office</h2><p>以<strong>管理员身份</strong>打开 CMD 或 PowerShell，输入：</p>
-<figure class="highlight powershell"><table><tr><td class="code"><pre><span class="line"><span class="built_in">irm</span> https://get.activated.win | <span class="built_in">iex</span></span><br></pre></td></tr></table></figure>
-
-<p>在弹出的菜单中选择：</p>
-<ul>
-<li><code>[1] HWID</code> — 永久激活 Windows（硬件数字许可证）</li>
-<li><code>[2] Ohook</code> — 永久激活 Office</li>
-</ul>
-<h2 id="永久禁止-Windows-更新"><a href="#永久禁止-Windows-更新" class="headerlink" title="永久禁止 Windows 更新"></a>永久禁止 Windows 更新</h2><p>使用 <strong>Windows Update Blocker</strong> 工具，一键永久禁止自动更新：</p>
-<p>下载地址：<a href="https://www.sordum.org/downloads/?st-windows-update-blocker">https://www.sordum.org/downloads/?st-windows-update-blocker</a></p>
-<h2 id="删除-禁用-Win11-无用功能"><a href="#删除-禁用-Win11-无用功能" class="headerlink" title="删除 &#x2F; 禁用 Win11 无用功能"></a>删除 &#x2F; 禁用 Win11 无用功能</h2><p><strong>Chris Titus Tech</strong> 的 Windows 工具箱，提供图形界面，一键删除或禁用各种臃肿功能。</p>
-<p>以<strong>管理员身份</strong>打开 CMD 或 PowerShell，输入：</p>
-<figure class="highlight powershell"><table><tr><td class="code"><pre><span class="line"><span class="built_in">irm</span> https://christitus.com/win | <span class="built_in">iex</span></span><br></pre></td></tr></table></figure>
-
-<p>GitHub 项目地址：<a href="https://github.com/ChrisTitusTech/winutil">https://github.com/ChrisTitusTech/winutil</a></p>
-<h2 id="系统汉化"><a href="#系统汉化" class="headerlink" title="系统汉化"></a>系统汉化</h2><p>如果安装的是英文版 Windows，参考以下教程进行汉化：</p>
-<p><a href="https://www.cnblogs.com/ACDIV/p/19156603">https://www.cnblogs.com/ACDIV/p/19156603</a></p>
-<h2 id="推荐软件"><a href="#推荐软件" class="headerlink" title="推荐软件"></a>推荐软件</h2><ul>
-<li><strong>Flow Launcher</strong> — 开源的快速启动器，类似 macOS 的 Spotlight，按快捷键即可搜索应用、文件、网页等</li>
-</ul>
-]]></content>
-      <categories>
-        <category>实用技巧</category>
-      </categories>
-  </entry>
-  <entry>
     <title>Shadowrocket &amp; Clash 进阶优化指南</title>
     <url>/2026/08/19/shadowrocket-clash-advanced-guide/</url>
     <content><![CDATA[<p>机场默认提供的订阅配置通常只做最基础的粗粒度分流，直接拿来当主力用经常会碰到各种瓶颈：大流量机场看视频流畅，但出口多为机房 IP，访问 Gemini、Claude 极易触发风控限制；专线节点纯净度高，但价格贵流量少，拿来跑日常下载太浪费。同时，移动端的客户端如果没有配置好，自己辛辛苦苦改好的分流规则一刷新就会被机场原始配置全量覆盖。</p>
@@ -207,6 +156,7 @@
 <li><strong>User Themes 生效机制</strong>：<br>GNOME 默认不允许用户直接切换第三方 Shell 主题。若在 GNOME Tweaks 中发现 Shell 选项置灰锁定，需安装 <code>User Themes</code> 扩展（UUID: <code>user-theme@gnome-shell-extensions.gcampax.github.com</code>）并放入 <code>~/.local/share/gnome-shell/extensions/</code>。</li>
 <li><strong>命令行应用主题</strong>：<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 应用光标</span></span><br><span class="line">gsettings <span class="built_in">set</span> org.gnome.desktop.interface cursor-theme <span class="string">&#x27;WhiteSur-cursors&#x27;</span></span><br><span class="line"><span class="comment"># 应用图标</span></span><br><span class="line">gsettings <span class="built_in">set</span> org.gnome.desktop.interface icon-theme <span class="string">&#x27;Tela&#x27;</span></span><br><span class="line"><span class="comment"># 应用窗口主题</span></span><br><span class="line">gsettings <span class="built_in">set</span> org.gnome.desktop.interface gtk-theme <span class="string">&#x27;Orchis-Light&#x27;</span></span><br><span class="line"><span class="comment"># 应用 Shell 主题</span></span><br><span class="line">gsettings <span class="built_in">set</span> org.gnome.shell.extensions.user-theme name <span class="string">&#x27;Orchis-Light&#x27;</span></span><br></pre></td></tr></table></figure></li>
 </ul>
+<p><img src="/image/ubuntu-app-drawer-blur.webp" alt="Tela 图标主题与 Blur my Shell 应用抽屉磨砂背景" title="Tela 图标主题与 Blur my Shell 应用抽屉磨砂背景效果"></p>
 <h3 id="2-3-顶部状态栏-100-透明与托盘图标居中"><a href="#2-3-顶部状态栏-100-透明与托盘图标居中" class="headerlink" title="2.3 顶部状态栏 100% 透明与托盘图标居中"></a>2.3 顶部状态栏 100% 透明与托盘图标居中</h3><ul>
 <li><strong>顶部状态栏（Top Bar）100% 全透明</strong>：<br>GNOME 原生顶栏由底层 C&#x2F;St 固化渲染并自带纯黑底色。安装专用扩展 <code>Transparent Top Bar (Adjustable transparency)</code>（UUID: <code>transparent-top-bar@ftpix.com</code>），并关闭 Blur my Shell 对顶栏的暗色磨砂，即可实现通透的全透明悬浮顶栏：<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">gsettings <span class="built_in">set</span> org.gnome.shell.extensions.blur-my-shell.panel blur <span class="literal">false</span></span><br><span class="line">gsettings --schemadir ~/.local/share/glib-2.0/schemas/ <span class="built_in">set</span> com.ftpix.transparentbar transparency 0</span><br><span class="line">gsettings --schemadir ~/.local/share/glib-2.0/schemas/ <span class="built_in">set</span> com.ftpix.transparentbar dark-full-screen <span class="literal">false</span></span><br></pre></td></tr></table></figure></li>
 <li><strong>后台托盘图标居中</strong>：<br>通过 <code>Ubuntu AppIndicators</code>（<code>ubuntu-appindicators@ubuntu.com</code>），可将原本挤在右上角的托盘图标移至顶栏中央（紧随在时钟日历后方）：<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">gsettings <span class="built_in">set</span> org.gnome.shell.extensions.appindicator tray-pos <span class="string">&#x27;center&#x27;</span></span><br></pre></td></tr></table></figure></li>
@@ -218,6 +168,7 @@
 </ol>
 <h4 id="100-真正全透明-Dock-标准配置"><a href="#100-真正全透明-Dock-标准配置" class="headerlink" title="100% 真正全透明 Dock 标准配置"></a>100% 真正全透明 Dock 标准配置</h4><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 1. 底部居中小胶囊</span></span><br><span class="line">gsettings <span class="built_in">set</span> org.gnome.shell.extensions.dash-to-dock dock-position <span class="string">&#x27;BOTTOM&#x27;</span></span><br><span class="line">gsettings <span class="built_in">set</span> org.gnome.shell.extensions.dash-to-dock extend-height <span class="literal">false</span></span><br><span class="line">gsettings <span class="built_in">set</span> org.gnome.shell.extensions.dash-to-dock custom-theme-shrink <span class="literal">true</span></span><br><span class="line">gsettings <span class="built_in">set</span> org.gnome.shell.extensions.dash-to-dock dash-max-icon-size 48</span><br><span class="line">gsettings <span class="built_in">set</span> org.gnome.shell.extensions.dash-to-dock running-indicator-style <span class="string">&#x27;DOTS&#x27;</span></span><br><span class="line">gsettings <span class="built_in">set</span> org.gnome.shell.extensions.dash-to-dock autohide <span class="literal">true</span></span><br><span class="line">gsettings <span class="built_in">set</span> org.gnome.shell.extensions.dash-to-dock intellihide <span class="literal">true</span></span><br><span class="line">gsettings <span class="built_in">set</span> org.gnome.shell.extensions.dash-to-dock show-mounts <span class="literal">false</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 2. 触发底层 0 不透明度注入（关键避坑）</span></span><br><span class="line">gsettings <span class="built_in">set</span> org.gnome.shell.extensions.dash-to-dock apply-custom-theme <span class="literal">false</span></span><br><span class="line">gsettings <span class="built_in">set</span> org.gnome.shell.extensions.dash-to-dock custom-background-color <span class="literal">true</span></span><br><span class="line">gsettings <span class="built_in">set</span> org.gnome.shell.extensions.dash-to-dock background-color <span class="string">&#x27;#000000&#x27;</span></span><br><span class="line">gsettings <span class="built_in">set</span> org.gnome.shell.extensions.dash-to-dock transparency-mode <span class="string">&#x27;FIXED&#x27;</span></span><br><span class="line">gsettings <span class="built_in">set</span> org.gnome.shell.extensions.dash-to-dock background-opacity 0.0</span><br><span class="line"></span><br><span class="line"><span class="comment"># 3. 移除多余的毛玻璃图层</span></span><br><span class="line">gsettings <span class="built_in">set</span> org.gnome.shell.extensions.blur-my-shell.dash-to-dock blur <span class="literal">false</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 4. 热重载 Dock 扩展即时生效</span></span><br><span class="line">gnome-extensions <span class="built_in">disable</span> ubuntu-dock@ubuntu.com &amp;&amp; <span class="built_in">sleep</span> 0.2 &amp;&amp; gnome-extensions <span class="built_in">enable</span> ubuntu-dock@ubuntu.com</span><br></pre></td></tr></table></figure>
 
+<p><img src="/image/ubuntu-desktop-transparent-dock.webp" alt="Ubuntu 全透明顶栏与居中悬浮 Dock 最终效果" title="Ubuntu 全透明顶栏与居中悬浮 Dock 最终效果"></p>
 <h4 id="Dock-鼠标悬停实时窗口缩略图（零延迟即消）"><a href="#Dock-鼠标悬停实时窗口缩略图（零延迟即消）" class="headerlink" title="Dock 鼠标悬停实时窗口缩略图（零延迟即消）"></a>Dock 鼠标悬停实时窗口缩略图（零延迟即消）</h4><p>安装 <strong><code>Dock Window Preview</code></strong>（UUID: <code>dock-window-preview@quivio</code>），可实现类似 Windows &#x2F; macOS 的悬停缩略图：</p>
 <ol>
 <li><strong>水平卡片与灵敏度</strong>：<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">gsettings --schemadir ~/.local/share/glib-2.0/schemas/ <span class="built_in">set</span> org.gnome.shell.extensions.dock-window-preview preview-layout <span class="string">&#x27;horizontal&#x27;</span></span><br><span class="line">gsettings --schemadir ~/.local/share/glib-2.0/schemas/ <span class="built_in">set</span> org.gnome.shell.extensions.dock-window-preview show-close-button <span class="literal">true</span></span><br><span class="line">gsettings --schemadir ~/.local/share/glib-2.0/schemas/ <span class="built_in">set</span> org.gnome.shell.extensions.dock-window-preview hover-delay-ms 150</span><br></pre></td></tr></table></figure></li>
@@ -350,6 +301,85 @@
       </categories>
   </entry>
   <entry>
+    <title>Windows 11 优化方案</title>
+    <url>/2026/07/18/windows-11-optimization-guide/</url>
+    <content><![CDATA[<p>Windows 11 自带了大量臃肿功能和恼人的 UI 变动。以下是一套完整的优化方案，涵盖精简系统、还原经典界面、激活、禁用更新等。</p>
+<h2 id="精简系统镜像"><a href="#精简系统镜像" class="headerlink" title="精简系统镜像"></a>精简系统镜像</h2><p>与其装完再删，不如一开始就用精简版镜像。GitHub 上有两个知名项目：</p>
+<ul>
+<li><strong>Tiny11</strong> — 删除了大部分无用系统组件，保留核心功能，适合大多数人</li>
+<li><strong>nano11</strong> — 比 Tiny11 更激进的精简方案，适合追求极致精简的用户</li>
+</ul>
+<p>在 GitHub 搜索 <code>Tiny11</code> 或 <code>nano11</code> 即可找到。配合 <strong>Rufus</strong>（开源刷机工具）制作启动 U 盘进行安装。</p>
+<h2 id="还原经典开始菜单和任务栏"><a href="#还原经典开始菜单和任务栏" class="headerlink" title="还原经典开始菜单和任务栏"></a>还原经典开始菜单和任务栏</h2><p>Win11 的开始菜单和任务栏改动很大，如果你更习惯 Win10 的风格，可以使用 <strong>StartAllBack</strong> 一键还原。</p>
+<p>下载地址：<a href="https://www.ghxi.com/startallback.html">https://www.ghxi.com/startallback.html</a></p>
+<h2 id="还原经典右键菜单"><a href="#还原经典右键菜单" class="headerlink" title="还原经典右键菜单"></a>还原经典右键菜单</h2><p>Win11 的右键菜单默认只显示几个选项，完整菜单被折叠了。用以下方法可以恢复 Win10 样式的完整右键菜单。</p>
+<p>以<strong>管理员身份</strong>打开 CMD 或 PowerShell，输入：</p>
+<figure class="highlight powershell"><table><tr><td class="code"><pre><span class="line">reg add <span class="string">&quot;HKCU\Software\Classes\CLSID\&#123;86ca1aa0-34aa-4e8b-a509-50c905bae2a2&#125;\InprocServer32&quot;</span> /f /ve</span><br></pre></td></tr></table></figure>
+
+<p>然后重启资源管理器即可生效。</p>
+<p>如果想恢复回 Win11 默认右键菜单：</p>
+<figure class="highlight powershell"><table><tr><td class="code"><pre><span class="line">reg delete <span class="string">&quot;HKCU\Software\Classes\CLSID\&#123;86ca1aa0-34aa-4e8b-a509-50c905bae2a2&#125;&quot;</span> /f</span><br></pre></td></tr></table></figure>
+
+<h2 id="关闭动画和半透明效果"><a href="#关闭动画和半透明效果" class="headerlink" title="关闭动画和半透明效果"></a>关闭动画和半透明效果</h2><p>打开 <strong>设置 → 辅助功能 → 视觉效果</strong>，关闭以下两项：</p>
+<ul>
+<li><strong>动画效果</strong> — 关闭</li>
+<li><strong>透明效果</strong> — 关闭</li>
+</ul>
+<p>关闭后系统响应会更跟手，尤其对低配机器提升明显。</p>
+<h2 id="激活-Windows-和-Office"><a href="#激活-Windows-和-Office" class="headerlink" title="激活 Windows 和 Office"></a>激活 Windows 和 Office</h2><p>以<strong>管理员身份</strong>打开 CMD 或 PowerShell，输入：</p>
+<figure class="highlight powershell"><table><tr><td class="code"><pre><span class="line"><span class="built_in">irm</span> https://get.activated.win | <span class="built_in">iex</span></span><br></pre></td></tr></table></figure>
+
+<p>在弹出的菜单中选择：</p>
+<ul>
+<li><code>[1] HWID</code> — 永久激活 Windows（硬件数字许可证）</li>
+<li><code>[2] Ohook</code> — 永久激活 Office</li>
+</ul>
+<h2 id="永久禁止-Windows-更新"><a href="#永久禁止-Windows-更新" class="headerlink" title="永久禁止 Windows 更新"></a>永久禁止 Windows 更新</h2><p>使用 <strong>Windows Update Blocker</strong> 工具，一键永久禁止自动更新：</p>
+<p>下载地址：<a href="https://www.sordum.org/downloads/?st-windows-update-blocker">https://www.sordum.org/downloads/?st-windows-update-blocker</a></p>
+<h2 id="删除-禁用-Win11-无用功能"><a href="#删除-禁用-Win11-无用功能" class="headerlink" title="删除 &#x2F; 禁用 Win11 无用功能"></a>删除 &#x2F; 禁用 Win11 无用功能</h2><p><strong>Chris Titus Tech</strong> 的 Windows 工具箱，提供图形界面，一键删除或禁用各种臃肿功能。</p>
+<p>以<strong>管理员身份</strong>打开 CMD 或 PowerShell，输入：</p>
+<figure class="highlight powershell"><table><tr><td class="code"><pre><span class="line"><span class="built_in">irm</span> https://christitus.com/win | <span class="built_in">iex</span></span><br></pre></td></tr></table></figure>
+
+<p>GitHub 项目地址：<a href="https://github.com/ChrisTitusTech/winutil">https://github.com/ChrisTitusTech/winutil</a></p>
+<h2 id="系统汉化"><a href="#系统汉化" class="headerlink" title="系统汉化"></a>系统汉化</h2><p>如果安装的是英文版 Windows，参考以下教程进行汉化：</p>
+<p><a href="https://www.cnblogs.com/ACDIV/p/19156603">https://www.cnblogs.com/ACDIV/p/19156603</a></p>
+<h2 id="推荐软件"><a href="#推荐软件" class="headerlink" title="推荐软件"></a>推荐软件</h2><ul>
+<li><strong>Flow Launcher</strong> — 开源的快速启动器，类似 macOS 的 Spotlight，按快捷键即可搜索应用、文件、网页等</li>
+</ul>
+]]></content>
+      <categories>
+        <category>实用技巧</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>电子扫盲｜超分与补帧</title>
+    <url>/2025/03/13/tech-basics-upscaling-frame-generation/</url>
+    <content><![CDATA[<p>我们在[[分辨率]]这篇文章里提到过，如果我们玩游戏时想获得清晰的画面，就要拉高分辨率，而拉高分辨率的后果就是帧数降低。那有没有什么办法，能让我们在<strong>不手动拉高分辨率</strong>的情况下，画面也能变清晰呢？</p>
+<p>答案是有的。这就是<strong>超分辨率技术（super resolution）</strong>，俗称超分。超分就是利用一定的算法或者是AI技术，来将原本低分辨率的画面变成高分辨率的画面。比如你用DLSS将1K的画面超分到4K，此时你看到的是4K的画面，但是电脑实际上只渲染的是1K，所以压力大大减小，帧数因此也就提高了。</p>
+<p>另外一种技术是补帧，也叫<strong>帧生成（frame generation）</strong>，或者叫插帧也行。从名字来看就很好理解，就是用算法或者ai来添加额外的帧，从而使画面变得流畅。但是由于插帧一般的原理是<strong>根据两个帧补出它们中间的帧</strong>，所以需要等待下一帧出现才能补出上一帧，从而造成了延迟。原始帧越低，那么补帧延迟越高，效果越差。比如你将30帧补成120帧就没有将60帧补成120帧的效果好。</p>
+<p>在游戏画面越来越爆炸的今天，显卡的性能已经逐渐跟不上游戏的发展，因此超分与补帧几乎成为了刚需。各家都有各自的超分与补帧技术。下面简单的介绍一下。</p>
+<p><strong>DLSS（Deep Learning Super Sampling，深度学习超级采样）</strong>，俗称“大力水手”，是n卡（英伟达的显卡）才有的功能，包含了超分和插帧（插帧只有DLSS3才有，而DLSS3只有40系n卡才能开）。目前最新版本是DLSS4。</p>
+<p><strong>FSR（FidelityFX Super Resolution）</strong></p>
+]]></content>
+      <categories>
+        <category>FeeFee电子扫盲</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>电子扫盲｜显示器</title>
+    <url>/2025/02/12/tech-basics-display-technologies/</url>
+    <content><![CDATA[<p>先讲讲LCD显示器的基本原理。首先是一层液晶材料用来显示图像，但由于液晶材料本身不发光，所以再在它的底部加上一层背光板（发光的板子），这就构成了LCD屏。</p>
+<p>LCD的优点是延迟很低，价格也很便宜，很适合打fps游戏（first player shooting，第一人称射击游戏），因此大部分游戏笔记本都采用LCD屏。但是LCD屏有个缺点，就是对比度（明暗差异，对比度越高，色彩表现越好，画面越真实）很低。什么意思呢？比如你在LCD屏上打开一张纯黑的图片，然后你再把房间里的灯关掉，你就会发现屏幕居然在发光！这是因为LCD屏在打开的时候，下面的背光板是一直亮着的，所以即便黑色依然会发光。由此我们也可以推断出LCD屏会很耗电。<em>就我个人而言，我见过的对比度控制的比较好的LCD屏是iPad Pro 2020。</em> 而且LCD屏还有个缺点就是屏幕边缘会漏光。（如下图）</p>
+<p><img src="/image/2.webp" alt="一张图片" title="LCD漏光现象"></p>
+<p>这时候有人就诞生了一个想法，如果说我把LCD的背光板切成很多小份，这些背光板上方如果显示的是黑色，我就把这个背光板关掉；如果显示的不是黑色，那就把背光板打开。这样不就实现了高对比度吗？这种<strong>分区背光</strong>的LCD屏就叫做<strong>miniLED</strong>，miniLED本质上讲依旧属于LCD屏，但显示效果要远远好于LCD。而且，miniLED的显示效果跟分区数（即背光板被切成的份数）是正相关的，分区数量越多，那明暗的差异自然越大，显示效果自然越好。</p>
+<p>但miniLED也有缺点。首先是光晕现象。比如一张纯黑的图片，正中间有一个杯子（如下图），那么杯子的周围就会形成一圈光晕。当然，如果分区数量够多，那光晕现象自然也会减小。</p>
+<p><img src="/image/1.webp" alt="一张图片" title="miniLED光晕现象"></p>
+]]></content>
+      <categories>
+        <category>FeeFee电子扫盲</category>
+      </categories>
+  </entry>
+  <entry>
     <title>用几个不同的大模型接力，我写了个原生的 macOS 版 WO Mic</title>
     <url>/2026/08/20/native-macos-womic-client-macmic/</url>
     <content><![CDATA[<p>Mac 平台一直缺少官方的 WO Mic 客户端，市面上也很难找到足够轻量、好用的替代方案。平时如果临时想把手机当成 Mac 的无线麦克风，往往需要复杂的配置或忍受高延迟的网页中转。</p>
@@ -429,33 +459,5 @@
         <tag>大模型</tag>
         <tag>WO Mic</tag>
       </tags>
-  </entry>
-  <entry>
-    <title>电子扫盲｜超分与补帧</title>
-    <url>/2025/03/13/tech-basics-upscaling-frame-generation/</url>
-    <content><![CDATA[<p>我们在[[分辨率]]这篇文章里提到过，如果我们玩游戏时想获得清晰的画面，就要拉高分辨率，而拉高分辨率的后果就是帧数降低。那有没有什么办法，能让我们在<strong>不手动拉高分辨率</strong>的情况下，画面也能变清晰呢？</p>
-<p>答案是有的。这就是<strong>超分辨率技术（super resolution）</strong>，俗称超分。超分就是利用一定的算法或者是AI技术，来将原本低分辨率的画面变成高分辨率的画面。比如你用DLSS将1K的画面超分到4K，此时你看到的是4K的画面，但是电脑实际上只渲染的是1K，所以压力大大减小，帧数因此也就提高了。</p>
-<p>另外一种技术是补帧，也叫<strong>帧生成（frame generation）</strong>，或者叫插帧也行。从名字来看就很好理解，就是用算法或者ai来添加额外的帧，从而使画面变得流畅。但是由于插帧一般的原理是<strong>根据两个帧补出它们中间的帧</strong>，所以需要等待下一帧出现才能补出上一帧，从而造成了延迟。原始帧越低，那么补帧延迟越高，效果越差。比如你将30帧补成120帧就没有将60帧补成120帧的效果好。</p>
-<p>在游戏画面越来越爆炸的今天，显卡的性能已经逐渐跟不上游戏的发展，因此超分与补帧几乎成为了刚需。各家都有各自的超分与补帧技术。下面简单的介绍一下。</p>
-<p><strong>DLSS（Deep Learning Super Sampling，深度学习超级采样）</strong>，俗称“大力水手”，是n卡（英伟达的显卡）才有的功能，包含了超分和插帧（插帧只有DLSS3才有，而DLSS3只有40系n卡才能开）。目前最新版本是DLSS4。</p>
-<p><strong>FSR（FidelityFX Super Resolution）</strong></p>
-]]></content>
-      <categories>
-        <category>FeeFee电子扫盲</category>
-      </categories>
-  </entry>
-  <entry>
-    <title>电子扫盲｜显示器</title>
-    <url>/2025/02/12/tech-basics-display-technologies/</url>
-    <content><![CDATA[<p>先讲讲LCD显示器的基本原理。首先是一层液晶材料用来显示图像，但由于液晶材料本身不发光，所以再在它的底部加上一层背光板（发光的板子），这就构成了LCD屏。</p>
-<p>LCD的优点是延迟很低，价格也很便宜，很适合打fps游戏（first player shooting，第一人称射击游戏），因此大部分游戏笔记本都采用LCD屏。但是LCD屏有个缺点，就是对比度（明暗差异，对比度越高，色彩表现越好，画面越真实）很低。什么意思呢？比如你在LCD屏上打开一张纯黑的图片，然后你再把房间里的灯关掉，你就会发现屏幕居然在发光！这是因为LCD屏在打开的时候，下面的背光板是一直亮着的，所以即便黑色依然会发光。由此我们也可以推断出LCD屏会很耗电。<em>就我个人而言，我见过的对比度控制的比较好的LCD屏是iPad Pro 2020。</em> 而且LCD屏还有个缺点就是屏幕边缘会漏光。（如下图）</p>
-<p><img src="/image/2.webp" alt="一张图片" title="LCD漏光现象"></p>
-<p>这时候有人就诞生了一个想法，如果说我把LCD的背光板切成很多小份，这些背光板上方如果显示的是黑色，我就把这个背光板关掉；如果显示的不是黑色，那就把背光板打开。这样不就实现了高对比度吗？这种<strong>分区背光</strong>的LCD屏就叫做<strong>miniLED</strong>，miniLED本质上讲依旧属于LCD屏，但显示效果要远远好于LCD。而且，miniLED的显示效果跟分区数（即背光板被切成的份数）是正相关的，分区数量越多，那明暗的差异自然越大，显示效果自然越好。</p>
-<p>但miniLED也有缺点。首先是光晕现象。比如一张纯黑的图片，正中间有一个杯子（如下图），那么杯子的周围就会形成一圈光晕。当然，如果分区数量够多，那光晕现象自然也会减小。</p>
-<p><img src="/image/1.webp" alt="一张图片" title="miniLED光晕现象"></p>
-]]></content>
-      <categories>
-        <category>FeeFee电子扫盲</category>
-      </categories>
   </entry>
 </search>
