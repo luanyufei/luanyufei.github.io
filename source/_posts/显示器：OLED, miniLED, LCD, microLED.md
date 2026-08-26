@@ -1,5 +1,6 @@
 ---
 title: 电子扫盲｜显示器
+slug: tech-basics-display-technologies
 date: 2025-02-12
 categories: FeeFee电子扫盲
 ---

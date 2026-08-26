@@ -1,5 +1,6 @@
 ---
 title: 电子扫盲｜超分与补帧
+slug: tech-basics-upscaling-frame-generation
 date: 2025-03-13
 categories: FeeFee电子扫盲
 ---

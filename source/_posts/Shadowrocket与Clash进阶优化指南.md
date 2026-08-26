@@ -1,5 +1,6 @@
 ---
 title: Shadowrocket & Clash 进阶优化指南
+slug: shadowrocket-clash-advanced-guide
 date: 2026-08-19 09:30:00
 categories: 实用技巧
 tags:

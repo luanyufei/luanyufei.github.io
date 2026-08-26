@@ -1,5 +1,6 @@
 ---
 title: 用几个不同的大模型接力，我写了个原生的 macOS 版 WO Mic
+slug: native-macos-womic-client-macmic
 date: 2026-08-20 14:45:00
 categories: 开发记录
 tags:

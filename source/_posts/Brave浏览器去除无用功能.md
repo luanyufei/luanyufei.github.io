@@ -1,5 +1,6 @@
 ---
 title: Brave 浏览器去除无用功能
+slug: brave-browser-debloat
 date: 2026-07-18
 categories: 实用技巧
 ---

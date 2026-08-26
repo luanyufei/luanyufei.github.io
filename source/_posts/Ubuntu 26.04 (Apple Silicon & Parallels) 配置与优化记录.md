@@ -1,5 +1,6 @@
 ---
 title: Ubuntu 26.04 (Apple Silicon / Parallels) 配置与优化记录
+slug: ubuntu-26-04-parallels-optimization
 date: 2026-08-26 17:20:00
 categories: 实用技巧
 tags:

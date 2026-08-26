@@ -1,5 +1,6 @@
 ---
 title: Windows 11 优化方案
+slug: windows-11-optimization-guide
 date: 2026-07-18
 categories: 实用技巧
 ---

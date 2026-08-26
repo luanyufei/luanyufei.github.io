@@ -1,5 +1,6 @@
 ---
 title: 电子扫盲｜操作系统
+slug: tech-basics-operating-systems
 date: 2025-02-20
 categories: FeeFee电子扫盲
 ---
