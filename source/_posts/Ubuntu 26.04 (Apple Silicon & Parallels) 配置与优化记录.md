@@ -166,6 +166,9 @@ rm -rf ~/snap/firefox ~/.mozilla
 ### 6.3 剪贴板与拖拽服务
 创建 Systemd 用户守护服务 `~/.config/systemd/user/parallels-tools-user.service` 并安装 `wl-clipboard` 与 `xclip`，确保登录后自动恢复与 Mac 宿主机的双向剪贴板和文件拖放支持。
 
+### 6.4 系统监控与任务管理（Mission Center）
+* 安装了 **Mission Center**，界面风格和交互逻辑几乎是 Windows 任务管理器的翻版，支持直观监控 CPU、内存、磁盘 I/O、网络利用率及细粒度进程管理，相比原生系统监视器更加直观好用。
+
 ## 7. 开发工具与 Antigravity 配置
 
 ### 7.1 Antigravity 部署与修复
