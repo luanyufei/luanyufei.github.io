@@ -970,7 +970,7 @@ body.is-home-page #content-inner {
 }
 
 #article-container figure.article-image-figure,
-#article-container figure {
+#article-container figure:not(.highlight) {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -980,8 +980,9 @@ body.is-home-page #content-inner {
   max-width: 100%;
 }
 
-#article-container figure img,
-#article-container img {
+#article-container figure.article-image-figure img,
+#article-container figure:not(.highlight) img,
+#article-container img:not(.highlight img) {
   display: block;
   max-width: 100%;
   height: auto;
@@ -1128,12 +1129,15 @@ body.fs-lightbox-dragging *,
 
 #article-container figure.highlight {
   position: relative !important;
+  display: block !important;
+  width: 100% !important;
   margin: 1.8rem 0 !important;
   border-radius: 10px !important;
   border: 1px solid var(--fs-code-border) !important;
   background: var(--fs-code-bg) !important;
   box-shadow: 0 4px 18px rgba(0, 0, 0, 0.03) !important;
   overflow: hidden !important;
+  text-align: left !important;
   line-height: 1.65 !important;
 }
 
@@ -1151,7 +1155,10 @@ body.fs-lightbox-dragging *,
   background: var(--fs-code-header) !important;
   border-bottom: 1px solid var(--fs-code-border) !important;
   color: var(--fs-text-3) !important;
-  user-select: none;
+  user-select: none !important;
+  box-sizing: border-box !important;
+  width: 100% !important;
+  text-align: left !important;
 }
 
 /* macOS Window Dots */
@@ -1160,6 +1167,8 @@ body.fs-lightbox-dragging *,
   align-items: center !important;
   gap: 7px !important;
   margin: 0 !important;
+  padding: 0 !important;
+  flex-shrink: 0 !important;
 }
 
 #article-container figure.highlight .macStyle .mac-close,
@@ -1169,6 +1178,8 @@ body.fs-lightbox-dragging *,
   height: 11px !important;
   border-radius: 50% !important;
   display: inline-block !important;
+  margin: 0 !important;
+  padding: 0 !important;
 }
 
 #article-container figure.highlight .macStyle .mac-close {
@@ -1186,11 +1197,15 @@ body.fs-lightbox-dragging *,
 /* Language Badge */
 #article-container figure.highlight .code-lang {
   font-family: var(--fs-mono) !important;
-  font-size: 0.72rem !important;
+  font-size: 0.75rem !important;
   font-weight: 700 !important;
   letter-spacing: 0.08em !important;
   text-transform: uppercase !important;
   color: var(--fs-text-3) !important;
+  text-align: center !important;
+  flex: 1 !important;
+  margin: 0 !important;
+  padding: 0 !important;
 }
 
 /* Copy Button */
@@ -1205,6 +1220,9 @@ body.fs-lightbox-dragging *,
   cursor: pointer !important;
   transition: all 0.2s var(--fs-ease) !important;
   font-size: 0.85rem !important;
+  flex-shrink: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
 }
 
 #article-container figure.highlight .copy-button:hover {
@@ -1220,21 +1238,27 @@ body.fs-lightbox-dragging *,
   border-collapse: collapse !important;
   display: table !important;
   background: transparent !important;
+  table-layout: auto !important;
+  text-align: left !important;
 }
 
 #article-container figure.highlight td {
   border: none !important;
   padding: 0 !important;
+  vertical-align: top !important;
+  text-align: left !important;
 }
 
 #article-container figure.highlight td.gutter {
   width: 44px !important;
   min-width: 44px !important;
+  max-width: 44px !important;
   background: var(--fs-code-gutter-bg) !important;
   border-right: 1px solid var(--fs-code-border) !important;
   padding: 0.85rem 0.65rem !important;
   text-align: right !important;
-  user-select: none;
+  user-select: none !important;
+  box-sizing: border-box !important;
 }
 
 #article-container figure.highlight td.gutter pre {
@@ -1244,12 +1268,16 @@ body.fs-lightbox-dragging *,
   font-size: 0.82rem !important;
   line-height: 1.65 !important;
   color: var(--fs-code-gutter) !important;
+  text-align: right !important;
+  white-space: pre !important;
 }
 
 #article-container figure.highlight td.code {
   background: var(--fs-code-bg) !important;
   padding: 0.85rem 1.1rem !important;
   overflow-x: auto !important;
+  box-sizing: border-box !important;
+  text-align: left !important;
 }
 
 #article-container figure.highlight td.code pre {
@@ -1259,6 +1287,18 @@ body.fs-lightbox-dragging *,
   font-size: 0.86rem !important;
   line-height: 1.65 !important;
   color: var(--fs-code-text) !important;
+  text-align: left !important;
+  white-space: pre !important;
+}
+
+#article-container figure.highlight td.code pre * {
+  text-align: left !important;
+}
+
+#article-container figure.highlight td.code .line {
+  display: block !important;
+  text-align: left !important;
+  white-space: pre !important;
 }
 
 /* ── Syntax Highlighting Tokens ── */
