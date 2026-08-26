@@ -442,29 +442,6 @@
     const toc = document.querySelector('#card-toc .toc-content');
     if (!toc) return;
 
-    // Decouple TOC container scrolling from page scrolling:
-    // Prevent Butterfly theme scripts from programmatically jumping/auto-scrolling the TOC
-    // so the user can independently browse long TOCs without scroll resets.
-    try {
-      const origDescriptor = Object.getOwnPropertyDescriptor(Element.prototype, 'scrollTop');
-      if (origDescriptor && origDescriptor.get) {
-        Object.defineProperty(toc, 'scrollTop', {
-          get() {
-            return origDescriptor.get.call(this);
-          },
-          set(_val) {
-            // Ignore programmatic autoScrollToc overrides triggered on page scroll
-          },
-          configurable: true,
-        });
-      }
-      toc.scrollTo = function() {};
-      toc.scroll = function() {};
-      toc.scrollBy = function() {};
-    } catch (_e) {
-      // Fallback
-    }
-
     // Deduplicate and complete TOC numbering:
     // If the heading text itself already starts with a recognized index/number, remove redundant toc-number.
     toc.querySelectorAll('.toc-link').forEach((link) => {
@@ -515,6 +492,15 @@
     const cardToc = document.getElementById('card-toc');
 
     if (cardToc) {
+      // Ensure cardToc is mounted to body on mobile so it escapes any parent stacking context
+      let isBodyMounted = false;
+      const ensureBodyMounted = () => {
+        if (!isBodyMounted && window.innerWidth <= 900) {
+          document.body.appendChild(cardToc);
+          isBodyMounted = true;
+        }
+      };
+
       // Create dedicated floating mobile TOC button if not present
       let mobileTocToggle = document.querySelector('.site-toc-toggle');
       if (!mobileTocToggle) {
@@ -553,6 +539,7 @@
 
       const toggleMobileToc = (e) => {
         if (e) e.stopPropagation();
+        ensureBodyMounted();
         const isOpen = cardToc.classList.toggle('open');
         backdrop.classList.toggle('show', isOpen);
       };
@@ -564,14 +551,29 @@
         backdrop.classList.remove('show');
       });
 
-      // Auto close mobile TOC when tapping any link on mobile screen
+      // Handle TOC link clicks on mobile: smooth jump to heading and auto close
       cardToc.addEventListener('click', (e) => {
         const link = e.target.closest('.toc-link');
-        if (link && window.innerWidth <= 900) {
+        if (!link) return;
+
+        const href = link.getAttribute('href');
+        if (href && href.startsWith('#')) {
+          const targetId = decodeURIComponent(href.slice(1));
+          const targetElement = document.getElementById(targetId);
+          if (targetElement) {
+            e.preventDefault();
+            targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            // update active link state
+            cardToc.querySelectorAll('.toc-link').forEach((l) => l.classList.remove('active'));
+            link.classList.add('active');
+          }
+        }
+
+        if (window.innerWidth <= 900) {
           setTimeout(() => {
             cardToc.classList.remove('open');
             backdrop.classList.remove('show');
-          }, 180);
+          }, 150);
         }
       });
     }
