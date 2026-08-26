@@ -1,0 +1,448 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>Ubuntu 26.04 (Apple Silicon / Parallels) 配置与优化记录 | Fee Space</title><meta name="author" content="乱与狒,noonyjufee@gmail.com"><meta name="copyright" content="乱与狒"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="很久以前我装过一次 Ubuntu，当时各种依赖、字体和驱动配置实在太折腾，没用多久就放弃了。现在有了 AI Agent，很多底层的调试和脚本一句话就能搞定，整个折腾流程顺畅了许多。 这篇文档是我在 Apple Silicon Mac 的 Parallels 虚拟机里调教 Ubuntu 26.04 的完整记录。内容涵盖了屏幕高刷锁定、GNOME 现代主题架构与深色模式避坑、全透明悬浮 Dock、输入">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Ubuntu 26.04 (Apple Silicon &#x2F; Parallels) 配置与优化记录">
+<meta property="og:url" content="https://luanyufei.cn/2026/08/26/ubuntu-26-04-parallels-optimization/index.html">
+<meta property="og:site_name" content="Fee Space">
+<meta property="og:description" content="很久以前我装过一次 Ubuntu，当时各种依赖、字体和驱动配置实在太折腾，没用多久就放弃了。现在有了 AI Agent，很多底层的调试和脚本一句话就能搞定，整个折腾流程顺畅了许多。 这篇文档是我在 Apple Silicon Mac 的 Parallels 虚拟机里调教 Ubuntu 26.04 的完整记录。内容涵盖了屏幕高刷锁定、GNOME 现代主题架构与深色模式避坑、全透明悬浮 Dock、输入">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://luanyufei.cn/img/touxiang.webp">
+<meta property="article:published_time" content="2026-08-26T09:20:00.000Z">
+<meta property="article:modified_time" content="2026-08-26T16:36:54.543Z">
+<meta property="article:author" content="乱与狒">
+<meta property="article:tag" content="Linux">
+<meta property="article:tag" content="Ubuntu">
+<meta property="article:tag" content="Parallels">
+<meta property="article:tag" content="折腾记录">
+<meta property="article:tag" content="生产力">
+<meta property="article:tag" content="桌面美化">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://luanyufei.cn/img/touxiang.webp"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "Ubuntu 26.04 (Apple Silicon / Parallels) 配置与优化记录",
+  "url": "https://luanyufei.cn/2026/08/26/ubuntu-26-04-parallels-optimization/",
+  "image": "https://luanyufei.cn/img/touxiang.webp",
+  "datePublished": "2026-08-26T09:20:00.000Z",
+  "dateModified": "2026-08-26T16:36:54.543Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "乱与狒",
+      "url": "https://luanyufei.cn/"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/img/noon-avatar.webp"><link rel="canonical" href="https://luanyufei.cn/2026/08/26/ubuntu-26-04-parallels-optimization/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox/fancybox.min.css" media="print" onload="this.media='all'"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          const mediaQueryDark = window.matchMedia('(prefers-color-scheme: dark)')
+          const mediaQueryLight = window.matchMedia('(prefers-color-scheme: light)')
+          
+          if (theme === undefined) {
+            if (mediaQueryLight.matches) activateLightMode()
+            else if (mediaQueryDark.matches) activateDarkMode()
+            else {
+              const hour = new Date().getHours()
+              const isNight = hour <= 6 || hour >= 18
+              isNight ? activateDarkMode() : activateLightMode()
+            }
+            mediaQueryDark.addEventListener('change', () => {
+              if (saveToLocal.get('theme') === undefined) {
+                e.matches ? activateDarkMode() : activateLightMode()
+              }
+            })
+          } else {
+            theme === 'light' ? activateLightMode() : activateDarkMode()
+          }
+        
+      
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: true,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: true,
+  },
+  autoDarkmode: true
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'Ubuntu 26.04 (Apple Silicon / Parallels) 配置与优化记录',
+  isHighlightShrink: undefined,
+  isToc: true,
+  pageType: 'post'
+}</script><script>(function(){try{localStorage.removeItem('theme');var raw=sessionStorage.getItem('theme');var saved;if(raw){try{var parsed=JSON.parse(raw);saved=parsed.value}catch(e){saved=raw}}var mode=saved==='light'||saved==='dark'?saved:(window.matchMedia&&window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',mode);document.documentElement.classList.add('js');var m=document.querySelector('meta[name="theme-color"]');if(m){m.setAttribute('content',mode==='dark'?'#0f1111':'#f3f6f2')}}catch(e){document.documentElement.setAttribute('data-theme','light')}})();</script><link rel="stylesheet" href="/css/cyber-background.css?v=20260827_v4"><link rel="stylesheet" href="/css/footer-brand.css?v=20260815_v3"><meta name="generator" content="Hexo 7.3.0"><link rel="alternate" href="/atom.xml" title="Fee Space" type="application/atom+xml">
+<link rel="alternate" href="/rss2.xml" title="Fee Space" type="application/rss+xml">
+</head><body><div class="post" id="body-wrap"><header class="post-bg fixed" id="page-header">
+<nav id="nav" class="feespace-nav">
+  <a class="site-wordmark" href="/" aria-label="Fee Space 首页"><span>Fee Space</span><small>©2026</small></a>
+  <div id="blog-info" aria-hidden="true"><a href="/"><span class="site-name">Fee Space</span></a></div>
+  <div id="menus">
+    <div class="menus_items">
+      <div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span>首页</span></a></div>
+      <div class="menus_item"><a class="site-page" href="/projects/"><i class="fa-fw fas fa-code"></i><span>项目</span></a></div>
+      <div class="menus_item menus_item-article">
+        <a class="site-page" href="/archives/" aria-haspopup="true" aria-expanded="false">
+          <i class="fa-fw fas fa-layer-group"></i><span>文章</span><i class="menu-caret fas fa-chevron-down" aria-hidden="true"></i>
+        </a>
+        <div class="menu-dropdown" role="menu" aria-label="文章导航">
+          <a class="menu-dropdown-link" href="/categories/" role="menuitem"><span>分类</span><small>Categories</small></a>
+          <a class="menu-dropdown-link" href="/tags/" role="menuitem"><span>标签</span><small>Tags</small></a>
+        </div>
+      </div>
+      <div class="menus_item"><a class="site-page" href="/trend/"><i class="fa-fw fas fa-bolt"></i><span>动态</span></a></div>
+      <div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-compass"></i><span>链接</span></a></div>
+      <div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-user"></i><span>关于</span></a></div>
+    </div>
+  </div>
+</nav><div id="post-info"><div class="fs-unified-hero"><span class="fs-hero-tag">NOTE &amp; ARTICLE</span><h1 class="post-title">Ubuntu 26.04 (Apple Silicon / Parallels) 配置与优化记录</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2026-08-26T09:20:00.000Z" title="发表于 2026-08-26 17:20:00">2026-08-26</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-08-26T16:36:54.543Z" title="更新于 2026-08-27 00:36:54">2026-08-27</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E5%AE%9E%E7%94%A8%E6%8A%80%E5%B7%A7/">实用技巧</a></span></div><div class="meta-secondline"></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><p>很久以前我装过一次 Ubuntu，当时各种依赖、字体和驱动配置实在太折腾，没用多久就放弃了。现在有了 AI Agent，很多底层的调试和脚本一句话就能搞定，整个折腾流程顺畅了许多。</p>
+<p>这篇文档是我在 Apple Silicon Mac 的 Parallels 虚拟机里调教 Ubuntu 26.04 的完整记录。内容涵盖了屏幕高刷锁定、GNOME 现代主题架构与深色模式避坑、全透明悬浮 Dock、输入法迁移、终端与浏览器调优、常用原生工具及系统底层服务，留作以后换机或在实体机上装 Linux 时的速查参考。</p>
+<h2 id="1-屏幕分辨率与高刷锁定（2560×1440-180Hz）"><a href="#1-屏幕分辨率与高刷锁定（2560×1440-180Hz）" class="headerlink" title="1. 屏幕分辨率与高刷锁定（2560×1440 @ 180Hz）"></a>1. 屏幕分辨率与高刷锁定（2560×1440 @ 180Hz）</h2><h3 id="遇到问题"><a href="#遇到问题" class="headerlink" title="遇到问题"></a>遇到问题</h3><ol>
+<li><strong>分辨率与刷新率缺失</strong>：系统初始缺少 2K 16:9（2560×1440）及 180Hz 高刷新率选项。</li>
+<li><strong>分辨率被动态重置</strong>：Parallels Tools 后台进程在拖动或缩放 Mac 窗口时会触发动态分辨率检测，将虚拟机强行改回当前窗口尺寸并将刷新率重置为 60Hz。</li>
+</ol>
+<h3 id="解决方法"><a href="#解决方法" class="headerlink" title="解决方法"></a>解决方法</h3><ul>
+<li><strong>内核 DRM 注入</strong>：在 <code>/etc/default/grub.d/99_resolution.cfg</code> 中加入参数 <code>video=Virtual-1:2560x1440@180 video=2560x1440@180</code>，执行 <code>sudo update-grub</code>，让内核在引导时生成对应的显示模式。</li>
+<li><strong>阻止动态分辨率篡改</strong>：将系统二进制 <code>/usr/bin/prlcc</code> 替换为包装脚本，移除 DynRes 分辨率监听逻辑，同时保留剪贴板同步（<code>prlcp</code>）、文件拖放（<code>prldnd</code>）和共享目录（<code>prl_fsd</code>）。</li>
+<li><strong>同步显示管理器配置</strong>：将显示配置文件保存到 <code>~/.config/monitors.xml</code>，并同步复制至 <code>/var/lib/gdm3/.config/monitors.xml</code>，确保从 GDM3 登录界面到进入桌面全程锁定该配置。</li>
+</ul>
+<h2 id="2-GNOME-42-主题架构与深色模式避坑"><a href="#2-GNOME-42-主题架构与深色模式避坑" class="headerlink" title="2. GNOME 42+ 主题架构与深色模式避坑"></a>2. GNOME 42+ 主题架构与深色模式避坑</h2><p>在现代 GNOME（GNOME 42+）下给 Ubuntu 换主题，很容易遇到各种莫名其妙的 bug：比如切了深色模式设置窗口依然是白色、换了第三方图标只要按一下深色按钮就自动变回默认图标、Brave 里的 Dark Reader 变黑两秒后又自己跳回白色等。</p>
+<p>这些坑的根源在于现代 GNOME 的底层架构分层。</p>
+<h3 id="2-1-现代-GNOME-的四层界面架构"><a href="#2-1-现代-GNOME-的四层界面架构" class="headerlink" title="2.1 现代 GNOME 的四层界面架构"></a>2.1 现代 GNOME 的四层界面架构</h3><p>目前的 Linux 桌面由四个相互独立的系统组成：</p>
+<figure class="highlight text"><table><tr><td class="code"><pre><span class="line">               ┌────────────────────────────────────────┐</span><br><span class="line">               │         你的应用界面 (Applications)       │</span><br><span class="line">               └───────────────────┬────────────────────┘</span><br><span class="line">                                   │</span><br><span class="line">         ┌─────────────────────────┴─────────────────────────┐</span><br><span class="line">         ▼                                                   ▼</span><br><span class="line">┌─────────────────────────────────┐         ┌─────────────────────────────────┐</span><br><span class="line">│     现代应用 (GTK4 + Libadwaita)   │         │     传统应用 (GTK3 / Legacy)     │</span><br><span class="line">│   (如: 系统设置、文件管理器、文本编辑器)   │         │    (如: GIMP、各种第三方老应用)     │</span><br><span class="line">└────────────────┬────────────────┘         └────────────────┬────────────────┘</span><br><span class="line">                 │                                           │</span><br><span class="line">   ┌─────────────┴─────────────┐                             │</span><br><span class="line">   ▼                           ▼                             ▼</span><br><span class="line">【Libadwaita 原生引擎】   【~/.config/gtk-4.0/】       【~/.themes/ 或 /usr/share/】</span><br><span class="line"> • 内置深浅色样式         • 用户强制覆盖层              • 读取 gsettings gtk-theme</span><br><span class="line"> • 官方标准架构           (第三方主题强行注入点)        (Yaru / Orchis 在此生效)</span><br><span class="line"> • 0ms 实时深浅热重载     • 静态文件，无法热重载</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><strong>Libadwaita (GTK4)</strong>：GNOME 官方为了防止第三方主题破坏控件结构，完全废弃了从 <code>~/.themes/</code> 读取外部主题的做法。深浅色样式直接以内置资源形式编译在底层，支持毫秒级的动态切换。</li>
+<li><strong>第三方主题（如 Orchis）</strong>：为了强行修改 Libadwaita 应用，安装脚本通常会把生成的静态 CSS 复制到 <code>~/.config/gtk-4.0/gtk.css</code>。这是 GTK4 留给用户的最高优先级覆盖层，一旦写入，就会直接废掉 Libadwaita 原生的动态深浅色切换能力。</li>
+<li><strong>GNOME Shell UI</strong>：独立于应用窗口，专门管顶部状态栏、右上角快捷控制面板（Quick Settings）、通知中心和日历，由 <code>user-theme</code> 扩展独立控制。</li>
+<li><strong>Electron 与 Chromium &#x2F; Brave</strong>：依赖 Linux 的 XDG Desktop Portal（通过 D-Bus <code>org.freedesktop.portal.Settings</code> 广播）来接收操作系统的 <code>color-scheme</code> 切换信号。</li>
+</ul>
+<h3 id="2-2-五大常见故障与深度原理复盘"><a href="#2-2-五大常见故障与深度原理复盘" class="headerlink" title="2.2 五大常见故障与深度原理复盘"></a>2.2 五大常见故障与深度原理复盘</h3><h4 id="1-系统设了-Dark-Mode，系统设置窗口依然是白色？"><a href="#1-系统设了-Dark-Mode，系统设置窗口依然是白色？" class="headerlink" title="1. 系统设了 Dark Mode，系统设置窗口依然是白色？"></a>1. 系统设了 Dark Mode，系统设置窗口依然是白色？</h4><ul>
+<li><strong>根本原因</strong>：之前安装 Orchis 等第三方主题时，浅色样式的 CSS 文件被写入了 <code>~/.config/gtk-4.0/gtk.css</code>。GTK4 启动时无条件优先加载这个静态文件里的背景定义，导致设置窗口被强行涂白。</li>
+</ul>
+<h4 id="2-为什么-Electron-能秒切深浅色，原生设置和浏览器却不行？"><a href="#2-为什么-Electron-能秒切深浅色，原生设置和浏览器却不行？" class="headerlink" title="2. 为什么 Electron 能秒切深浅色，原生设置和浏览器却不行？"></a>2. 为什么 Electron 能秒切深浅色，原生设置和浏览器却不行？</h4><ul>
+<li><strong>根本原因</strong>：Electron 实时监听 D-Bus Portal 广播信号，收到后在内存里即时重算 CSS <code>@media (prefers-color-scheme: dark)</code>。而 GTK4 外部覆盖文件只在启动时读取一次磁盘，无法实时热重绘，必须关闭窗口重开才能生效。</li>
+</ul>
+<h4 id="3-Brave-里的-Dark-Reader-变黑-2-秒后，自动弹回浅色？"><a href="#3-Brave-里的-Dark-Reader-变黑-2-秒后，自动弹回浅色？" class="headerlink" title="3. Brave 里的 Dark Reader 变黑 2 秒后，自动弹回浅色？"></a>3. Brave 里的 Dark Reader 变黑 2 秒后，自动弹回浅色？</h4><ul>
+<li><strong>根本原因（信号竞争冲突）</strong>：<ol>
+<li>点击系统深色模式时，GNOME 先通过 D-Bus 广播 <code>color-scheme = 1 (Dark)</code>，Dark Reader 瞬间生效变黑；</li>
+<li>如果 Brave 开启了 <code>Use GTK</code>，Chromium 底层模块在 2 秒后完成 GTK3 主题色彩重算，误判为浅色，强行推翻了之前的 Portal 信号，向页面发送 <code>prefers-color-scheme: light</code>；</li>
+<li>Dark Reader 收到错误的覆盖信号，误以为系统切回了浅色，于是自动关闭了深色渲染。</li>
+</ol>
+</li>
+</ul>
+<h4 id="4-右上角控制中心与系统弹窗依然是白色？"><a href="#4-右上角控制中心与系统弹窗依然是白色？" class="headerlink" title="4. 右上角控制中心与系统弹窗依然是白色？"></a>4. 右上角控制中心与系统弹窗依然是白色？</h4><ul>
+<li><strong>根本原因</strong>：桌面的系统弹窗属于 GNOME Shell UI，由 <code>user-theme</code> 扩展管理。如果之前 Shell 主题被固定指定为了浅色主题（如 <code>Orchis-Light</code>），桌面弹窗就会被强制固定为浅色。</li>
+</ul>
+<h4 id="5-换了第三方图标（如-Tela），一按深色模式又变回官方图标？"><a href="#5-换了第三方图标（如-Tela），一按深色模式又变回官方图标？" class="headerlink" title="5. 换了第三方图标（如 Tela），一按深色模式又变回官方图标？"></a>5. 换了第三方图标（如 Tela），一按深色模式又变回官方图标？</h4><ul>
+<li><strong>根本原因</strong>：Ubuntu 的「系统设置 ➔ 外观」面板内置了绑定逻辑。只要在图形界面里点击了 Dark &#x2F; Default 或切换了颜色圆圈，Ubuntu 就会自动触发 <code>gsettings set icon-theme Yaru-&lt;color&gt;-dark</code>，强行重置图标。</li>
+</ul>
+<h3 id="2-3-终极推荐配置：纯净热重载与图标防篡改"><a href="#2-3-终极推荐配置：纯净热重载与图标防篡改" class="headerlink" title="2.3 终极推荐配置：纯净热重载与图标防篡改"></a>2.3 终极推荐配置：纯净热重载与图标防篡改</h3><p>要实现<strong>零 Bug、免重启、毫秒级平滑热重载、图标不被系统重置</strong>，按照以下四步配置：</p>
+<h4 id="1-净化-GTK4-Libadwaita（恢复原生热重载）"><a href="#1-净化-GTK4-Libadwaita（恢复原生热重载）" class="headerlink" title="1. 净化 GTK4 &#x2F; Libadwaita（恢复原生热重载）"></a>1. 净化 GTK4 &#x2F; Libadwaita（恢复原生热重载）</h4><p>清理用户目录下的暴力覆盖层：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 备份并清空 gtk-4.0 下的所有覆盖文件</span></span><br><span class="line"><span class="built_in">mkdir</span> -p ~/.config/gtk-4.0.bak</span><br><span class="line"><span class="built_in">mv</span> ~/.config/gtk-4.0/* ~/.config/gtk-4.0.bak/ 2&gt;/dev/null || <span class="literal">true</span></span><br><span class="line"><span class="built_in">rm</span> -rf ~/.config/gtk-4.0/*</span><br></pre></td></tr></table></figure>
+
+<h4 id="2-统一官方系统主题与-Shell-主题"><a href="#2-统一官方系统主题与-Shell-主题" class="headerlink" title="2. 统一官方系统主题与 Shell 主题"></a>2. 统一官方系统主题与 Shell 主题</h4><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 设置 GTK 传统主题为官方 Yaru-purple</span></span><br><span class="line">gsettings <span class="built_in">set</span> org.gnome.desktop.interface gtk-theme <span class="string">&#x27;Yaru-purple&#x27;</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 重置 GNOME Shell 主题为官方原生（解决右上角弹窗保持白色的问题）</span></span><br><span class="line">gsettings <span class="built_in">set</span> org.gnome.shell.extensions.user-theme name <span class="string">&#x27;&#x27;</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="3-利用-XDG-优先级锁定-Tela-图标"><a href="#3-利用-XDG-优先级锁定-Tela-图标" class="headerlink" title="3. 利用 XDG 优先级锁定 Tela 图标"></a>3. 利用 XDG 优先级锁定 Tela 图标</h4><p>Linux 标准规定：<code>~/.local/share/icons/</code> 的优先级高于 <code>/usr/share/icons/</code>。建立软链接后，就算 Ubuntu 设置面板强制写入 Yaru，系统读取到的依然是 Tela 图标：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">ln</span> -sfn ~/.local/share/icons/Tela-purple-dark ~/.local/share/icons/Yaru-purple-dark</span><br><span class="line"><span class="built_in">ln</span> -sfn ~/.local/share/icons/Tela-purple ~/.local/share/icons/Yaru-purple</span><br><span class="line"><span class="built_in">ln</span> -sfn ~/.local/share/icons/Tela-dark ~/.local/share/icons/Yaru-dark</span><br><span class="line"><span class="built_in">ln</span> -sfn ~/.local/share/icons/Tela ~/.local/share/icons/Yaru</span><br><span class="line"></span><br><span class="line"><span class="comment"># 立即刷新当前图标</span></span><br><span class="line">gsettings <span class="built_in">set</span> org.gnome.desktop.interface icon-theme <span class="string">&#x27;Tela-purple-dark&#x27;</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="2-4-深浅色自动切换（扩展方案与纯命令行定时）"><a href="#2-4-深浅色自动切换（扩展方案与纯命令行定时）" class="headerlink" title="2.4 深浅色自动切换（扩展方案与纯命令行定时）"></a>2.4 深浅色自动切换（扩展方案与纯命令行定时）</h3><p>如果希望桌面能像 macOS 一样根据日落日出或指定时间自动在深浅色之间无感切换，有两种实现方式：</p>
+<h4 id="方案-A：Night-Theme-Switcher-扩展（体验最佳）"><a href="#方案-A：Night-Theme-Switcher-扩展（体验最佳）" class="headerlink" title="方案 A：Night Theme Switcher 扩展（体验最佳）"></a>方案 A：Night Theme Switcher 扩展（体验最佳）</h4><p>社区里成熟的自动切换扩展是 <strong>Night Theme Switcher</strong>，支持根据地理位置的日落日出时间、系统夜灯状态或指定时钟定时自动切换。在没有浏览器扩展商店或想免 Sudo 纯命令行部署时，可以直接用 Python 脚本下载并启用：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 1. 自动下载并安装扩展包</span></span><br><span class="line">python3 -c <span class="string">&quot;</span></span><br><span class="line"><span class="string">import urllib.request, tempfile, subprocess, os</span></span><br><span class="line"><span class="string">url = &#x27;https://extensions.gnome.org/download-extension/nightthemeswitcher@romainvigier.fr.shell-extension.zip?version_tag=73047&#x27;</span></span><br><span class="line"><span class="string">with tempfile.NamedTemporaryFile(suffix=&#x27;.zip&#x27;, delete=False) as f:</span></span><br><span class="line"><span class="string">    zip_path = f.name</span></span><br><span class="line"><span class="string">    with urllib.request.urlopen(urllib.request.Request(url, headers=&#123;&#x27;User-Agent&#x27;: &#x27;Mozilla/5.0&#x27;&#125;)) as resp:</span></span><br><span class="line"><span class="string">        f.write(resp.read())</span></span><br><span class="line"><span class="string">subprocess.run([&#x27;gnome-extensions&#x27;, &#x27;install&#x27;, &#x27;--force&#x27;, zip_path])</span></span><br><span class="line"><span class="string">os.unlink(zip_path)</span></span><br><span class="line"><span class="string">&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 2. 编译 schema 规则文件</span></span><br><span class="line">glib-compile-schemas ~/.local/share/gnome-shell/extensions/nightthemeswitcher@romainvigier.fr/schemas</span><br><span class="line"></span><br><span class="line"><span class="comment"># 3. 启用扩展</span></span><br><span class="line">gnome-extensions <span class="built_in">enable</span> nightthemeswitcher@romainvigier.fr</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><strong>快速手动切主题快捷键</strong>：<kbd>Shift</kbd> + <kbd>Super</kbd> + <kbd>T</kbd></li>
+<li><strong>打开图形设置面板</strong>：<code>gnome-extensions prefs nightthemeswitcher@romainvigier.fr</code></li>
+<li><strong>命令行设定固定切换时间</strong>（如 07:00 浅色、19:00 深色）：<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">SCH_DIR=~/.local/share/gnome-shell/extensions/nightthemeswitcher@romainvigier.fr/schemas</span><br><span class="line">gsettings --schemadir <span class="string">&quot;<span class="variable">$SCH_DIR</span>&quot;</span> <span class="built_in">set</span> org.gnome.shell.extensions.nightthemeswitcher.time sunrise 7.0</span><br><span class="line">gsettings --schemadir <span class="string">&quot;<span class="variable">$SCH_DIR</span>&quot;</span> <span class="built_in">set</span> org.gnome.shell.extensions.nightthemeswitcher.time sunset 19.0</span><br></pre></td></tr></table></figure></li>
+</ul>
+<h4 id="方案-B：纯-Crontab-定时任务（免装扩展）"><a href="#方案-B：纯-Crontab-定时任务（免装扩展）" class="headerlink" title="方案 B：纯 Crontab 定时任务（免装扩展）"></a>方案 B：纯 Crontab 定时任务（免装扩展）</h4><p>如果不打算额外安装扩展，直接用系统内置的 <code>gsettings</code> 配合定时任务即可：</p>
+<ul>
+<li><strong>深色切换</strong>：<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">gsettings <span class="built_in">set</span> org.gnome.desktop.interface color-scheme <span class="string">&#x27;prefer-dark&#x27;</span></span><br><span class="line">gsettings <span class="built_in">set</span> org.gnome.desktop.interface gtk-theme <span class="string">&#x27;Yaru-dark&#x27;</span></span><br></pre></td></tr></table></figure></li>
+<li><strong>浅色切换</strong>：<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">gsettings <span class="built_in">set</span> org.gnome.desktop.interface color-scheme <span class="string">&#x27;default&#x27;</span></span><br><span class="line">gsettings <span class="built_in">set</span> org.gnome.desktop.interface gtk-theme <span class="string">&#x27;Yaru&#x27;</span></span><br></pre></td></tr></table></figure></li>
+</ul>
+<p>执行 <code>crontab -e</code> 写入两行定时规则：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line"># 每天 07:00 切浅色</span><br><span class="line">0 7 * * * gsettings set org.gnome.desktop.interface color-scheme &#x27;default&#x27; &amp;&amp; gsettings set org.gnome.desktop.interface gtk-theme &#x27;Yaru&#x27;</span><br><span class="line"></span><br><span class="line"># 每天 19:00 切深色</span><br><span class="line">0 19 * * * gsettings set org.gnome.desktop.interface color-scheme &#x27;prefer-dark&#x27; &amp;&amp; gsettings set org.gnome.desktop.interface gtk-theme &#x27;Yaru-dark&#x27;</span><br></pre></td></tr></table></figure>
+
+<h2 id="3-桌面深度美化与透明组件调优"><a href="#3-桌面深度美化与透明组件调优" class="headerlink" title="3. 桌面深度美化与透明组件调优"></a>3. 桌面深度美化与透明组件调优</h2><h3 id="3-1-字体安装与渲染配置"><a href="#3-1-字体安装与渲染配置" class="headerlink" title="3.1 字体安装与渲染配置"></a>3.1 字体安装与渲染配置</h3><ul>
+<li><strong>安装常用字体</strong>：<ul>
+<li>中文字体：苹方全字重（PingFang SC，存放于 <code>/usr/local/share/fonts/PingFang/</code>）及思源黑体（Noto Sans CJK SC）。</li>
+<li>等宽编程字体：JetBrains Mono、Fira Code。</li>
+</ul>
+</li>
+<li><strong>全局字体渲染设置</strong>：<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">gsettings <span class="built_in">set</span> org.gnome.desktop.interface font-name <span class="string">&quot;PingFang SC 11&quot;</span></span><br><span class="line">gsettings <span class="built_in">set</span> org.gnome.desktop.interface document-font-name <span class="string">&quot;PingFang SC 11&quot;</span></span><br><span class="line">gsettings <span class="built_in">set</span> org.gnome.desktop.interface monospace-font-name <span class="string">&quot;JetBrains Mono 10&quot;</span></span><br><span class="line">gsettings <span class="built_in">set</span> org.gnome.desktop.wm.preferences titlebar-font <span class="string">&quot;PingFang SC Bold 11&quot;</span></span><br><span class="line">gsettings <span class="built_in">set</span> org.gnome.desktop.interface font-antialiasing <span class="string">&quot;rgba&quot;</span></span><br><span class="line">gsettings <span class="built_in">set</span> org.gnome.desktop.interface font-hinting <span class="string">&quot;slight&quot;</span></span><br></pre></td></tr></table></figure></li>
+<li><strong>网页字体映射修复</strong>：在 <code>/etc/fonts/local.conf</code> 中将 <code>SimSun</code>、<code>宋体</code>、<code>Microsoft YaHei</code> 和 <code>微软雅黑</code> 映射至苹方，解决部分国内网页将中文字形错误回退到衬线宋体的问题。</li>
+</ul>
+<figure class="article-image-figure"><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/image/ubuntu-app-drawer-blur.webp" alt="Tela 图标主题与 Blur my Shell 应用抽屉磨砂背景" title="Tela 图标主题与 Blur my Shell 应用抽屉磨砂背景效果" loading="lazy" decoding="async"><figcaption class="image-caption">Tela 图标主题与 Blur my Shell 应用抽屉磨砂背景效果</figcaption></figure>
+<h3 id="3-2-顶部状态栏-100-透明与托盘图标居中"><a href="#3-2-顶部状态栏-100-透明与托盘图标居中" class="headerlink" title="3.2 顶部状态栏 100% 透明与托盘图标居中"></a>3.2 顶部状态栏 100% 透明与托盘图标居中</h3><ul>
+<li><strong>顶部状态栏（Top Bar）100% 全透明</strong>：<br>GNOME 原生顶栏由底层 C&#x2F;St 固化渲染并自带纯黑底色。安装专用扩展 <code>Transparent Top Bar (Adjustable transparency)</code>（UUID: <code>transparent-top-bar@ftpix.com</code>），并关闭 Blur my Shell 对顶栏的暗色磨砂，即可实现通透的全透明悬浮顶栏：<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">gsettings <span class="built_in">set</span> org.gnome.shell.extensions.blur-my-shell.panel blur <span class="literal">false</span></span><br><span class="line">gsettings --schemadir ~/.local/share/glib-2.0/schemas/ <span class="built_in">set</span> com.ftpix.transparentbar transparency 0</span><br><span class="line">gsettings --schemadir ~/.local/share/glib-2.0/schemas/ <span class="built_in">set</span> com.ftpix.transparentbar dark-full-screen <span class="literal">false</span></span><br></pre></td></tr></table></figure></li>
+<li><strong>后台托盘图标居中</strong>：<br>通过 <code>Ubuntu AppIndicators</code>（<code>ubuntu-appindicators@ubuntu.com</code>），可将原本挤在右上角的托盘图标移至顶栏中央（紧随在时钟日历后方）：<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">gsettings <span class="built_in">set</span> org.gnome.shell.extensions.appindicator tray-pos <span class="string">&#x27;center&#x27;</span></span><br></pre></td></tr></table></figure></li>
+</ul>
+<h3 id="3-3-【核心避坑】Dock-栏-100-全透明与悬停预览调优"><a href="#3-3-【核心避坑】Dock-栏-100-全透明与悬停预览调优" class="headerlink" title="3.3 【核心避坑】Dock 栏 100% 全透明与悬停预览调优"></a>3.3 【核心避坑】Dock 栏 100% 全透明与悬停预览调优</h3><p>很多用户将 Dock 栏调为底部居中小胶囊后，发现即使设置 <code>background-opacity = 0.0</code>，底栏依然存在灰色半透明底、磨砂气泡或直接变成纯黑一块。</p>
+<h4 id="为什么普通方法会失效？"><a href="#为什么普通方法会失效？" class="headerlink" title="为什么普通方法会失效？"></a>为什么普通方法会失效？</h4><ol>
+<li><strong>Ubuntu Dock 源码逻辑缺陷（<code>theming.js</code>）</strong>：在 Ubuntu Dock 内部，如果 <code>custom-background-color</code> 为 <code>false</code>，计算透明度的 Alpha 逻辑<strong>不会被执行</strong>，而是直接回退为系统默认的半透明深色底。单纯开启 <code>custom-background-color</code> 给 <code>#000000</code> 时，若未正确注入 Alpha，系统会渲染为纯黑块。<strong>必须同时满足 <code>custom-background-color = true</code>、<code>background-color = &#39;#000000&#39;</code>、<code>transparency-mode = &#39;FIXED&#39;</code> 和 <code>background-opacity = 0.0</code></strong>，底层才会生成 <code>rgba(0, 0, 0, 0)</code> 的完全透明内联样式。</li>
+<li><strong>Blur my Shell 图层叠加冲突</strong>：<code>Blur my Shell</code> 默认对 Dock 启用了毛玻璃模糊，即使透明度为 0 也会在背后叠加一层灰白色磨砂层。需显式关闭其针对 Dash-to-Dock 的模糊层。</li>
+</ol>
+<h4 id="100-真正全透明-Dock-标准配置"><a href="#100-真正全透明-Dock-标准配置" class="headerlink" title="100% 真正全透明 Dock 标准配置"></a>100% 真正全透明 Dock 标准配置</h4><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 1. 底部居中小胶囊</span></span><br><span class="line">gsettings <span class="built_in">set</span> org.gnome.shell.extensions.dash-to-dock dock-position <span class="string">&#x27;BOTTOM&#x27;</span></span><br><span class="line">gsettings <span class="built_in">set</span> org.gnome.shell.extensions.dash-to-dock extend-height <span class="literal">false</span></span><br><span class="line">gsettings <span class="built_in">set</span> org.gnome.shell.extensions.dash-to-dock custom-theme-shrink <span class="literal">true</span></span><br><span class="line">gsettings <span class="built_in">set</span> org.gnome.shell.extensions.dash-to-dock dash-max-icon-size 48</span><br><span class="line">gsettings <span class="built_in">set</span> org.gnome.shell.extensions.dash-to-dock running-indicator-style <span class="string">&#x27;DOTS&#x27;</span></span><br><span class="line">gsettings <span class="built_in">set</span> org.gnome.shell.extensions.dash-to-dock autohide <span class="literal">true</span></span><br><span class="line">gsettings <span class="built_in">set</span> org.gnome.shell.extensions.dash-to-dock intellihide <span class="literal">true</span></span><br><span class="line">gsettings <span class="built_in">set</span> org.gnome.shell.extensions.dash-to-dock show-mounts <span class="literal">false</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 2. 触发底层 0 不透明度注入（关键避坑）</span></span><br><span class="line">gsettings <span class="built_in">set</span> org.gnome.shell.extensions.dash-to-dock apply-custom-theme <span class="literal">false</span></span><br><span class="line">gsettings <span class="built_in">set</span> org.gnome.shell.extensions.dash-to-dock custom-background-color <span class="literal">true</span></span><br><span class="line">gsettings <span class="built_in">set</span> org.gnome.shell.extensions.dash-to-dock background-color <span class="string">&#x27;#000000&#x27;</span></span><br><span class="line">gsettings <span class="built_in">set</span> org.gnome.shell.extensions.dash-to-dock transparency-mode <span class="string">&#x27;FIXED&#x27;</span></span><br><span class="line">gsettings <span class="built_in">set</span> org.gnome.shell.extensions.dash-to-dock background-opacity 0.0</span><br><span class="line"></span><br><span class="line"><span class="comment"># 3. 移除多余的毛玻璃图层</span></span><br><span class="line">gsettings <span class="built_in">set</span> org.gnome.shell.extensions.blur-my-shell.dash-to-dock blur <span class="literal">false</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 4. 热重载 Dock 扩展即时生效</span></span><br><span class="line">gnome-extensions <span class="built_in">disable</span> ubuntu-dock@ubuntu.com &amp;&amp; <span class="built_in">sleep</span> 0.2 &amp;&amp; gnome-extensions <span class="built_in">enable</span> ubuntu-dock@ubuntu.com</span><br></pre></td></tr></table></figure>
+
+<figure class="article-image-figure"><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/image/ubuntu-desktop-transparent-dock.webp" alt="Ubuntu 全透明顶栏与居中悬浮 Dock 最终效果" title="Ubuntu 全透明顶栏与居中悬浮 Dock 最终效果" loading="lazy" decoding="async"><figcaption class="image-caption">Ubuntu 全透明顶栏与居中悬浮 Dock 最终效果</figcaption></figure>
+<h4 id="Dock-鼠标悬停实时窗口缩略图（零延迟即消）"><a href="#Dock-鼠标悬停实时窗口缩略图（零延迟即消）" class="headerlink" title="Dock 鼠标悬停实时窗口缩略图（零延迟即消）"></a>Dock 鼠标悬停实时窗口缩略图（零延迟即消）</h4><p>安装 <strong><code>Dock Window Preview</code></strong>（UUID: <code>dock-window-preview@quivio</code>），可实现类似 Windows &#x2F; macOS 的悬停缩略图：</p>
+<ol>
+<li><strong>水平卡片与灵敏度</strong>：<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">gsettings --schemadir ~/.local/share/glib-2.0/schemas/ <span class="built_in">set</span> org.gnome.shell.extensions.dock-window-preview preview-layout <span class="string">&#x27;horizontal&#x27;</span></span><br><span class="line">gsettings --schemadir ~/.local/share/glib-2.0/schemas/ <span class="built_in">set</span> org.gnome.shell.extensions.dock-window-preview show-close-button <span class="literal">true</span></span><br><span class="line">gsettings --schemadir ~/.local/share/glib-2.0/schemas/ <span class="built_in">set</span> org.gnome.shell.extensions.dock-window-preview hover-delay-ms 150</span><br></pre></td></tr></table></figure></li>
+<li><strong>零延迟即时消失调优</strong>：修改扩展目录中的 <code>extension.js</code>，将 <code>HIDE_DELAY_MS</code> 从 <code>240ms</code> 改为 <code>0ms</code>，将鼠标离开扫描周期 <code>POINTER_POLL_MS</code> 改为 <code>40ms</code>，实现鼠标悬停 0.15 秒弹出、移开瞬间 0 延迟消失。</li>
+</ol>
+<h3 id="3-4-GNOME-扩展清单"><a href="#3-4-GNOME-扩展清单" class="headerlink" title="3.4 GNOME 扩展清单"></a>3.4 GNOME 扩展清单</h3><p>管理工具通过 <code>sudo apt install gnome-shell-extension-manager</code> 安装，目前启用的扩展包括：</p>
+<ul>
+<li><strong>User Themes</strong> (<code>user-theme@gnome-shell-extensions.gcampax.github.com</code>)：解锁自定义 Shell 主题。</li>
+<li><strong>Blur my Shell</strong> (<code>blur-my-shell@aunetx</code>)：应用抽屉与概览背景半透明毛玻璃效果。</li>
+<li><strong>Transparent Top Bar</strong> (<code>transparent-top-bar@ftpix.com</code>)：顶栏 100% 全透明。</li>
+<li><strong>Dock Window Preview</strong> (<code>dock-window-preview@quivio</code>)：Dock 栏悬停实时窗口预览卡片。</li>
+<li><strong>Logo Menu</strong> (<code>logomenu@aryan_k</code>)：顶栏左侧系统菜单入口。</li>
+<li><strong>Vitals</strong> (<code>Vitals@CoreCoding.com</code>)：顶栏显示 CPU、内存、实时网速与存储状态。</li>
+<li><strong>Compiz Magic Lamp</strong> (<code>compiz-alike-magic-lamp-effect@hermes83.github.com</code>)：窗口最小化神奇缩放动效。</li>
+<li><strong>Ubuntu AppIndicators</strong> (<code>ubuntu-appindicators@ubuntu.com</code>)：系统托盘图标支持与居中对齐。</li>
+</ul>
+<h3 id="3-5-一键美化与恢复脚本速查"><a href="#3-5-一键美化与恢复脚本速查" class="headerlink" title="3.5 一键美化与恢复脚本速查"></a>3.5 一键美化与恢复脚本速查</h3><p>重装系统或新机配置时，可直接保存执行以下脚本一键还原整套美化：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="meta">#!/usr/bin/env bash</span></span><br><span class="line"><span class="comment"># 一键应用桌面美化与透明配置</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 1. 应用主题</span></span><br><span class="line">gsettings <span class="built_in">set</span> org.gnome.desktop.interface cursor-theme <span class="string">&#x27;WhiteSur-cursors&#x27;</span></span><br><span class="line">gsettings <span class="built_in">set</span> org.gnome.desktop.interface icon-theme <span class="string">&#x27;Tela-purple-dark&#x27;</span></span><br><span class="line">gsettings <span class="built_in">set</span> org.gnome.desktop.interface gtk-theme <span class="string">&#x27;Yaru-purple&#x27;</span></span><br><span class="line">gsettings <span class="built_in">set</span> org.gnome.shell.extensions.user-theme name <span class="string">&#x27;&#x27;</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 2. 托盘居中</span></span><br><span class="line">gsettings <span class="built_in">set</span> org.gnome.shell.extensions.appindicator tray-pos <span class="string">&#x27;center&#x27;</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 3. Dock 真正全透明</span></span><br><span class="line">gsettings <span class="built_in">set</span> org.gnome.shell.extensions.dash-to-dock dock-position <span class="string">&#x27;BOTTOM&#x27;</span></span><br><span class="line">gsettings <span class="built_in">set</span> org.gnome.shell.extensions.dash-to-dock extend-height <span class="literal">false</span></span><br><span class="line">gsettings <span class="built_in">set</span> org.gnome.shell.extensions.dash-to-dock custom-theme-shrink <span class="literal">true</span></span><br><span class="line">gsettings <span class="built_in">set</span> org.gnome.shell.extensions.dash-to-dock apply-custom-theme <span class="literal">false</span></span><br><span class="line">gsettings <span class="built_in">set</span> org.gnome.shell.extensions.dash-to-dock custom-background-color <span class="literal">true</span></span><br><span class="line">gsettings <span class="built_in">set</span> org.gnome.shell.extensions.dash-to-dock background-color <span class="string">&#x27;#000000&#x27;</span></span><br><span class="line">gsettings <span class="built_in">set</span> org.gnome.shell.extensions.dash-to-dock transparency-mode <span class="string">&#x27;FIXED&#x27;</span></span><br><span class="line">gsettings <span class="built_in">set</span> org.gnome.shell.extensions.dash-to-dock background-opacity 0.0</span><br><span class="line">gsettings <span class="built_in">set</span> org.gnome.shell.extensions.blur-my-shell.dash-to-dock blur <span class="literal">false</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 4. 顶栏 100% 纯透明</span></span><br><span class="line">gsettings <span class="built_in">set</span> org.gnome.shell.extensions.blur-my-shell.panel blur <span class="literal">false</span></span><br><span class="line">gsettings --schemadir ~/.local/share/glib-2.0/schemas/ <span class="built_in">set</span> com.ftpix.transparentbar transparency 0 2&gt;/dev/null || <span class="literal">true</span></span><br><span class="line">gsettings --schemadir ~/.local/share/glib-2.0/schemas/ <span class="built_in">set</span> com.ftpix.transparentbar dark-full-screen <span class="literal">false</span> 2&gt;/dev/null || <span class="literal">true</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 5. Dock 悬停预览参数</span></span><br><span class="line">gsettings --schemadir ~/.local/share/glib-2.0/schemas/ <span class="built_in">set</span> org.gnome.shell.extensions.dock-window-preview preview-layout <span class="string">&#x27;horizontal&#x27;</span> 2&gt;/dev/null || <span class="literal">true</span></span><br><span class="line">gsettings --schemadir ~/.local/share/glib-2.0/schemas/ <span class="built_in">set</span> org.gnome.shell.extensions.dock-window-preview show-close-button <span class="literal">true</span> 2&gt;/dev/null || <span class="literal">true</span></span><br><span class="line">gsettings --schemadir ~/.local/share/glib-2.0/schemas/ <span class="built_in">set</span> org.gnome.shell.extensions.dock-window-preview hover-delay-ms 150 2&gt;/dev/null || <span class="literal">true</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 6. 重启扩展生效</span></span><br><span class="line">gnome-extensions <span class="built_in">disable</span> ubuntu-dock@ubuntu.com &amp;&amp; <span class="built_in">sleep</span> 0.2 &amp;&amp; gnome-extensions <span class="built_in">enable</span> ubuntu-dock@ubuntu.com</span><br><span class="line">gnome-extensions <span class="built_in">disable</span> blur-my-shell@aunetx &amp;&amp; <span class="built_in">sleep</span> 0.2 &amp;&amp; gnome-extensions <span class="built_in">enable</span> blur-my-shell@aunetx</span><br><span class="line">nautilus -q 2&gt;/dev/null || <span class="literal">true</span></span><br><span class="line"></span><br><span class="line"><span class="built_in">echo</span> <span class="string">&quot;✨ 美化与透明配置已全部应用成功！&quot;</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="4-Rime-输入法与小鹤双拼"><a href="#4-Rime-输入法与小鹤双拼" class="headerlink" title="4. Rime 输入法与小鹤双拼"></a>4. Rime 输入法与小鹤双拼</h2><h3 id="实施细节"><a href="#实施细节" class="headerlink" title="实施细节"></a>实施细节</h3><ul>
+<li><strong>安装依赖</strong>：<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">sudo</span> apt install -y ibus-rime librime-bin librime-plugin-lua</span><br></pre></td></tr></table></figure></li>
+<li><strong>同步 Mac 词库与配置</strong>：从 Mac 共享路径 <code>/media/psf/Home/Library/Rime</code> 同步雾凇拼音（<code>rime_ice</code>）、双拼方案、词库文件（<code>cn_dicts/</code>、<code>en_dicts/</code>）、自定义短语（<code>custom_phrase.txt</code>）、Lua 插件及 OpenCC 规则到 <code>~/.config/ibus/rime/</code>。</li>
+<li><strong>设定默认方案</strong>：在 <code>default.custom.yaml</code> 中将 <code>double_pinyin_flypy</code>（小鹤双拼）置于首位。</li>
+<li><strong>行内拼音显示</strong>：在 <code>ibus_rime.custom.yaml</code> 中配置 <code>style/preedit_style: composition</code>，使输入框内直接显示键入的拼音字母（如 <code>na xie</code>），按空格确认后汉字上屏。</li>
+<li><strong>快捷键</strong>：输入法切换键设为 <code>Ctrl + Space</code>（避免与 macOS 的 Spotlight 冲突），中英文在 Rime 内通过 <code>Shift</code> 切换。</li>
+</ul>
+<h2 id="5-终端环境（Ghostty）"><a href="#5-终端环境（Ghostty）" class="headerlink" title="5. 终端环境（Ghostty）"></a>5. 终端环境（Ghostty）</h2><h3 id="5-1-安装与默认终端切换"><a href="#5-1-安装与默认终端切换" class="headerlink" title="5.1 安装与默认终端切换"></a>5.1 安装与默认终端切换</h3><ol>
+<li>通过 <code>sudo apt install -y ghostty</code> 安装官方 ARM64 版本。</li>
+<li>注册为默认终端：<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">sudo</span> update-alternatives --install /usr/bin/x-terminal-emulator x-terminal-emulator /usr/bin/ghostty 50</span><br><span class="line"><span class="built_in">sudo</span> update-alternatives --<span class="built_in">set</span> x-terminal-emulator /usr/bin/ghostty</span><br></pre></td></tr></table></figure></li>
+<li>绑定快捷键 <code>Ctrl + Alt + T</code> 唤起 Ghostty，并将 Dock 栏中的终端图标替换为 Ghostty。</li>
+</ol>
+<h3 id="5-2-渲染问题修复"><a href="#5-2-渲染问题修复" class="headerlink" title="5.2 渲染问题修复"></a>5.2 渲染问题修复</h3><ul>
+<li><strong>遇到问题</strong>：Ghostty 依赖 OpenGL 4.3 的片元着色器 SSBO 特性，而 Parallels 虚拟显卡仅支持 OpenGL 3.3，导致直接启动时崩溃或无响应。</li>
+<li><strong>修复方法</strong>：将二进制文件移动为 <code>/usr/bin/ghostty.bin</code>，并创建 <code>/usr/bin/ghostty</code> 包装脚本，指定 Mesa 的 <code>llvmpipe</code> 软件渲染引擎：<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="meta">#!/bin/sh</span></span><br><span class="line"><span class="built_in">export</span> LIBGL_ALWAYS_SOFTWARE=1</span><br><span class="line"><span class="built_in">export</span> MESA_LOADER_DRIVER_OVERRIDE=llvmpipe</span><br><span class="line"><span class="built_in">exec</span> /usr/bin/ghostty.bin <span class="string">&quot;<span class="variable">$@</span>&quot;</span></span><br></pre></td></tr></table></figure></li>
+<li><strong>主题配置</strong>：在 <code>~/.config/ghostty/config</code> 中配置标准主题：<figure class="highlight ini"><table><tr><td class="code"><pre><span class="line"><span class="attr">font-size</span> = <span class="number">13</span></span><br><span class="line"><span class="attr">theme</span> = dark:Catppuccin Mocha,light:Catppuccin Latte</span><br><span class="line"><span class="attr">window-padding-x</span> = <span class="number">8</span></span><br><span class="line"><span class="attr">window-padding-y</span> = <span class="number">8</span></span><br></pre></td></tr></table></figure></li>
+</ul>
+<h2 id="6-浏览器环境（Brave）"><a href="#6-浏览器环境（Brave）" class="headerlink" title="6. 浏览器环境（Brave）"></a>6. 浏览器环境（Brave）</h2><h3 id="6-1-移除-Firefox"><a href="#6-1-移除-Firefox" class="headerlink" title="6.1 移除 Firefox"></a>6.1 移除 Firefox</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">sudo</span> snap remove --purge firefox</span><br><span class="line"><span class="built_in">sudo</span> apt remove --purge -y firefox</span><br><span class="line"><span class="built_in">rm</span> -rf ~/snap/firefox ~/.mozilla</span><br></pre></td></tr></table></figure>
+
+<h3 id="6-2-安装-Brave-并配置企业策略"><a href="#6-2-安装-Brave-并配置企业策略" class="headerlink" title="6.2 安装 Brave 并配置企业策略"></a>6.2 安装 Brave 并配置企业策略</h3><ol>
+<li><strong>添加官方仓库并安装</strong>：<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">sudo</span> curl -fsSLo /usr/share/keyrings/brave-browser-archive-keyring.gpg https://brave-browser-apt-release.s3.brave.com/brave-browser-archive-keyring.gpg</span><br><span class="line"><span class="built_in">sudo</span> curl -fsSLo /etc/apt/sources.list.d/brave-browser-release.sources https://brave-browser-apt-release.s3.brave.com/brave-browser.sources</span><br><span class="line"><span class="built_in">sudo</span> apt update &amp;&amp; <span class="built_in">sudo</span> apt install -y brave-browser</span><br></pre></td></tr></table></figure></li>
+<li><strong>写入企业策略配置文件</strong>：创建 <code>/etc/brave/policies/managed/brave_debloat.json</code>，关闭加密钱包、内置 AI、VPN、推广奖励与遥测，并将字体统一指定为苹方与 JetBrains Mono：<figure class="highlight json"><table><tr><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">  <span class="attr">&quot;BraveWalletDisabled&quot;</span><span class="punctuation">:</span> <span class="literal"><span class="keyword">true</span></span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;BraveAIChatEnabled&quot;</span><span class="punctuation">:</span> <span class="literal"><span class="keyword">false</span></span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;BraveVPNDisabled&quot;</span><span class="punctuation">:</span> <span class="literal"><span class="keyword">true</span></span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;BraveRewardsDisabled&quot;</span><span class="punctuation">:</span> <span class="literal"><span class="keyword">true</span></span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;BraveNewsDisabled&quot;</span><span class="punctuation">:</span> <span class="literal"><span class="keyword">true</span></span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;BraveP3AEnabled&quot;</span><span class="punctuation">:</span> <span class="literal"><span class="keyword">false</span></span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;BraveStatsPingEnabled&quot;</span><span class="punctuation">:</span> <span class="literal"><span class="keyword">false</span></span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;MetricsReportingEnabled&quot;</span><span class="punctuation">:</span> <span class="literal"><span class="keyword">false</span></span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;BraveWebDiscoveryEnabled&quot;</span><span class="punctuation">:</span> <span class="literal"><span class="keyword">false</span></span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;UrlKeyedAnonymizedDataCollectionEnabled&quot;</span><span class="punctuation">:</span> <span class="literal"><span class="keyword">false</span></span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;UserFeedbackAllowed&quot;</span><span class="punctuation">:</span> <span class="literal"><span class="keyword">false</span></span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;StandardFontFamily&quot;</span><span class="punctuation">:</span> <span class="string">&quot;PingFang SC&quot;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;SansserifFontFamily&quot;</span><span class="punctuation">:</span> <span class="string">&quot;PingFang SC&quot;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;FixedFontFamily&quot;</span><span class="punctuation">:</span> <span class="string">&quot;JetBrains Mono&quot;</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure></li>
+<li><strong>设为默认浏览器</strong>：<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">xdg-settings <span class="built_in">set</span> default-web-browser brave-browser.desktop</span><br></pre></td></tr></table></figure></li>
+</ol>
+<h3 id="6-3-外观与深浅色跟随避坑"><a href="#6-3-外观与深浅色跟随避坑" class="headerlink" title="6.3 外观与深浅色跟随避坑"></a>6.3 外观与深浅色跟随避坑</h3><p>打开 Brave 进入 <code>brave://settings/appearance</code>：</p>
+<ul>
+<li><strong>Linux 主题选项</strong>：选择 <strong>Classic（经典主题）</strong>。如果当前显示 <code>Reset to Classic</code>，点击重置（<strong>切勿点击 Use GTK 或 Use QT</strong>，否则会引发前面提到的色彩信号竞争 bug）。</li>
+<li><strong>Brave colors</strong>：选择 <strong>Same as Linux</strong>（跟随系统）。</li>
+<li><strong>Dark Reader 扩展</strong>：移除了 GTK 的冲突信号后，Dark Reader 选择“跟随系统”即可正常工作，不再出现 2 秒后弹回浅色的问题。</li>
+</ul>
+<h2 id="7-系统底层与外设优化"><a href="#7-系统底层与外设优化" class="headerlink" title="7. 系统底层与外设优化"></a>7. 系统底层与外设优化</h2><h3 id="7-1-ZRAM-内存实时压缩"><a href="#7-1-ZRAM-内存实时压缩" class="headerlink" title="7.1 ZRAM 内存实时压缩"></a>7.1 ZRAM 内存实时压缩</h3><ul>
+<li>安装 <code>zram-tools</code> 并启用 <code>zramswap.service</code>。</li>
+<li>在 <code>/etc/default/zramswap</code> 中将压缩算法设为 <code>zstd</code>，容量上限设为 100% 物理内存（5.3GB），优先级设为 100。</li>
+<li><strong>效果</strong>：系统可用 Swap 扩充至 9.1GB，优先在内存中压缩暂存不活跃数据，避免因内存不足触发磁盘 I&#x2F;O 卡顿。</li>
+</ul>
+<h3 id="7-2-截图快捷键"><a href="#7-2-截图快捷键" class="headerlink" title="7.2 截图快捷键"></a>7.2 截图快捷键</h3><ul>
+<li>将交互式截图工具快捷键绑定为 <code>Ctrl + Shift + S</code>：<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">gsettings <span class="built_in">set</span> org.gnome.shell.keybindings show-screenshot-ui <span class="string">&quot;[&#x27;Print&#x27;, &#x27;&lt;Control&gt;&lt;Shift&gt;s&#x27;, &#x27;&lt;Super&gt;&lt;Shift&gt;s&#x27;]&quot;</span></span><br></pre></td></tr></table></figure></li>
+<li>支持区域框选、窗口截图与屏幕录制，截图自动存入剪贴板并保存在 <code>~/Pictures/Screenshots</code>。</li>
+</ul>
+<h3 id="7-3-剪贴板与拖拽服务"><a href="#7-3-剪贴板与拖拽服务" class="headerlink" title="7.3 剪贴板与拖拽服务"></a>7.3 剪贴板与拖拽服务</h3><p>创建 Systemd 用户守护服务 <code>~/.config/systemd/user/parallels-tools-user.service</code> 并安装 <code>wl-clipboard</code> 与 <code>xclip</code>，确保登录后自动恢复与 Mac 宿主机的双向剪贴板和文件拖放支持。</p>
+<h3 id="7-4-系统监控与任务管理（Mission-Center）"><a href="#7-4-系统监控与任务管理（Mission-Center）" class="headerlink" title="7.4 系统监控与任务管理（Mission Center）"></a>7.4 系统监控与任务管理（Mission Center）</h3><ul>
+<li>安装了 <strong>Mission Center</strong>，界面风格和交互逻辑几乎是 Windows 任务管理器的翻版，支持直观监控 CPU、内存、磁盘 I&#x2F;O、网络利用率及细粒度进程管理，相比原生系统监视器更加直观好用。</li>
+</ul>
+<h3 id="7-5-Nautilus-一级右键菜单扩展（复制文件路径）"><a href="#7-5-Nautilus-一级右键菜单扩展（复制文件路径）" class="headerlink" title="7.5 Nautilus 一级右键菜单扩展（复制文件路径）"></a>7.5 Nautilus 一级右键菜单扩展（复制文件路径）</h3><p>为了彻底摆脱二级 <code>Scripts</code> 子菜单的繁琐操作，直接在文件管理器一级右键菜单中调用复制路径：</p>
+<ol>
+<li><strong>安装 Python 扩展支持库</strong>：<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">sudo</span> apt install -y python3-nautilus</span><br></pre></td></tr></table></figure></li>
+<li><strong>安装 <code>nautilus-copy-path</code> 插件</strong>：<ul>
+<li>源码仓库：<a target="_blank" rel="noopener" href="https://github.com/chr314/nautilus-copy-path">chr314&#x2F;nautilus-copy-path</a>；</li>
+<li>将插件置于 <code>~/.local/share/nautilus-python/extensions/</code>，执行 <code>nautilus -q</code> 刷新后台。</li>
+</ul>
+</li>
+<li><strong>使用效果</strong>：<ul>
+<li>在文件管理器中右键任意文件，一级菜单直接提供 <strong><code>Copy Path</code></strong>（复制完整路径）与 <strong><code>Copy Name</code></strong>（复制文件名）；</li>
+<li>支持快捷键：选中文件直接按 <strong><code>Ctrl + Shift + C</code></strong> 瞬间复制完整路径。</li>
+</ul>
+</li>
+</ol>
+<h2 id="8-常用软件与-Antigravity-开发环境"><a href="#8-常用软件与-Antigravity-开发环境" class="headerlink" title="8. 常用软件与 Antigravity 开发环境"></a>8. 常用软件与 Antigravity 开发环境</h2><h3 id="8-1-原生-ARM64-常用生产力软件（LocalSend-PeaZip）"><a href="#8-1-原生-ARM64-常用生产力软件（LocalSend-PeaZip）" class="headerlink" title="8.1 原生 ARM64 常用生产力软件（LocalSend &amp; PeaZip）"></a>8.1 原生 ARM64 常用生产力软件（LocalSend &amp; PeaZip）</h3><ul>
+<li><strong>LocalSend（局域网跨平台隔空互传）</strong>：<ul>
+<li>官方 Linux aarch64 原生 Flutter 构建，安装于 <code>~/.local/share/localsend</code>，支持桌面图标点击与终端 <code>localsend</code> 命令启动。</li>
+</ul>
+</li>
+<li><strong>PeaZip（7-Zip 核心专业图形化压缩&#x2F;解压管理器）</strong>：<ul>
+<li>官方 7-Zip 原生 Linux 版仅有 CLI 命令行工具（<code>7zz</code>），PeaZip 是 Linux 下成熟强大的 7-Zip 图形化管理工具，支持多标签页、密码加密、分卷压缩，并已关联为系统中 <code>.7z</code>、<code>.zip</code>、<code>.rar</code>、<code>.tar.gz</code> 等所有常见压缩格式的默认打开程序。</li>
+</ul>
+</li>
+</ul>
+<h3 id="8-2-Antigravity-部署、补丁与深浅模式自动同步"><a href="#8-2-Antigravity-部署、补丁与深浅模式自动同步" class="headerlink" title="8.2 Antigravity 部署、补丁与深浅模式自动同步"></a>8.2 Antigravity 部署、补丁与深浅模式自动同步</h3><ul>
+<li><strong>部署与权限</strong>：安装于 <code>/opt/antigravity</code>，修复 <code>chrome-sandbox</code> 权限，生成 <code>/usr/local/bin/antigravity</code> 全局命令与桌面图标。</li>
+<li><strong>标题栏色差与窗口唤醒修复</strong>：<ul>
+<li>修改 <code>dist/ipcHandlers.js</code>，将主题同步平台判断放宽至非 macOS 系统，使 Linux 下窗口按钮区域颜色与主题实时匹配。</li>
+<li>修改 <code>dist/main.js</code> 中的 <code>second-instance</code> 事件逻辑，修复在 <code>Ctrl + W</code> 关闭窗口后点击 Dock 无法重新呼出界面的问题。</li>
+</ul>
+</li>
+<li><strong>自动打补丁脚本</strong>：编写 <code>/opt/antigravity/patch-linux-fixes.js</code> 并在启动脚本中调用，确保应用自动更新后补丁依然生效。</li>
+<li><strong>跟随系统自动切换深浅主题</strong>：<br>在 Antigravity &#x2F; VS Code 中按 <kbd>Ctrl</kbd> + <kbd>,</kbd> 打开设置，搜索并勾选 <code>Auto Detect Color Scheme</code>，或在 <code>settings.json</code> 中配置：<figure class="highlight json"><table><tr><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">  <span class="attr">&quot;window.autoDetectColorScheme&quot;</span><span class="punctuation">:</span> <span class="literal"><span class="keyword">true</span></span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;workbench.preferredLightColorTheme&quot;</span><span class="punctuation">:</span> <span class="string">&quot;Default Light Modern&quot;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;workbench.preferredDarkColorTheme&quot;</span><span class="punctuation">:</span> <span class="string">&quot;Default Dark Modern&quot;</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure></li>
+</ul>
+<h3 id="8-3-现代开发工具"><a href="#8-3-现代开发工具" class="headerlink" title="8.3 现代开发工具"></a>8.3 现代开发工具</h3><ul>
+<li><strong>uv</strong>：安装于 <code>/usr/local/bin/uv</code>，用于 Python 环境隔离和包管理。</li>
+<li><strong>OpenCLI</strong>：全局安装 <code>@jackwener/opencli</code>，并部署相关 skills 到 <code>~/.gemini/config/skills/</code>。</li>
+</ul>
+<h3 id="8-4-Web-开发中的深浅模式落地（防闪白与工程实践）"><a href="#8-4-Web-开发中的深浅模式落地（防闪白与工程实践）" class="headerlink" title="8.4 Web 开发中的深浅模式落地（防闪白与工程实践）"></a>8.4 Web 开发中的深浅模式落地（防闪白与工程实践）</h3><p>在开发网站或前端项目时，实现一个体验完善的深浅模式切换需要兼顾系统偏好、手动覆盖和防白屏闪烁（Anti-FOUC）。</p>
+<h4 id="1-核心架构：CSS-变量与-Class-切换"><a href="#1-核心架构：CSS-变量与-Class-切换" class="headerlink" title="1. 核心架构：CSS 变量与 Class 切换"></a>1. 核心架构：CSS 变量与 Class 切换</h4><p>生产环境通常在 <code>&lt;html&gt;</code> 标签上挂载 <code>.dark</code> 类，通过 CSS 变量统一管理色彩：</p>
+<figure class="highlight css"><table><tr><td class="code"><pre><span class="line"><span class="selector-pseudo">:root</span> &#123;</span><br><span class="line">  <span class="attr">--bg</span>: <span class="number">#ffffff</span>;</span><br><span class="line">  <span class="attr">--text</span>: <span class="number">#111111</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="selector-tag">html</span><span class="selector-class">.dark</span> &#123;</span><br><span class="line">  <span class="attr">--bg</span>: <span class="number">#121212</span>;</span><br><span class="line">  <span class="attr">--text</span>: <span class="number">#f5f5f5</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="selector-tag">body</span> &#123;</span><br><span class="line">  <span class="attribute">background-color</span>: <span class="built_in">var</span>(--bg);</span><br><span class="line">  <span class="attribute">color</span>: <span class="built_in">var</span>(--text);</span><br><span class="line">  <span class="attribute">transition</span>: background-color <span class="number">0.2s</span> ease, color <span class="number">0.2s</span> ease;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="2-防白屏闪烁（Anti-FOUC）"><a href="#2-防白屏闪烁（Anti-FOUC）" class="headerlink" title="2. 防白屏闪烁（Anti-FOUC）"></a>2. 防白屏闪烁（Anti-FOUC）</h4><p>很多网站在深色模式下刷新页面时，会先闪一下刺眼的白光再变黑。这是因为外部 JS 通常在 DOM 解析完毕后才执行。</p>
+<p>解决办法是在 <code>&lt;head&gt;</code> 标签的最顶部放一段轻量的阻塞式内联 JS，在浏览器开始绘制首帧之前就计算并挂载好类名：</p>
+<figure class="highlight html"><table><tr><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">head</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">meta</span> <span class="attr">charset</span>=<span class="string">&quot;UTF-8&quot;</span> /&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">script</span>&gt;</span><span class="language-javascript"></span></span><br><span class="line"><span class="language-javascript">    (<span class="keyword">function</span> (<span class="params"></span>) &#123;</span></span><br><span class="line"><span class="language-javascript">      <span class="keyword">const</span> saved = <span class="variable language_">localStorage</span>.<span class="title function_">getItem</span>(<span class="string">&#x27;theme-preference&#x27;</span>) || <span class="string">&#x27;system&#x27;</span>;</span></span><br><span class="line"><span class="language-javascript">      <span class="keyword">const</span> systemDark = <span class="variable language_">window</span>.<span class="title function_">matchMedia</span>(<span class="string">&#x27;(prefers-color-scheme: dark)&#x27;</span>).<span class="property">matches</span>;</span></span><br><span class="line"><span class="language-javascript">      <span class="keyword">if</span> (saved === <span class="string">&#x27;dark&#x27;</span> || (saved === <span class="string">&#x27;system&#x27;</span> &amp;&amp; systemDark)) &#123;</span></span><br><span class="line"><span class="language-javascript">        <span class="variable language_">document</span>.<span class="property">documentElement</span>.<span class="property">classList</span>.<span class="title function_">add</span>(<span class="string">&#x27;dark&#x27;</span>);</span></span><br><span class="line"><span class="language-javascript">      &#125; <span class="keyword">else</span> &#123;</span></span><br><span class="line"><span class="language-javascript">        <span class="variable language_">document</span>.<span class="property">documentElement</span>.<span class="property">classList</span>.<span class="title function_">remove</span>(<span class="string">&#x27;dark&#x27;</span>);</span></span><br><span class="line"><span class="language-javascript">      &#125;</span></span><br><span class="line"><span class="language-javascript">    &#125;)();</span></span><br><span class="line"><span class="language-javascript">  </span><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">head</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="3-完整的状态管理逻辑"><a href="#3-完整的状态管理逻辑" class="headerlink" title="3. 完整的状态管理逻辑"></a>3. 完整的状态管理逻辑</h4><p>支持 <code>light</code>、<code>dark</code>、<code>system</code> 三态，并在用户选择“跟随系统”时实时监听系统偏好广播：</p>
+<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="keyword">const</span> <span class="variable constant_">STORAGE_KEY</span> = <span class="string">&#x27;theme-preference&#x27;</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">function</span> <span class="title function_">getEffectiveTheme</span>(<span class="params">pref</span>) &#123;</span><br><span class="line">  <span class="keyword">if</span> (pref === <span class="string">&#x27;dark&#x27;</span> || pref === <span class="string">&#x27;light&#x27;</span>) <span class="keyword">return</span> pref;</span><br><span class="line">  <span class="keyword">return</span> <span class="variable language_">window</span>.<span class="title function_">matchMedia</span>(<span class="string">&#x27;(prefers-color-scheme: dark)&#x27;</span>).<span class="property">matches</span> ? <span class="string">&#x27;dark&#x27;</span> : <span class="string">&#x27;light&#x27;</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">function</span> <span class="title function_">applyTheme</span>(<span class="params">pref</span>) &#123;</span><br><span class="line">  <span class="keyword">const</span> effective = <span class="title function_">getEffectiveTheme</span>(pref);</span><br><span class="line">  <span class="variable language_">document</span>.<span class="property">documentElement</span>.<span class="property">classList</span>.<span class="title function_">toggle</span>(<span class="string">&#x27;dark&#x27;</span>, effective === <span class="string">&#x27;dark&#x27;</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">function</span> <span class="title function_">setTheme</span>(<span class="params">pref</span>) &#123;</span><br><span class="line">  <span class="variable language_">localStorage</span>.<span class="title function_">setItem</span>(<span class="variable constant_">STORAGE_KEY</span>, pref);</span><br><span class="line">  <span class="title function_">applyTheme</span>(pref);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 监听操作系统深浅模式变化</span></span><br><span class="line"><span class="variable language_">window</span>.<span class="title function_">matchMedia</span>(<span class="string">&#x27;(prefers-color-scheme: dark)&#x27;</span>).<span class="title function_">addEventListener</span>(<span class="string">&#x27;change&#x27;</span>, <span class="function">() =&gt;</span> &#123;</span><br><span class="line">  <span class="keyword">const</span> current = <span class="variable language_">localStorage</span>.<span class="title function_">getItem</span>(<span class="variable constant_">STORAGE_KEY</span>) || <span class="string">&#x27;system&#x27;</span>;</span><br><span class="line">  <span class="keyword">if</span> (current === <span class="string">&#x27;system&#x27;</span>) &#123;</span><br><span class="line">    <span class="title function_">applyTheme</span>(<span class="string">&#x27;system&#x27;</span>);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+
+<h4 id="4-常见框架生态方案"><a href="#4-常见框架生态方案" class="headerlink" title="4. 常见框架生态方案"></a>4. 常见框架生态方案</h4><p>写具体业务时通常不需要重复造轮子：</p>
+<ul>
+<li><strong>Tailwind CSS</strong>：在配置中设置 <code>darkMode: &#39;class&#39;</code>。</li>
+<li><strong>React &#x2F; Next.js</strong>：直接使用社区标配 <a target="_blank" rel="noopener" href="https://github.com/pacocoursey/next-themes"><code>next-themes</code></a>，内置了 SSR 防闪烁与三态管理。</li>
+<li><strong>Vue &#x2F; Nuxt</strong>：使用 <a target="_blank" rel="noopener" href="https://vueuse.org/core/useDark/"><code>@vueuse/core</code></a> 的 <code>useDark()</code> 与 <code>useColorMode()</code>。</li>
+</ul>
+<h2 id="9-核心维护与排错命令速查"><a href="#9-核心维护与排错命令速查" class="headerlink" title="9. 核心维护与排错命令速查"></a>9. 核心维护与排错命令速查</h2><p>平时调试深浅色和主题状态时，可以直接用这些命令查询：</p>
+<table>
+<thead>
+<tr>
+<th align="left">查询 &#x2F; 操作目的</th>
+<th align="left">终端命令</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><strong>查看当前深浅色状态</strong></td>
+<td align="left"><code>gsettings get org.gnome.desktop.interface color-scheme</code></td>
+</tr>
+<tr>
+<td align="left"><strong>查看当前 GTK 主题</strong></td>
+<td align="left"><code>gsettings get org.gnome.desktop.interface gtk-theme</code></td>
+</tr>
+<tr>
+<td align="left"><strong>查看当前图标主题</strong></td>
+<td align="left"><code>gsettings get org.gnome.desktop.interface icon-theme</code></td>
+</tr>
+<tr>
+<td align="left"><strong>查看当前 GNOME Shell 主题</strong></td>
+<td align="left"><code>gsettings get org.gnome.shell.extensions.user-theme name</code></td>
+</tr>
+<tr>
+<td align="left"><strong>切换为深色模式</strong></td>
+<td align="left"><code>gsettings set org.gnome.desktop.interface color-scheme &#39;prefer-dark&#39;</code></td>
+</tr>
+<tr>
+<td align="left"><strong>切换为浅色模式</strong></td>
+<td align="left"><code>gsettings set org.gnome.desktop.interface color-scheme &#39;default&#39;</code></td>
+</tr>
+<tr>
+<td align="left"><strong>查询 D-Bus Portal 真实广播值</strong></td>
+<td align="left"><code>dbus-send --session --print-reply=literal --dest=org.freedesktop.portal.Desktop /org/freedesktop/portal/desktop org.freedesktop.portal.Settings.Read string:org.freedesktop.appearance string:color-scheme</code></td>
+</tr>
+</tbody></table>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="https://luanyufei.cn">乱与狒</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="https://luanyufei.cn/2026/08/26/ubuntu-26-04-parallels-optimization/">https://luanyufei.cn/2026/08/26/ubuntu-26-04-parallels-optimization/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来源 <a href="https://luanyufei.cn" target="_blank">Fee Space</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/Linux/">Linux</a><a class="post-meta__tags" href="/tags/Ubuntu/">Ubuntu</a><a class="post-meta__tags" href="/tags/Parallels/">Parallels</a><a class="post-meta__tags" href="/tags/%E6%8A%98%E8%85%BE%E8%AE%B0%E5%BD%95/">折腾记录</a><a class="post-meta__tags" href="/tags/%E7%94%9F%E4%BA%A7%E5%8A%9B/">生产力</a><a class="post-meta__tags" href="/tags/%E6%A1%8C%E9%9D%A2%E7%BE%8E%E5%8C%96/">桌面美化</a></div><div class="post-share"><div class="social-share" data-image="/img/touxiang.webp" data-sites="facebook,twitter,wechat,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/js/social-share.min.js" defer></script></div></div><div class="post-reward"><div class="reward-button"><i class="fas fa-qrcode"></i>给口饭吃</div><div class="reward-main"><ul class="reward-all"><li class="reward-item"><a href="/img/wechat.JPG" target="_blank"><img loading="lazy" decoding="async" class="post-qr-code-img" src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="/img/wechat.JPG" alt="微信"/></a><div class="post-qr-code-desc">微信</div></li></ul></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related full-width" href="/2026/08/20/native-macos-womic-client-macmic/" title="用几个不同的大模型接力，我写了个原生的 macOS 版 WO Mic"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info"><div class="info-1"><div class="info-item-1">上一篇</div><div class="info-item-2">用几个不同的大模型接力，我写了个原生的 macOS 版 WO Mic</div></div><div class="info-2"><div class="info-item-1">Mac 平台一直缺少官方的 WO Mic 客户端，市面上也很难找到足够轻量、好用的替代方案。平时如果临时想把手机当成 Mac 的无线麦克风，往往需要复杂的配置或忍受高延迟的网页中转。 既然没有现成的工具，不如自己动手写一个。我用纯 Swift 和 SwiftUI 开发了原生客户端 MacMic，体积小、冷启动快、无须冗余的后台驻留服务。 原本以为这只是个简单的网络接收与音频解码工具——SwiftUI 界面和 Opus 解码器很快就搭建完毕。但随后在虚拟音频路由和闭源私有通信协议上踩到的深坑，远超最初的预期。整个排查与解决过程，经历了几个不同大模型的接力才得以彻底破局。 第一轮：Gemini 3.7 Flash 的驱动弯路与协议假死最初我使用 Gemini 3.7 Flash 来搭建骨架、实现基础网络通信和音频输入管线。 在音频输入这一步，Gemini 3.7 Flash 首先建议自研一套虚拟音频 HAL（Hardware Abstraction Layer）驱动，并生成了对应的 C&#x2F;C++ 驱动源码。然而在 macOS Sequoia 与 Apple Silicon...</div></div></div></a></nav></div><div class="aside-content" id="aside-content"><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content is-expand"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-%E5%B1%8F%E5%B9%95%E5%88%86%E8%BE%A8%E7%8E%87%E4%B8%8E%E9%AB%98%E5%88%B7%E9%94%81%E5%AE%9A%EF%BC%882560%C3%971440-180Hz%EF%BC%89"><span class="toc-text">1. 屏幕分辨率与高刷锁定（2560×1440 @ 180Hz）</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%81%87%E5%88%B0%E9%97%AE%E9%A2%98"><span class="toc-number">1.1.</span> <span class="toc-text">遇到问题</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95"><span class="toc-number">1.2.</span> <span class="toc-text">解决方法</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-GNOME-42-%E4%B8%BB%E9%A2%98%E6%9E%B6%E6%9E%84%E4%B8%8E%E6%B7%B1%E8%89%B2%E6%A8%A1%E5%BC%8F%E9%81%BF%E5%9D%91"><span class="toc-text">2. GNOME 42+ 主题架构与深色模式避坑</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-1-%E7%8E%B0%E4%BB%A3-GNOME-%E7%9A%84%E5%9B%9B%E5%B1%82%E7%95%8C%E9%9D%A2%E6%9E%B6%E6%9E%84"><span class="toc-text">2.1 现代 GNOME 的四层界面架构</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-2-%E4%BA%94%E5%A4%A7%E5%B8%B8%E8%A7%81%E6%95%85%E9%9A%9C%E4%B8%8E%E6%B7%B1%E5%BA%A6%E5%8E%9F%E7%90%86%E5%A4%8D%E7%9B%98"><span class="toc-text">2.2 五大常见故障与深度原理复盘</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-%E7%B3%BB%E7%BB%9F%E8%AE%BE%E4%BA%86-Dark-Mode%EF%BC%8C%E7%B3%BB%E7%BB%9F%E8%AE%BE%E7%BD%AE%E7%AA%97%E5%8F%A3%E4%BE%9D%E7%84%B6%E6%98%AF%E7%99%BD%E8%89%B2%EF%BC%9F"><span class="toc-text">1. 系统设了 Dark Mode，系统设置窗口依然是白色？</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-%E4%B8%BA%E4%BB%80%E4%B9%88-Electron-%E8%83%BD%E7%A7%92%E5%88%87%E6%B7%B1%E6%B5%85%E8%89%B2%EF%BC%8C%E5%8E%9F%E7%94%9F%E8%AE%BE%E7%BD%AE%E5%92%8C%E6%B5%8F%E8%A7%88%E5%99%A8%E5%8D%B4%E4%B8%8D%E8%A1%8C%EF%BC%9F"><span class="toc-text">2. 为什么 Electron 能秒切深浅色，原生设置和浏览器却不行？</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3-Brave-%E9%87%8C%E7%9A%84-Dark-Reader-%E5%8F%98%E9%BB%91-2-%E7%A7%92%E5%90%8E%EF%BC%8C%E8%87%AA%E5%8A%A8%E5%BC%B9%E5%9B%9E%E6%B5%85%E8%89%B2%EF%BC%9F"><span class="toc-text">3. Brave 里的 Dark Reader 变黑 2 秒后，自动弹回浅色？</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#4-%E5%8F%B3%E4%B8%8A%E8%A7%92%E6%8E%A7%E5%88%B6%E4%B8%AD%E5%BF%83%E4%B8%8E%E7%B3%BB%E7%BB%9F%E5%BC%B9%E7%AA%97%E4%BE%9D%E7%84%B6%E6%98%AF%E7%99%BD%E8%89%B2%EF%BC%9F"><span class="toc-text">4. 右上角控制中心与系统弹窗依然是白色？</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#5-%E6%8D%A2%E4%BA%86%E7%AC%AC%E4%B8%89%E6%96%B9%E5%9B%BE%E6%A0%87%EF%BC%88%E5%A6%82-Tela%EF%BC%89%EF%BC%8C%E4%B8%80%E6%8C%89%E6%B7%B1%E8%89%B2%E6%A8%A1%E5%BC%8F%E5%8F%88%E5%8F%98%E5%9B%9E%E5%AE%98%E6%96%B9%E5%9B%BE%E6%A0%87%EF%BC%9F"><span class="toc-text">5. 换了第三方图标（如 Tela），一按深色模式又变回官方图标？</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-3-%E7%BB%88%E6%9E%81%E6%8E%A8%E8%8D%90%E9%85%8D%E7%BD%AE%EF%BC%9A%E7%BA%AF%E5%87%80%E7%83%AD%E9%87%8D%E8%BD%BD%E4%B8%8E%E5%9B%BE%E6%A0%87%E9%98%B2%E7%AF%A1%E6%94%B9"><span class="toc-text">2.3 终极推荐配置：纯净热重载与图标防篡改</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-%E5%87%80%E5%8C%96-GTK4-Libadwaita%EF%BC%88%E6%81%A2%E5%A4%8D%E5%8E%9F%E7%94%9F%E7%83%AD%E9%87%8D%E8%BD%BD%EF%BC%89"><span class="toc-text">1. 净化 GTK4 &#x2F; Libadwaita（恢复原生热重载）</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-%E7%BB%9F%E4%B8%80%E5%AE%98%E6%96%B9%E7%B3%BB%E7%BB%9F%E4%B8%BB%E9%A2%98%E4%B8%8E-Shell-%E4%B8%BB%E9%A2%98"><span class="toc-text">2. 统一官方系统主题与 Shell 主题</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3-%E5%88%A9%E7%94%A8-XDG-%E4%BC%98%E5%85%88%E7%BA%A7%E9%94%81%E5%AE%9A-Tela-%E5%9B%BE%E6%A0%87"><span class="toc-text">3. 利用 XDG 优先级锁定 Tela 图标</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-4-%E6%B7%B1%E6%B5%85%E8%89%B2%E8%87%AA%E5%8A%A8%E5%88%87%E6%8D%A2%EF%BC%88%E6%89%A9%E5%B1%95%E6%96%B9%E6%A1%88%E4%B8%8E%E7%BA%AF%E5%91%BD%E4%BB%A4%E8%A1%8C%E5%AE%9A%E6%97%B6%EF%BC%89"><span class="toc-text">2.4 深浅色自动切换（扩展方案与纯命令行定时）</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%96%B9%E6%A1%88-A%EF%BC%9ANight-Theme-Switcher-%E6%89%A9%E5%B1%95%EF%BC%88%E4%BD%93%E9%AA%8C%E6%9C%80%E4%BD%B3%EF%BC%89"><span class="toc-number">2.4.1.</span> <span class="toc-text">方案 A：Night Theme Switcher 扩展（体验最佳）</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%96%B9%E6%A1%88-B%EF%BC%9A%E7%BA%AF-Crontab-%E5%AE%9A%E6%97%B6%E4%BB%BB%E5%8A%A1%EF%BC%88%E5%85%8D%E8%A3%85%E6%89%A9%E5%B1%95%EF%BC%89"><span class="toc-number">2.4.2.</span> <span class="toc-text">方案 B：纯 Crontab 定时任务（免装扩展）</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-%E6%A1%8C%E9%9D%A2%E6%B7%B1%E5%BA%A6%E7%BE%8E%E5%8C%96%E4%B8%8E%E9%80%8F%E6%98%8E%E7%BB%84%E4%BB%B6%E8%B0%83%E4%BC%98"><span class="toc-text">3. 桌面深度美化与透明组件调优</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#3-1-%E5%AD%97%E4%BD%93%E5%AE%89%E8%A3%85%E4%B8%8E%E6%B8%B2%E6%9F%93%E9%85%8D%E7%BD%AE"><span class="toc-text">3.1 字体安装与渲染配置</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-2-%E9%A1%B6%E9%83%A8%E7%8A%B6%E6%80%81%E6%A0%8F-100-%E9%80%8F%E6%98%8E%E4%B8%8E%E6%89%98%E7%9B%98%E5%9B%BE%E6%A0%87%E5%B1%85%E4%B8%AD"><span class="toc-text">3.2 顶部状态栏 100% 透明与托盘图标居中</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-3-%E3%80%90%E6%A0%B8%E5%BF%83%E9%81%BF%E5%9D%91%E3%80%91Dock-%E6%A0%8F-100-%E5%85%A8%E9%80%8F%E6%98%8E%E4%B8%8E%E6%82%AC%E5%81%9C%E9%A2%84%E8%A7%88%E8%B0%83%E4%BC%98"><span class="toc-text">3.3 【核心避坑】Dock 栏 100% 全透明与悬停预览调优</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E6%99%AE%E9%80%9A%E6%96%B9%E6%B3%95%E4%BC%9A%E5%A4%B1%E6%95%88%EF%BC%9F"><span class="toc-number">3.3.1.</span> <span class="toc-text">为什么普通方法会失效？</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#100-%E7%9C%9F%E6%AD%A3%E5%85%A8%E9%80%8F%E6%98%8E-Dock-%E6%A0%87%E5%87%86%E9%85%8D%E7%BD%AE"><span class="toc-number">3.3.2.</span> <span class="toc-text">100% 真正全透明 Dock 标准配置</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Dock-%E9%BC%A0%E6%A0%87%E6%82%AC%E5%81%9C%E5%AE%9E%E6%97%B6%E7%AA%97%E5%8F%A3%E7%BC%A9%E7%95%A5%E5%9B%BE%EF%BC%88%E9%9B%B6%E5%BB%B6%E8%BF%9F%E5%8D%B3%E6%B6%88%EF%BC%89"><span class="toc-number">3.3.3.</span> <span class="toc-text">Dock 鼠标悬停实时窗口缩略图（零延迟即消）</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-4-GNOME-%E6%89%A9%E5%B1%95%E6%B8%85%E5%8D%95"><span class="toc-text">3.4 GNOME 扩展清单</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-5-%E4%B8%80%E9%94%AE%E7%BE%8E%E5%8C%96%E4%B8%8E%E6%81%A2%E5%A4%8D%E8%84%9A%E6%9C%AC%E9%80%9F%E6%9F%A5"><span class="toc-text">3.5 一键美化与恢复脚本速查</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#4-Rime-%E8%BE%93%E5%85%A5%E6%B3%95%E4%B8%8E%E5%B0%8F%E9%B9%A4%E5%8F%8C%E6%8B%BC"><span class="toc-text">4. Rime 输入法与小鹤双拼</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%AE%9E%E6%96%BD%E7%BB%86%E8%8A%82"><span class="toc-number">4.1.</span> <span class="toc-text">实施细节</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#5-%E7%BB%88%E7%AB%AF%E7%8E%AF%E5%A2%83%EF%BC%88Ghostty%EF%BC%89"><span class="toc-text">5. 终端环境（Ghostty）</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#5-1-%E5%AE%89%E8%A3%85%E4%B8%8E%E9%BB%98%E8%AE%A4%E7%BB%88%E7%AB%AF%E5%88%87%E6%8D%A2"><span class="toc-text">5.1 安装与默认终端切换</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-2-%E6%B8%B2%E6%9F%93%E9%97%AE%E9%A2%98%E4%BF%AE%E5%A4%8D"><span class="toc-text">5.2 渲染问题修复</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#6-%E6%B5%8F%E8%A7%88%E5%99%A8%E7%8E%AF%E5%A2%83%EF%BC%88Brave%EF%BC%89"><span class="toc-text">6. 浏览器环境（Brave）</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#6-1-%E7%A7%BB%E9%99%A4-Firefox"><span class="toc-text">6.1 移除 Firefox</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#6-2-%E5%AE%89%E8%A3%85-Brave-%E5%B9%B6%E9%85%8D%E7%BD%AE%E4%BC%81%E4%B8%9A%E7%AD%96%E7%95%A5"><span class="toc-text">6.2 安装 Brave 并配置企业策略</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#6-3-%E5%A4%96%E8%A7%82%E4%B8%8E%E6%B7%B1%E6%B5%85%E8%89%B2%E8%B7%9F%E9%9A%8F%E9%81%BF%E5%9D%91"><span class="toc-text">6.3 外观与深浅色跟随避坑</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#7-%E7%B3%BB%E7%BB%9F%E5%BA%95%E5%B1%82%E4%B8%8E%E5%A4%96%E8%AE%BE%E4%BC%98%E5%8C%96"><span class="toc-text">7. 系统底层与外设优化</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#7-1-ZRAM-%E5%86%85%E5%AD%98%E5%AE%9E%E6%97%B6%E5%8E%8B%E7%BC%A9"><span class="toc-text">7.1 ZRAM 内存实时压缩</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#7-2-%E6%88%AA%E5%9B%BE%E5%BF%AB%E6%8D%B7%E9%94%AE"><span class="toc-text">7.2 截图快捷键</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#7-3-%E5%89%AA%E8%B4%B4%E6%9D%BF%E4%B8%8E%E6%8B%96%E6%8B%BD%E6%9C%8D%E5%8A%A1"><span class="toc-text">7.3 剪贴板与拖拽服务</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#7-4-%E7%B3%BB%E7%BB%9F%E7%9B%91%E6%8E%A7%E4%B8%8E%E4%BB%BB%E5%8A%A1%E7%AE%A1%E7%90%86%EF%BC%88Mission-Center%EF%BC%89"><span class="toc-text">7.4 系统监控与任务管理（Mission Center）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#7-5-Nautilus-%E4%B8%80%E7%BA%A7%E5%8F%B3%E9%94%AE%E8%8F%9C%E5%8D%95%E6%89%A9%E5%B1%95%EF%BC%88%E5%A4%8D%E5%88%B6%E6%96%87%E4%BB%B6%E8%B7%AF%E5%BE%84%EF%BC%89"><span class="toc-text">7.5 Nautilus 一级右键菜单扩展（复制文件路径）</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#8-%E5%B8%B8%E7%94%A8%E8%BD%AF%E4%BB%B6%E4%B8%8E-Antigravity-%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83"><span class="toc-text">8. 常用软件与 Antigravity 开发环境</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#8-1-%E5%8E%9F%E7%94%9F-ARM64-%E5%B8%B8%E7%94%A8%E7%94%9F%E4%BA%A7%E5%8A%9B%E8%BD%AF%E4%BB%B6%EF%BC%88LocalSend-PeaZip%EF%BC%89"><span class="toc-text">8.1 原生 ARM64 常用生产力软件（LocalSend &amp; PeaZip）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#8-2-Antigravity-%E9%83%A8%E7%BD%B2%E3%80%81%E8%A1%A5%E4%B8%81%E4%B8%8E%E6%B7%B1%E6%B5%85%E6%A8%A1%E5%BC%8F%E8%87%AA%E5%8A%A8%E5%90%8C%E6%AD%A5"><span class="toc-text">8.2 Antigravity 部署、补丁与深浅模式自动同步</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#8-3-%E7%8E%B0%E4%BB%A3%E5%BC%80%E5%8F%91%E5%B7%A5%E5%85%B7"><span class="toc-text">8.3 现代开发工具</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#8-4-Web-%E5%BC%80%E5%8F%91%E4%B8%AD%E7%9A%84%E6%B7%B1%E6%B5%85%E6%A8%A1%E5%BC%8F%E8%90%BD%E5%9C%B0%EF%BC%88%E9%98%B2%E9%97%AA%E7%99%BD%E4%B8%8E%E5%B7%A5%E7%A8%8B%E5%AE%9E%E8%B7%B5%EF%BC%89"><span class="toc-text">8.4 Web 开发中的深浅模式落地（防闪白与工程实践）</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-%E6%A0%B8%E5%BF%83%E6%9E%B6%E6%9E%84%EF%BC%9ACSS-%E5%8F%98%E9%87%8F%E4%B8%8E-Class-%E5%88%87%E6%8D%A2"><span class="toc-text">1. 核心架构：CSS 变量与 Class 切换</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-%E9%98%B2%E7%99%BD%E5%B1%8F%E9%97%AA%E7%83%81%EF%BC%88Anti-FOUC%EF%BC%89"><span class="toc-text">2. 防白屏闪烁（Anti-FOUC）</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3-%E5%AE%8C%E6%95%B4%E7%9A%84%E7%8A%B6%E6%80%81%E7%AE%A1%E7%90%86%E9%80%BB%E8%BE%91"><span class="toc-text">3. 完整的状态管理逻辑</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#4-%E5%B8%B8%E8%A7%81%E6%A1%86%E6%9E%B6%E7%94%9F%E6%80%81%E6%96%B9%E6%A1%88"><span class="toc-text">4. 常见框架生态方案</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#9-%E6%A0%B8%E5%BF%83%E7%BB%B4%E6%8A%A4%E4%B8%8E%E6%8E%92%E9%94%99%E5%91%BD%E4%BB%A4%E9%80%9F%E6%9F%A5"><span class="toc-text">9. 核心维护与排错命令速查</span></a></li></ol></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="copyright">&copy;2019 - 2026 By 乱与狒</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"></div><div id="rightside-config-show"><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox/fancybox.umd.min.js"></script><script src="https://cdn.jsdelivr.net/npm/vanilla-lazyload/dist/lazyload.iife.min.js"></script><div class="js-pjax"></div><script src="/js/site-ui.js?v=20260827_v4" defer></script><script src="/js/footer-brand.js?v=20260815_v3" defer></script></div></body></html>
