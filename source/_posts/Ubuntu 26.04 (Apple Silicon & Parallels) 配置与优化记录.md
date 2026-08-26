@@ -68,6 +68,8 @@ tags:
   gsettings set org.gnome.shell.extensions.user-theme name 'Orchis-Light'
   ```
 
+![Tela 图标主题与 Blur my Shell 应用抽屉磨砂背景](/image/ubuntu-app-drawer-blur.webp "Tela 图标主题与 Blur my Shell 应用抽屉磨砂背景效果")
+
 ### 2.3 顶部状态栏 100% 透明与托盘图标居中
 * **顶部状态栏（Top Bar）100% 全透明**：
   GNOME 原生顶栏由底层 C/St 固化渲染并自带纯黑底色。安装专用扩展 `Transparent Top Bar (Adjustable transparency)`（UUID: `transparent-top-bar@ftpix.com`），并关闭 Blur my Shell 对顶栏的暗色磨砂，即可实现通透的全透明悬浮顶栏：
@@ -114,6 +116,8 @@ gsettings set org.gnome.shell.extensions.blur-my-shell.dash-to-dock blur false
 # 4. 热重载 Dock 扩展即时生效
 gnome-extensions disable ubuntu-dock@ubuntu.com && sleep 0.2 && gnome-extensions enable ubuntu-dock@ubuntu.com
 ```
+
+![Ubuntu 全透明顶栏与居中悬浮 Dock 最终效果](/image/ubuntu-desktop-transparent-dock.webp "Ubuntu 全透明顶栏与居中悬浮 Dock 最终效果")
 
 #### Dock 鼠标悬停实时窗口缩略图（零延迟即消）
 安装 **`Dock Window Preview`**（UUID: `dock-window-preview@quivio`），可实现类似 Windows / macOS 的悬停缩略图：
