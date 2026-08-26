@@ -53,29 +53,29 @@
   const updateThemeButton = (button, mode, actualTheme) => {
     if (!button) return;
 
-    let icon = 'fa-desktop';
+    let svgIcon = '';
     let label = '跟随系统';
     let nextLabel = '浅色';
 
     if (mode === 'light') {
-      icon = 'fa-sun';
       label = '浅色';
       nextLabel = '深色';
+      svgIcon = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>';
     } else if (mode === 'dark') {
-      icon = 'fa-moon';
       label = '深色';
       nextLabel = '跟随系统';
+      svgIcon = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>';
     } else {
-      icon = 'fa-desktop';
       label = `跟随系统 (${actualTheme === 'dark' ? '深色' : '浅色'})`;
       nextLabel = '浅色';
+      svgIcon = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>';
     }
 
     button.dataset.themeMode = mode;
     button.dataset.theme = actualTheme;
     button.setAttribute('aria-label', `当前外观：${label}，点击切换为${nextLabel}模式`);
     button.setAttribute('title', `外观：${label} (点击切换为${nextLabel})`);
-    button.innerHTML = `<i class="fas ${icon}" aria-hidden="true"></i>`;
+    button.innerHTML = svgIcon;
   };
 
   const applyThemeMode = (mode, persist = false) => {
@@ -510,6 +510,71 @@
 
       item.insertBefore(button, link.nextSibling);
     });
+
+    // Mobile TOC interaction & floating button handling
+    const cardToc = document.getElementById('card-toc');
+
+    if (cardToc) {
+      // Create dedicated floating mobile TOC button if not present
+      let mobileTocToggle = document.querySelector('.site-toc-toggle');
+      if (!mobileTocToggle) {
+        mobileTocToggle = document.createElement('button');
+        mobileTocToggle.type = 'button';
+        mobileTocToggle.className = 'site-toc-toggle';
+        mobileTocToggle.setAttribute('aria-label', '打开目录');
+        mobileTocToggle.setAttribute('title', '查看目录');
+        mobileTocToggle.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>';
+        document.body.appendChild(mobileTocToggle);
+      }
+
+      // Create mobile backdrop
+      let backdrop = document.querySelector('.mobile-toc-backdrop');
+      if (!backdrop) {
+        backdrop = document.createElement('div');
+        backdrop.className = 'mobile-toc-backdrop';
+        document.body.appendChild(backdrop);
+      }
+
+      // Add mobile close button in headline if not present
+      const headline = cardToc.querySelector('.item-headline');
+      if (headline && !headline.querySelector('.mobile-toc-close-btn')) {
+        const closeBtn = document.createElement('button');
+        closeBtn.type = 'button';
+        closeBtn.className = 'mobile-toc-close-btn';
+        closeBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>';
+        closeBtn.setAttribute('aria-label', '关闭目录');
+        closeBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          cardToc.classList.remove('open');
+          backdrop.classList.remove('show');
+        });
+        headline.appendChild(closeBtn);
+      }
+
+      const toggleMobileToc = (e) => {
+        if (e) e.stopPropagation();
+        const isOpen = cardToc.classList.toggle('open');
+        backdrop.classList.toggle('show', isOpen);
+      };
+
+      mobileTocToggle.addEventListener('click', toggleMobileToc);
+
+      backdrop.addEventListener('click', () => {
+        cardToc.classList.remove('open');
+        backdrop.classList.remove('show');
+      });
+
+      // Auto close mobile TOC when tapping any link on mobile screen
+      cardToc.addEventListener('click', (e) => {
+        const link = e.target.closest('.toc-link');
+        if (link && window.innerWidth <= 900) {
+          setTimeout(() => {
+            cardToc.classList.remove('open');
+            backdrop.classList.remove('show');
+          }, 180);
+        }
+      });
+    }
   };
 
   const initThreeHero = () => {
