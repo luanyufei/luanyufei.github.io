@@ -2896,13 +2896,10 @@ html.search-open body {
     display: none;
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.45);
-    backdrop-filter: blur(4px);
-    -webkit-backdrop-filter: blur(4px);
+    background: transparent;
     z-index: 998;
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.25s ease;
   }
 
   .mobile-toc-backdrop.show {

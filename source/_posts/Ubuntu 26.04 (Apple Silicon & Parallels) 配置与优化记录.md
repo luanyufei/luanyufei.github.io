@@ -116,6 +116,67 @@ ln -sfn ~/.local/share/icons/Tela ~/.local/share/icons/Yaru
 gsettings set org.gnome.desktop.interface icon-theme 'Tela-purple-dark'
 ```
 
+### 2.4 深浅色自动切换（扩展方案与纯命令行定时）
+
+如果希望桌面能像 macOS 一样根据日落日出或指定时间自动在深浅色之间无感切换，有两种实现方式：
+
+#### 方案 A：Night Theme Switcher 扩展（体验最佳）
+
+社区里成熟的自动切换扩展是 **Night Theme Switcher**，支持根据地理位置的日落日出时间、系统夜灯状态或指定时钟定时自动切换。在没有浏览器扩展商店或想免 Sudo 纯命令行部署时，可以直接用 Python 脚本下载并启用：
+
+```bash
+# 1. 自动下载并安装扩展包
+python3 -c "
+import urllib.request, tempfile, subprocess, os
+url = 'https://extensions.gnome.org/download-extension/nightthemeswitcher@romainvigier.fr.shell-extension.zip?version_tag=73047'
+with tempfile.NamedTemporaryFile(suffix='.zip', delete=False) as f:
+    zip_path = f.name
+    with urllib.request.urlopen(urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})) as resp:
+        f.write(resp.read())
+subprocess.run(['gnome-extensions', 'install', '--force', zip_path])
+os.unlink(zip_path)
+"
+
+# 2. 编译 schema 规则文件
+glib-compile-schemas ~/.local/share/gnome-shell/extensions/nightthemeswitcher@romainvigier.fr/schemas
+
+# 3. 启用扩展
+gnome-extensions enable nightthemeswitcher@romainvigier.fr
+```
+
+* **快速手动切主题快捷键**：<kbd>Shift</kbd> + <kbd>Super</kbd> + <kbd>T</kbd>
+* **打开图形设置面板**：`gnome-extensions prefs nightthemeswitcher@romainvigier.fr`
+* **命令行设定固定切换时间**（如 07:00 浅色、19:00 深色）：
+  ```bash
+  SCH_DIR=~/.local/share/gnome-shell/extensions/nightthemeswitcher@romainvigier.fr/schemas
+  gsettings --schemadir "$SCH_DIR" set org.gnome.shell.extensions.nightthemeswitcher.time sunrise 7.0
+  gsettings --schemadir "$SCH_DIR" set org.gnome.shell.extensions.nightthemeswitcher.time sunset 19.0
+  ```
+
+#### 方案 B：纯 Crontab 定时任务（免装扩展）
+
+如果不打算额外安装扩展，直接用系统内置的 `gsettings` 配合定时任务即可：
+
+* **深色切换**：
+  ```bash
+  gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark'
+  gsettings set org.gnome.desktop.interface gtk-theme 'Yaru-dark'
+  ```
+* **浅色切换**：
+  ```bash
+  gsettings set org.gnome.desktop.interface color-scheme 'default'
+  gsettings set org.gnome.desktop.interface gtk-theme 'Yaru'
+  ```
+
+执行 `crontab -e` 写入两行定时规则：
+```cron
+# 每天 07:00 切浅色
+0 7 * * * gsettings set org.gnome.desktop.interface color-scheme 'default' && gsettings set org.gnome.desktop.interface gtk-theme 'Yaru'
+
+# 每天 19:00 切深色
+0 19 * * * gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark' && gsettings set org.gnome.desktop.interface gtk-theme 'Yaru-dark'
+```
+
 ## 3. 桌面深度美化与透明组件调优
 
 ### 3.1 字体安装与渲染配置
@@ -377,16 +438,112 @@ rm -rf ~/snap/firefox ~/.mozilla
 * **PeaZip（7-Zip 核心专业图形化压缩/解压管理器）**：
   * 官方 7-Zip 原生 Linux 版仅有 CLI 命令行工具（`7zz`），PeaZip 是 Linux 下成熟强大的 7-Zip 图形化管理工具，支持多标签页、密码加密、分卷压缩，并已关联为系统中 `.7z`、`.zip`、`.rar`、`.tar.gz` 等所有常见压缩格式的默认打开程序。
 
-### 8.2 Antigravity 部署与修复
+### 8.2 Antigravity 部署、补丁与深浅模式自动同步
 * **部署与权限**：安装于 `/opt/antigravity`，修复 `chrome-sandbox` 权限，生成 `/usr/local/bin/antigravity` 全局命令与桌面图标。
 * **标题栏色差与窗口唤醒修复**：
   * 修改 `dist/ipcHandlers.js`，将主题同步平台判断放宽至非 macOS 系统，使 Linux 下窗口按钮区域颜色与主题实时匹配。
   * 修改 `dist/main.js` 中的 `second-instance` 事件逻辑，修复在 `Ctrl + W` 关闭窗口后点击 Dock 无法重新呼出界面的问题。
 * **自动打补丁脚本**：编写 `/opt/antigravity/patch-linux-fixes.js` 并在启动脚本中调用，确保应用自动更新后补丁依然生效。
+* **跟随系统自动切换深浅主题**：
+  在 Antigravity / VS Code 中按 <kbd>Ctrl</kbd> + <kbd>,</kbd> 打开设置，搜索并勾选 `Auto Detect Color Scheme`，或在 `settings.json` 中配置：
+  ```json
+  {
+    "window.autoDetectColorScheme": true,
+    "workbench.preferredLightColorTheme": "Default Light Modern",
+    "workbench.preferredDarkColorTheme": "Default Dark Modern"
+  }
+  ```
 
 ### 8.3 现代开发工具
 * **uv**：安装于 `/usr/local/bin/uv`，用于 Python 环境隔离和包管理。
 * **OpenCLI**：全局安装 `@jackwener/opencli`，并部署相关 skills 到 `~/.gemini/config/skills/`。
+
+### 8.4 Web 开发中的深浅模式落地（防闪白与工程实践）
+
+在开发网站或前端项目时，实现一个体验完善的深浅模式切换需要兼顾系统偏好、手动覆盖和防白屏闪烁（Anti-FOUC）。
+
+#### 1. 核心架构：CSS 变量与 Class 切换
+
+生产环境通常在 `<html>` 标签上挂载 `.dark` 类，通过 CSS 变量统一管理色彩：
+
+```css
+:root {
+  --bg: #ffffff;
+  --text: #111111;
+}
+
+html.dark {
+  --bg: #121212;
+  --text: #f5f5f5;
+}
+
+body {
+  background-color: var(--bg);
+  color: var(--text);
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+```
+
+#### 2. 防白屏闪烁（Anti-FOUC）
+
+很多网站在深色模式下刷新页面时，会先闪一下刺眼的白光再变黑。这是因为外部 JS 通常在 DOM 解析完毕后才执行。
+
+解决办法是在 `<head>` 标签的最顶部放一段轻量的阻塞式内联 JS，在浏览器开始绘制首帧之前就计算并挂载好类名：
+
+```html
+<head>
+  <meta charset="UTF-8" />
+  <script>
+    (function () {
+      const saved = localStorage.getItem('theme-preference') || 'system';
+      const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      if (saved === 'dark' || (saved === 'system' && systemDark)) {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+    })();
+  </script>
+</head>
+```
+
+#### 3. 完整的状态管理逻辑
+
+支持 `light`、`dark`、`system` 三态，并在用户选择“跟随系统”时实时监听系统偏好广播：
+
+```javascript
+const STORAGE_KEY = 'theme-preference';
+
+function getEffectiveTheme(pref) {
+  if (pref === 'dark' || pref === 'light') return pref;
+  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+}
+
+function applyTheme(pref) {
+  const effective = getEffectiveTheme(pref);
+  document.documentElement.classList.toggle('dark', effective === 'dark');
+}
+
+function setTheme(pref) {
+  localStorage.setItem(STORAGE_KEY, pref);
+  applyTheme(pref);
+}
+
+// 监听操作系统深浅模式变化
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+  const current = localStorage.getItem(STORAGE_KEY) || 'system';
+  if (current === 'system') {
+    applyTheme('system');
+  }
+});
+```
+
+#### 4. 常见框架生态方案
+
+写具体业务时通常不需要重复造轮子：
+* **Tailwind CSS**：在配置中设置 `darkMode: 'class'`。
+* **React / Next.js**：直接使用社区标配 [`next-themes`](https://github.com/pacocoursey/next-themes)，内置了 SSR 防闪烁与三态管理。
+* **Vue / Nuxt**：使用 [`@vueuse/core`](https://vueuse.org/core/useDark/) 的 `useDark()` 与 `useColorMode()`。
 
 ## 9. 核心维护与排错命令速查
 
