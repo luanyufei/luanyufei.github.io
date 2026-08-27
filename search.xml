@@ -22,6 +22,57 @@
       </categories>
   </entry>
   <entry>
+    <title>Windows 11 优化方案</title>
+    <url>/2026/07/18/windows-11-optimization-guide/</url>
+    <content><![CDATA[<p>Windows 11 自带了大量臃肿功能和恼人的 UI 变动。以下是一套完整的优化方案，涵盖精简系统、还原经典界面、激活、禁用更新等。</p>
+<h2 id="精简系统镜像"><a href="#精简系统镜像" class="headerlink" title="精简系统镜像"></a>精简系统镜像</h2><p>与其装完再删，不如一开始就用精简版镜像。GitHub 上有两个知名项目：</p>
+<ul>
+<li><strong>Tiny11</strong> — 删除了大部分无用系统组件，保留核心功能，适合大多数人</li>
+<li><strong>nano11</strong> — 比 Tiny11 更激进的精简方案，适合追求极致精简的用户</li>
+</ul>
+<p>在 GitHub 搜索 <code>Tiny11</code> 或 <code>nano11</code> 即可找到。配合 <strong>Rufus</strong>（开源刷机工具）制作启动 U 盘进行安装。</p>
+<h2 id="还原经典开始菜单和任务栏"><a href="#还原经典开始菜单和任务栏" class="headerlink" title="还原经典开始菜单和任务栏"></a>还原经典开始菜单和任务栏</h2><p>Win11 的开始菜单和任务栏改动很大，如果你更习惯 Win10 的风格，可以使用 <strong>StartAllBack</strong> 一键还原。</p>
+<p>下载地址：<a href="https://www.ghxi.com/startallback.html">https://www.ghxi.com/startallback.html</a></p>
+<h2 id="还原经典右键菜单"><a href="#还原经典右键菜单" class="headerlink" title="还原经典右键菜单"></a>还原经典右键菜单</h2><p>Win11 的右键菜单默认只显示几个选项，完整菜单被折叠了。用以下方法可以恢复 Win10 样式的完整右键菜单。</p>
+<p>以<strong>管理员身份</strong>打开 CMD 或 PowerShell，输入：</p>
+<figure class="highlight powershell"><table><tr><td class="code"><pre><span class="line">reg add <span class="string">&quot;HKCU\Software\Classes\CLSID\&#123;86ca1aa0-34aa-4e8b-a509-50c905bae2a2&#125;\InprocServer32&quot;</span> /f /ve</span><br></pre></td></tr></table></figure>
+
+<p>然后重启资源管理器即可生效。</p>
+<p>如果想恢复回 Win11 默认右键菜单：</p>
+<figure class="highlight powershell"><table><tr><td class="code"><pre><span class="line">reg delete <span class="string">&quot;HKCU\Software\Classes\CLSID\&#123;86ca1aa0-34aa-4e8b-a509-50c905bae2a2&#125;&quot;</span> /f</span><br></pre></td></tr></table></figure>
+
+<h2 id="关闭动画和半透明效果"><a href="#关闭动画和半透明效果" class="headerlink" title="关闭动画和半透明效果"></a>关闭动画和半透明效果</h2><p>打开 <strong>设置 → 辅助功能 → 视觉效果</strong>，关闭以下两项：</p>
+<ul>
+<li><strong>动画效果</strong> — 关闭</li>
+<li><strong>透明效果</strong> — 关闭</li>
+</ul>
+<p>关闭后系统响应会更跟手，尤其对低配机器提升明显。</p>
+<h2 id="激活-Windows-和-Office"><a href="#激活-Windows-和-Office" class="headerlink" title="激活 Windows 和 Office"></a>激活 Windows 和 Office</h2><p>以<strong>管理员身份</strong>打开 CMD 或 PowerShell，输入：</p>
+<figure class="highlight powershell"><table><tr><td class="code"><pre><span class="line"><span class="built_in">irm</span> https://get.activated.win | <span class="built_in">iex</span></span><br></pre></td></tr></table></figure>
+
+<p>在弹出的菜单中选择：</p>
+<ul>
+<li><code>[1] HWID</code> — 永久激活 Windows（硬件数字许可证）</li>
+<li><code>[2] Ohook</code> — 永久激活 Office</li>
+</ul>
+<h2 id="永久禁止-Windows-更新"><a href="#永久禁止-Windows-更新" class="headerlink" title="永久禁止 Windows 更新"></a>永久禁止 Windows 更新</h2><p>使用 <strong>Windows Update Blocker</strong> 工具，一键永久禁止自动更新：</p>
+<p>下载地址：<a href="https://www.sordum.org/downloads/?st-windows-update-blocker">https://www.sordum.org/downloads/?st-windows-update-blocker</a></p>
+<h2 id="删除-禁用-Win11-无用功能"><a href="#删除-禁用-Win11-无用功能" class="headerlink" title="删除 &#x2F; 禁用 Win11 无用功能"></a>删除 &#x2F; 禁用 Win11 无用功能</h2><p><strong>Chris Titus Tech</strong> 的 Windows 工具箱，提供图形界面，一键删除或禁用各种臃肿功能。</p>
+<p>以<strong>管理员身份</strong>打开 CMD 或 PowerShell，输入：</p>
+<figure class="highlight powershell"><table><tr><td class="code"><pre><span class="line"><span class="built_in">irm</span> https://christitus.com/win | <span class="built_in">iex</span></span><br></pre></td></tr></table></figure>
+
+<p>GitHub 项目地址：<a href="https://github.com/ChrisTitusTech/winutil">https://github.com/ChrisTitusTech/winutil</a></p>
+<h2 id="系统汉化"><a href="#系统汉化" class="headerlink" title="系统汉化"></a>系统汉化</h2><p>如果安装的是英文版 Windows，参考以下教程进行汉化：</p>
+<p><a href="https://www.cnblogs.com/ACDIV/p/19156603">https://www.cnblogs.com/ACDIV/p/19156603</a></p>
+<h2 id="推荐软件"><a href="#推荐软件" class="headerlink" title="推荐软件"></a>推荐软件</h2><ul>
+<li><strong>Flow Launcher</strong> — 开源的快速启动器，类似 macOS 的 Spotlight，按快捷键即可搜索应用、文件、网页等</li>
+</ul>
+]]></content>
+      <categories>
+        <category>实用技巧</category>
+      </categories>
+  </entry>
+  <entry>
     <title>Shadowrocket &amp; Clash 进阶优化指南</title>
     <url>/2026/08/19/shadowrocket-clash-advanced-guide/</url>
     <content><![CDATA[<p>机场默认提供的订阅配置通常只做最基础的粗粒度分流，直接拿来当主力用经常会碰到各种瓶颈：大流量机场看视频流畅，但出口多为机房 IP，访问 Gemini、Claude 极易触发风控限制；专线节点纯净度高，但价格贵流量少，拿来跑日常下载太浪费。同时，移动端的客户端如果没有配置好，自己辛辛苦苦改好的分流规则一刷新就会被机场原始配置全量覆盖。</p>
@@ -360,54 +411,18 @@
       </tags>
   </entry>
   <entry>
-    <title>Windows 11 优化方案</title>
-    <url>/2026/07/18/windows-11-optimization-guide/</url>
-    <content><![CDATA[<p>Windows 11 自带了大量臃肿功能和恼人的 UI 变动。以下是一套完整的优化方案，涵盖精简系统、还原经典界面、激活、禁用更新等。</p>
-<h2 id="精简系统镜像"><a href="#精简系统镜像" class="headerlink" title="精简系统镜像"></a>精简系统镜像</h2><p>与其装完再删，不如一开始就用精简版镜像。GitHub 上有两个知名项目：</p>
-<ul>
-<li><strong>Tiny11</strong> — 删除了大部分无用系统组件，保留核心功能，适合大多数人</li>
-<li><strong>nano11</strong> — 比 Tiny11 更激进的精简方案，适合追求极致精简的用户</li>
-</ul>
-<p>在 GitHub 搜索 <code>Tiny11</code> 或 <code>nano11</code> 即可找到。配合 <strong>Rufus</strong>（开源刷机工具）制作启动 U 盘进行安装。</p>
-<h2 id="还原经典开始菜单和任务栏"><a href="#还原经典开始菜单和任务栏" class="headerlink" title="还原经典开始菜单和任务栏"></a>还原经典开始菜单和任务栏</h2><p>Win11 的开始菜单和任务栏改动很大，如果你更习惯 Win10 的风格，可以使用 <strong>StartAllBack</strong> 一键还原。</p>
-<p>下载地址：<a href="https://www.ghxi.com/startallback.html">https://www.ghxi.com/startallback.html</a></p>
-<h2 id="还原经典右键菜单"><a href="#还原经典右键菜单" class="headerlink" title="还原经典右键菜单"></a>还原经典右键菜单</h2><p>Win11 的右键菜单默认只显示几个选项，完整菜单被折叠了。用以下方法可以恢复 Win10 样式的完整右键菜单。</p>
-<p>以<strong>管理员身份</strong>打开 CMD 或 PowerShell，输入：</p>
-<figure class="highlight powershell"><table><tr><td class="code"><pre><span class="line">reg add <span class="string">&quot;HKCU\Software\Classes\CLSID\&#123;86ca1aa0-34aa-4e8b-a509-50c905bae2a2&#125;\InprocServer32&quot;</span> /f /ve</span><br></pre></td></tr></table></figure>
-
-<p>然后重启资源管理器即可生效。</p>
-<p>如果想恢复回 Win11 默认右键菜单：</p>
-<figure class="highlight powershell"><table><tr><td class="code"><pre><span class="line">reg delete <span class="string">&quot;HKCU\Software\Classes\CLSID\&#123;86ca1aa0-34aa-4e8b-a509-50c905bae2a2&#125;&quot;</span> /f</span><br></pre></td></tr></table></figure>
-
-<h2 id="关闭动画和半透明效果"><a href="#关闭动画和半透明效果" class="headerlink" title="关闭动画和半透明效果"></a>关闭动画和半透明效果</h2><p>打开 <strong>设置 → 辅助功能 → 视觉效果</strong>，关闭以下两项：</p>
-<ul>
-<li><strong>动画效果</strong> — 关闭</li>
-<li><strong>透明效果</strong> — 关闭</li>
-</ul>
-<p>关闭后系统响应会更跟手，尤其对低配机器提升明显。</p>
-<h2 id="激活-Windows-和-Office"><a href="#激活-Windows-和-Office" class="headerlink" title="激活 Windows 和 Office"></a>激活 Windows 和 Office</h2><p>以<strong>管理员身份</strong>打开 CMD 或 PowerShell，输入：</p>
-<figure class="highlight powershell"><table><tr><td class="code"><pre><span class="line"><span class="built_in">irm</span> https://get.activated.win | <span class="built_in">iex</span></span><br></pre></td></tr></table></figure>
-
-<p>在弹出的菜单中选择：</p>
-<ul>
-<li><code>[1] HWID</code> — 永久激活 Windows（硬件数字许可证）</li>
-<li><code>[2] Ohook</code> — 永久激活 Office</li>
-</ul>
-<h2 id="永久禁止-Windows-更新"><a href="#永久禁止-Windows-更新" class="headerlink" title="永久禁止 Windows 更新"></a>永久禁止 Windows 更新</h2><p>使用 <strong>Windows Update Blocker</strong> 工具，一键永久禁止自动更新：</p>
-<p>下载地址：<a href="https://www.sordum.org/downloads/?st-windows-update-blocker">https://www.sordum.org/downloads/?st-windows-update-blocker</a></p>
-<h2 id="删除-禁用-Win11-无用功能"><a href="#删除-禁用-Win11-无用功能" class="headerlink" title="删除 &#x2F; 禁用 Win11 无用功能"></a>删除 &#x2F; 禁用 Win11 无用功能</h2><p><strong>Chris Titus Tech</strong> 的 Windows 工具箱，提供图形界面，一键删除或禁用各种臃肿功能。</p>
-<p>以<strong>管理员身份</strong>打开 CMD 或 PowerShell，输入：</p>
-<figure class="highlight powershell"><table><tr><td class="code"><pre><span class="line"><span class="built_in">irm</span> https://christitus.com/win | <span class="built_in">iex</span></span><br></pre></td></tr></table></figure>
-
-<p>GitHub 项目地址：<a href="https://github.com/ChrisTitusTech/winutil">https://github.com/ChrisTitusTech/winutil</a></p>
-<h2 id="系统汉化"><a href="#系统汉化" class="headerlink" title="系统汉化"></a>系统汉化</h2><p>如果安装的是英文版 Windows，参考以下教程进行汉化：</p>
-<p><a href="https://www.cnblogs.com/ACDIV/p/19156603">https://www.cnblogs.com/ACDIV/p/19156603</a></p>
-<h2 id="推荐软件"><a href="#推荐软件" class="headerlink" title="推荐软件"></a>推荐软件</h2><ul>
-<li><strong>Flow Launcher</strong> — 开源的快速启动器，类似 macOS 的 Spotlight，按快捷键即可搜索应用、文件、网页等</li>
-</ul>
-]]></content>
+    <title>电子扫盲｜写在前面</title>
+    <url>/2025/02/13/tech-basics-foreword/</url>
+    <content><![CDATA[<p>《FEEFEE电子扫盲》是为那些对电脑<strong>完全一窍不通</strong>的人群而撰写的，所以许多细节之处有所省略。</p>
+<h1 id="为什么想到写这样一个系列"><a href="#为什么想到写这样一个系列" class="headerlink" title="为什么想到写这样一个系列"></a>为什么想到写这样一个系列</h1><p>当我在机房看到20岁的同班同学打开了Chrome浏览器，直接在Google上搜索却没有反应，还举手说电脑坏了时，我沉默了。。。</p>
+<p>当我听到有人Windows系统卡死，抱怨道“安卓系统真垃圾”时，我沉默了。。。</p>
+<p>当有人给我发来一个.exe文件，问我这个文件怎么在他的mac上打不开时，我沉默了。。。</p>
+<p>当长辈问我明明有一个电脑（指显示器）为什么还买个笔记本时，我沉默了。。。</p>
+<p>随着手机的逐渐普及，越来越多人已经逐渐抛弃了电脑，甚至有人妄言：电脑已经没用了，手机能解决一切。如此的后果就是越来越多的年轻人正逐渐称为「赛博文盲」。</p>
+<p><a href="https://zhuanlan.zhihu.com/p/706499217">https://zhuanlan.zhihu.com/p/706499217</a></p>
+<h1 id="后面的内容还没想好，过几天写"><a href="#后面的内容还没想好，过几天写" class="headerlink" title="后面的内容还没想好，过几天写"></a>后面的内容还没想好，过几天写</h1>]]></content>
       <categories>
-        <category>实用技巧</category>
+        <category>FeeFee电子扫盲</category>
       </categories>
   </entry>
   <entry>
@@ -525,21 +540,6 @@
 <p><strong>DLSS（Deep Learning Super Sampling，深度学习超级采样）</strong>，俗称“大力水手”，是n卡（英伟达的显卡）才有的功能，包含了超分和插帧（插帧只有DLSS3才有，而DLSS3只有40系n卡才能开）。目前最新版本是DLSS4。</p>
 <p><strong>FSR（FidelityFX Super Resolution）</strong></p>
 ]]></content>
-      <categories>
-        <category>FeeFee电子扫盲</category>
-      </categories>
-  </entry>
-  <entry>
-    <title>电子扫盲｜写在前面</title>
-    <url>/2025/02/13/tech-basics-foreword/</url>
-    <content><![CDATA[<p>《FEEFEE电子扫盲》是为那些对电脑<strong>完全一窍不通</strong>的人群而撰写的，所以许多细节之处有所省略。</p>
-<h1 id="为什么想到写这样一个系列"><a href="#为什么想到写这样一个系列" class="headerlink" title="为什么想到写这样一个系列"></a>为什么想到写这样一个系列</h1><p>当我在机房看到20岁的同班同学打开了Chrome浏览器，直接在Google上搜索却没有反应，还举手说电脑坏了时，我沉默了。。。</p>
-<p>当我听到有人Windows系统卡死，抱怨道“安卓系统真垃圾”时，我沉默了。。。</p>
-<p>当有人给我发来一个.exe文件，问我这个文件怎么在他的mac上打不开时，我沉默了。。。</p>
-<p>当长辈问我明明有一个电脑（指显示器）为什么还买个笔记本时，我沉默了。。。</p>
-<p>随着手机的逐渐普及，越来越多人已经逐渐抛弃了电脑，甚至有人妄言：电脑已经没用了，手机能解决一切。如此的后果就是越来越多的年轻人正逐渐称为「赛博文盲」。</p>
-<p><a href="https://zhuanlan.zhihu.com/p/706499217">https://zhuanlan.zhihu.com/p/706499217</a></p>
-<h1 id="后面的内容还没想好，过几天写"><a href="#后面的内容还没想好，过几天写" class="headerlink" title="后面的内容还没想好，过几天写"></a>后面的内容还没想好，过几天写</h1>]]></content>
       <categories>
         <category>FeeFee电子扫盲</category>
       </categories>

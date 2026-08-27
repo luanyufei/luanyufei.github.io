@@ -578,6 +578,19 @@
             cardToc.querySelectorAll('.toc-link').forEach((l) => l.classList.remove('active'));
             link.classList.add('active');
 
+            // On desktop, smoothly center the active TOC link in the TOC container
+            const tocContent = cardToc.querySelector('.toc-content');
+            if (tocContent && window.innerWidth > 900) {
+              const containerRect = tocContent.getBoundingClientRect();
+              const linkRect = link.getBoundingClientRect();
+              const relativeTop = linkRect.top - containerRect.top + tocContent.scrollTop;
+              const targetScroll = relativeTop - (containerRect.height - linkRect.height) / 2;
+              tocContent.scrollTo({
+                top: Math.max(0, targetScroll),
+                behavior: 'smooth'
+              });
+            }
+
             if (history.pushState) {
               history.pushState(null, '', href);
             }
