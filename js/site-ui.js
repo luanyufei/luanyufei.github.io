@@ -565,15 +565,16 @@
             e.stopPropagation();
 
             const nav = document.getElementById('nav');
-            const navHeight = nav ? nav.offsetHeight : 72;
-            const targetTop = targetElement.getBoundingClientRect().top + window.pageYOffset - navHeight - 20;
+            const navHeight = nav ? nav.offsetHeight : 64;
+            // Align targetTop so top > heading.offsetTop - 80 is strictly satisfied for the target heading
+            const targetTop = targetElement.getBoundingClientRect().top + window.pageYOffset - (navHeight + 6);
 
             window.scrollTo({
               top: Math.max(0, targetTop),
               behavior: 'smooth'
             });
 
-            // update active link state
+            // update active link state immediately
             cardToc.querySelectorAll('.toc-link').forEach((l) => l.classList.remove('active'));
             link.classList.add('active');
 
