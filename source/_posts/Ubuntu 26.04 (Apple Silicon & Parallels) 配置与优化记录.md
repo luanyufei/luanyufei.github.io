@@ -1,7 +1,7 @@
 ---
 title: Ubuntu 26.04 (Apple Silicon / Parallels) 配置与优化记录
 slug: ubuntu-26-04-parallels-optimization
-date: 2026-08-26 17:20:00
+date: '2026-08-27'
 categories: 实用技巧
 tags:
   - Linux
@@ -11,7 +11,6 @@ tags:
   - 生产力
   - 桌面美化
 ---
-
 很久以前我装过一次 Ubuntu，当时各种依赖、字体和驱动配置实在太折腾，没用多久就放弃了。现在有了 AI Agent，很多底层的调试和脚本一句话就能搞定，整个折腾流程顺畅了许多。
 
 这篇文档是我在 Apple Silicon Mac 的 Parallels 虚拟机里调教 Ubuntu 26.04 的完整记录。内容涵盖了屏幕高刷锁定、GNOME 现代主题架构与深色模式避坑、全透明悬浮 Dock、输入法迁移、终端与浏览器调优、系统深度瘦身与去遥测（彻底剥离 Snap、接入 Flatpak）、常用原生工具及系统底层服务，留作以后换机或在实体机上装 Linux 时的速查参考。
@@ -435,10 +434,6 @@ Ubuntu 这几年把不少常用软件甚至底层运行时都硬塞进了 Snap�
    ```bash
    flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
    ```
-   如果官方源下载慢，可以切到国内镜像（如上海交大源）：
-   ```bash
-   flatpak remote-modify flathub --url=https://mirror.sjtu.edu.cn/flathub
-   ```
 
 ### 7.3 关闭崩溃报错弹窗与遥测数据收集
 
@@ -646,4 +641,3 @@ window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () 
 | **查询 D-Bus Portal 真实广播值** | `dbus-send --session --print-reply=literal --dest=org.freedesktop.portal.Desktop /org/freedesktop/portal/desktop org.freedesktop.portal.Settings.Read string:org.freedesktop.appearance string:color-scheme` |
 | **更新所有 Flatpak 应用** | `flatpak update` |
 | **清理未使用的 Flatpak 运行时** | `flatpak uninstall --unused` |
-
