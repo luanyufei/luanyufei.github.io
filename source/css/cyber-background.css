@@ -1381,13 +1381,43 @@ body.fs-lightbox-dragging *,
   box-shadow: none !important;
 }
 
-#aside-content .item-headline {
+#card-toc ol,
+#card-toc ul,
+#card-toc li,
+.toc-content ol,
+.toc-content ul,
+.toc-content li {
+  list-style: none !important;
+  list-style-type: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+#card-toc .toc-child,
+.toc-content .toc-child {
+  padding-left: 0.9rem !important;
+  list-style: none !important;
+  list-style-type: none !important;
+}
+
+#card-toc .toc-percentage {
+  font-family: var(--fs-mono) !important;
+  font-size: 0.75rem !important;
+  color: var(--fs-text-3) !important;
+  margin-left: auto !important;
+  margin-right: 6px !important;
+}
+
+#aside-content .item-headline,
+#card-toc .item-headline {
   color: var(--fs-text-3);
   font-family: var(--fs-mono);
   font-size: 0.68rem;
   text-transform: uppercase;
 }
 
+.toc-content .toc-link.active,
+.toc-content .toc-link.active:hover,
 #aside-content .toc-content .toc-link.active,
 #aside-content .toc-content .toc-link.active:hover {
   color: #0b0d0b !important;
@@ -1395,27 +1425,31 @@ body.fs-lightbox-dragging *,
   transition-property: background-color, padding-left;
 }
 
+.toc-link,
 #aside-content .toc-link {
   color: var(--fs-text-2) !important;
 }
 
-#aside-content .toc-content.is-user-collapsible .toc-item {
-  position: relative;
+.toc-content .toc-item,
+#aside-content .toc-content .toc-item {
+  position: static !important;
 }
 
+.toc-content .toc-item.has-children > .toc-link,
 #aside-content .toc-content.is-user-collapsible .toc-item.has-children > .toc-link {
-  padding-right: 2rem;
+  padding-right: 1.8rem;
 }
 
 .toc-branch-toggle {
-  position: absolute;
-  top: 2px;
-  right: 0;
-  z-index: 2;
+  float: right;
+  margin-top: -27px;
+  margin-right: 4px;
+  position: relative;
+  z-index: 3;
   display: grid;
   place-items: center;
-  width: 26px;
-  height: 26px;
+  width: 22px;
+  height: 22px;
   padding: 0;
   border: 0;
   background: transparent;
@@ -1441,6 +1475,7 @@ body.fs-lightbox-dragging *,
   transform: translate(-2px, 0) rotate(-45deg);
 }
 
+.toc-content.is-expand .toc-item.is-collapsed > .toc-child,
 #aside-content .toc-content.is-expand .toc-item.is-collapsed > .toc-child {
   display: none !important;
 }
