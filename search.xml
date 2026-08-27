@@ -1,6 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
+    <title>Brave 浏览器去除无用功能</title>
+    <url>/2026/07/18/brave-browser-debloat/</url>
+    <content><![CDATA[<p>由于 Chrome 浏览器对去广告插件有反制机制——检测到去广告扩展后会让 YouTube 变得卡顿——所以我决定转用 Brave。然而 Brave 也自带了不少臃肿功能，比如 AI、钱包、VPN 等等。下面分别介绍 macOS 和 Windows 上的一键精简方法。</p>
+<h2 id="macOS"><a href="#macOS" class="headerlink" title="macOS"></a>macOS</h2><h3 id="Step-1：生成配置描述文件"><a href="#Step-1：生成配置描述文件" class="headerlink" title="Step 1：生成配置描述文件"></a>Step 1：生成配置描述文件</h3><p>把下面这段命令<strong>整段</strong>粘贴到终端里执行：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">cat</span> &lt;&lt; <span class="string">&#x27;EOF&#x27;</span> &gt; ~/Desktop/BraveDebloat.mobileconfig</span><br><span class="line">&lt;?xml version=<span class="string">&quot;1.0&quot;</span> encoding=<span class="string">&quot;UTF-8&quot;</span>?&gt;</span><br><span class="line">&lt;!DOCTYPE plist PUBLIC <span class="string">&quot;-//Apple//DTD PLIST 1.0//EN&quot;</span> <span class="string">&quot;http://www.apple.com/DTDs/PropertyList-1.0.dtd&quot;</span>&gt;</span><br><span class="line">&lt;plist version=<span class="string">&quot;1.0&quot;</span>&gt;</span><br><span class="line">&lt;dict&gt;</span><br><span class="line">    &lt;key&gt;PayloadContent&lt;/key&gt;</span><br><span class="line">    &lt;array&gt;</span><br><span class="line">        &lt;dict&gt;</span><br><span class="line">            &lt;key&gt;PayloadContent&lt;/key&gt;</span><br><span class="line">            &lt;dict&gt;</span><br><span class="line">                &lt;key&gt;com.brave.Browser&lt;/key&gt;</span><br><span class="line">                &lt;dict&gt;</span><br><span class="line">                    &lt;key&gt;Forced&lt;/key&gt;</span><br><span class="line">                    &lt;array&gt;</span><br><span class="line">                        &lt;dict&gt;</span><br><span class="line">                            &lt;key&gt;mcx_preference_settings&lt;/key&gt;</span><br><span class="line">                            &lt;dict&gt;</span><br><span class="line">                                &lt;key&gt;BraveWalletDisabled&lt;/key&gt;</span><br><span class="line">                                &lt;<span class="literal">true</span>/&gt;</span><br><span class="line">                                &lt;key&gt;BraveAIChatEnabled&lt;/key&gt;</span><br><span class="line">                                &lt;<span class="literal">false</span>/&gt;</span><br><span class="line">                                &lt;key&gt;BraveVPNDisabled&lt;/key&gt;</span><br><span class="line">                                &lt;<span class="literal">true</span>/&gt;</span><br><span class="line">                                &lt;key&gt;BraveRewardsDisabled&lt;/key&gt;</span><br><span class="line">                                &lt;<span class="literal">true</span>/&gt;</span><br><span class="line">                                &lt;key&gt;BraveNewsDisabled&lt;/key&gt;</span><br><span class="line">                                &lt;<span class="literal">true</span>/&gt;</span><br><span class="line">                                &lt;key&gt;BraveP3AEnabled&lt;/key&gt;</span><br><span class="line">                                &lt;<span class="literal">false</span>/&gt;</span><br><span class="line">                                &lt;key&gt;BraveStatsPingEnabled&lt;/key&gt;</span><br><span class="line">                                &lt;<span class="literal">false</span>/&gt;</span><br><span class="line">                                &lt;key&gt;MetricsReportingEnabled&lt;/key&gt;</span><br><span class="line">                                &lt;<span class="literal">false</span>/&gt;</span><br><span class="line">                                &lt;key&gt;BraveWebDiscoveryEnabled&lt;/key&gt;</span><br><span class="line">                                &lt;<span class="literal">false</span>/&gt;</span><br><span class="line">                                &lt;key&gt;UrlKeyedAnonymizedDataCollectionEnabled&lt;/key&gt;</span><br><span class="line">                                &lt;<span class="literal">false</span>/&gt;</span><br><span class="line">                                &lt;key&gt;UserFeedbackAllowed&lt;/key&gt;</span><br><span class="line">                                &lt;<span class="literal">false</span>/&gt;</span><br><span class="line">                            &lt;/dict&gt;</span><br><span class="line">                        &lt;/dict&gt;</span><br><span class="line">                    &lt;/array&gt;</span><br><span class="line">                &lt;/dict&gt;</span><br><span class="line">            &lt;/dict&gt;</span><br><span class="line">            &lt;key&gt;PayloadEnabled&lt;/key&gt;</span><br><span class="line">            &lt;<span class="literal">true</span>/&gt;</span><br><span class="line">            &lt;key&gt;PayloadIdentifier&lt;/key&gt;</span><br><span class="line">            &lt;string&gt;com.apple.ManagedClient.preferences.Brave&lt;/string&gt;</span><br><span class="line">            &lt;key&gt;PayloadType&lt;/key&gt;</span><br><span class="line">            &lt;string&gt;com.apple.ManagedClient.preferences&lt;/string&gt;</span><br><span class="line">            &lt;key&gt;PayloadUUID&lt;/key&gt;</span><br><span class="line">            &lt;string&gt;98765432-ABCD-EF01-2345-6789ABCDEF01&lt;/string&gt;</span><br><span class="line">            &lt;key&gt;PayloadVersion&lt;/key&gt;</span><br><span class="line">            &lt;<span class="built_in">integer</span>&gt;1&lt;/integer&gt;</span><br><span class="line">        &lt;/dict&gt;</span><br><span class="line">    &lt;/array&gt;</span><br><span class="line">    &lt;key&gt;PayloadDescription&lt;/key&gt;</span><br><span class="line">    &lt;string&gt;Brave Debloat&lt;/string&gt;</span><br><span class="line">    &lt;key&gt;PayloadDisplayName&lt;/key&gt;</span><br><span class="line">    &lt;string&gt;Brave Debloat&lt;/string&gt;</span><br><span class="line">    &lt;key&gt;PayloadIdentifier&lt;/key&gt;</span><br><span class="line">    &lt;string&gt;com.brave.debloat.profile&lt;/string&gt;</span><br><span class="line">    &lt;key&gt;PayloadOrganization&lt;/key&gt;</span><br><span class="line">    &lt;string&gt;LocalAdmin&lt;/string&gt;</span><br><span class="line">    &lt;key&gt;PayloadRemovalDisallowed&lt;/key&gt;</span><br><span class="line">    &lt;<span class="literal">false</span>/&gt;</span><br><span class="line">    &lt;key&gt;PayloadScope&lt;/key&gt;</span><br><span class="line">    &lt;string&gt;System&lt;/string&gt;</span><br><span class="line">    &lt;key&gt;PayloadType&lt;/key&gt;</span><br><span class="line">    &lt;string&gt;Configuration&lt;/string&gt;</span><br><span class="line">    &lt;key&gt;PayloadUUID&lt;/key&gt;</span><br><span class="line">    &lt;string&gt;12345678-ABCD-EF01-2345-6789ABCDEF01&lt;/string&gt;</span><br><span class="line">    &lt;key&gt;PayloadVersion&lt;/key&gt;</span><br><span class="line">    &lt;<span class="built_in">integer</span>&gt;1&lt;/integer&gt;</span><br><span class="line">&lt;/dict&gt;</span><br><span class="line">&lt;/plist&gt;</span><br><span class="line">EOF</span><br></pre></td></tr></table></figure>
+
+<h3 id="Step-2：安装配置描述文件"><a href="#Step-2：安装配置描述文件" class="headerlink" title="Step 2：安装配置描述文件"></a>Step 2：安装配置描述文件</h3><p>执行完成后，桌面会生成一个名为 <code>BraveDebloat.mobileconfig</code> 的文件。<strong>双击它</strong>，弹窗不用管，点 OK 即可。</p>
+<h3 id="Step-3：在系统设置中确认安装"><a href="#Step-3：在系统设置中确认安装" class="headerlink" title="Step 3：在系统设置中确认安装"></a>Step 3：在系统设置中确认安装</h3><p>打开 <strong>系统设置</strong>，搜索 <code>profiles</code>，进入 <strong>Device Management</strong> 界面。双击 <strong>Brave Debloat</strong>，然后点 <strong>Install</strong> 安装。</p>
+<p><figure class="article-image-figure"><img src="/image/brave-debloat-profiles.webp" alt="系统设置中的 Brave Debloat 描述文件" title="在 Device Management 中安装 Brave Debloat 描述文件" loading="lazy" decoding="async"><figcaption class="image-caption">在 Device Management 中安装 Brave Debloat 描述文件</figcaption></figure></p>
+<h3 id="Step-4：重启-Brave"><a href="#Step-4：重启-Brave" class="headerlink" title="Step 4：重启 Brave"></a>Step 4：重启 Brave</h3><p>重启 Brave 浏览器，此时那些没用的功能就全部消失了。</p>
+<h2 id="Windows"><a href="#Windows" class="headerlink" title="Windows"></a>Windows</h2><h3 id="Step-1：创建注册表文件"><a href="#Step-1：创建注册表文件" class="headerlink" title="Step 1：创建注册表文件"></a>Step 1：创建注册表文件</h3><p>在桌面新建一个<strong>文本文档</strong>，将以下内容粘贴进去：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">Windows Registry Editor Version 5.00</span><br><span class="line"></span><br><span class="line">[HKEY_LOCAL_MACHINE\SOFTWARE\Policies\BraveSoftware\Brave]</span><br><span class="line">&quot;BraveWalletDisabled&quot;=dword:00000001</span><br><span class="line">&quot;BraveAIChatEnabled&quot;=dword:00000000</span><br><span class="line">&quot;BraveVPNDisabled&quot;=dword:00000001</span><br><span class="line">&quot;BraveRewardsDisabled&quot;=dword:00000001</span><br><span class="line">&quot;BraveNewsDisabled&quot;=dword:00000001</span><br><span class="line">&quot;BraveP3AEnabled&quot;=dword:00000000</span><br><span class="line">&quot;BraveStatsPingEnabled&quot;=dword:00000000</span><br><span class="line">&quot;MetricsReportingEnabled&quot;=dword:00000000</span><br><span class="line">&quot;BraveWebDiscoveryEnabled&quot;=dword:00000000</span><br><span class="line">&quot;UrlKeyedAnonymizedDataCollectionEnabled&quot;=dword:00000000</span><br><span class="line">&quot;UserFeedbackAllowed&quot;=dword:00000000</span><br></pre></td></tr></table></figure>
+
+<h3 id="Step-2：修改后缀名并运行"><a href="#Step-2：修改后缀名并运行" class="headerlink" title="Step 2：修改后缀名并运行"></a>Step 2：修改后缀名并运行</h3><p>保存文件后，将后缀名从 <code>.txt</code> 改为 <code>.reg</code>（例如 <code>BraveDebloat.reg</code>）。<strong>双击运行</strong>，弹出的提示一路点「是」，允许写入注册表。</p>
+<h3 id="Step-3：重启-Brave"><a href="#Step-3：重启-Brave" class="headerlink" title="Step 3：重启 Brave"></a>Step 3：重启 Brave</h3><p>重启 Brave 浏览器，完成瘦身。</p>
+]]></content>
+      <categories>
+        <category>实用技巧</category>
+      </categories>
+  </entry>
+  <entry>
     <title>Shadowrocket &amp; Clash 进阶优化指南</title>
     <url>/2026/08/19/shadowrocket-clash-advanced-guide/</url>
     <content><![CDATA[<p>机场默认提供的订阅配置通常只做最基础的粗粒度分流，直接拿来当主力用经常会碰到各种瓶颈：大流量机场看视频流畅，但出口多为机房 IP，访问 Gemini、Claude 极易触发风控限制；专线节点纯净度高，但价格贵流量少，拿来跑日常下载太浪费。同时，移动端的客户端如果没有配置好，自己辛辛苦苦改好的分流规则一刷新就会被机场原始配置全量覆盖。</p>
@@ -79,21 +100,65 @@
       </tags>
   </entry>
   <entry>
-    <title>Brave 浏览器去除无用功能</title>
-    <url>/2026/07/18/brave-browser-debloat/</url>
-    <content><![CDATA[<p>由于 Chrome 浏览器对去广告插件有反制机制——检测到去广告扩展后会让 YouTube 变得卡顿——所以我决定转用 Brave。然而 Brave 也自带了不少臃肿功能，比如 AI、钱包、VPN 等等。下面分别介绍 macOS 和 Windows 上的一键精简方法。</p>
-<h2 id="macOS"><a href="#macOS" class="headerlink" title="macOS"></a>macOS</h2><h3 id="Step-1：生成配置描述文件"><a href="#Step-1：生成配置描述文件" class="headerlink" title="Step 1：生成配置描述文件"></a>Step 1：生成配置描述文件</h3><p>把下面这段命令<strong>整段</strong>粘贴到终端里执行：</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">cat</span> &lt;&lt; <span class="string">&#x27;EOF&#x27;</span> &gt; ~/Desktop/BraveDebloat.mobileconfig</span><br><span class="line">&lt;?xml version=<span class="string">&quot;1.0&quot;</span> encoding=<span class="string">&quot;UTF-8&quot;</span>?&gt;</span><br><span class="line">&lt;!DOCTYPE plist PUBLIC <span class="string">&quot;-//Apple//DTD PLIST 1.0//EN&quot;</span> <span class="string">&quot;http://www.apple.com/DTDs/PropertyList-1.0.dtd&quot;</span>&gt;</span><br><span class="line">&lt;plist version=<span class="string">&quot;1.0&quot;</span>&gt;</span><br><span class="line">&lt;dict&gt;</span><br><span class="line">    &lt;key&gt;PayloadContent&lt;/key&gt;</span><br><span class="line">    &lt;array&gt;</span><br><span class="line">        &lt;dict&gt;</span><br><span class="line">            &lt;key&gt;PayloadContent&lt;/key&gt;</span><br><span class="line">            &lt;dict&gt;</span><br><span class="line">                &lt;key&gt;com.brave.Browser&lt;/key&gt;</span><br><span class="line">                &lt;dict&gt;</span><br><span class="line">                    &lt;key&gt;Forced&lt;/key&gt;</span><br><span class="line">                    &lt;array&gt;</span><br><span class="line">                        &lt;dict&gt;</span><br><span class="line">                            &lt;key&gt;mcx_preference_settings&lt;/key&gt;</span><br><span class="line">                            &lt;dict&gt;</span><br><span class="line">                                &lt;key&gt;BraveWalletDisabled&lt;/key&gt;</span><br><span class="line">                                &lt;<span class="literal">true</span>/&gt;</span><br><span class="line">                                &lt;key&gt;BraveAIChatEnabled&lt;/key&gt;</span><br><span class="line">                                &lt;<span class="literal">false</span>/&gt;</span><br><span class="line">                                &lt;key&gt;BraveVPNDisabled&lt;/key&gt;</span><br><span class="line">                                &lt;<span class="literal">true</span>/&gt;</span><br><span class="line">                                &lt;key&gt;BraveRewardsDisabled&lt;/key&gt;</span><br><span class="line">                                &lt;<span class="literal">true</span>/&gt;</span><br><span class="line">                                &lt;key&gt;BraveNewsDisabled&lt;/key&gt;</span><br><span class="line">                                &lt;<span class="literal">true</span>/&gt;</span><br><span class="line">                                &lt;key&gt;BraveP3AEnabled&lt;/key&gt;</span><br><span class="line">                                &lt;<span class="literal">false</span>/&gt;</span><br><span class="line">                                &lt;key&gt;BraveStatsPingEnabled&lt;/key&gt;</span><br><span class="line">                                &lt;<span class="literal">false</span>/&gt;</span><br><span class="line">                                &lt;key&gt;MetricsReportingEnabled&lt;/key&gt;</span><br><span class="line">                                &lt;<span class="literal">false</span>/&gt;</span><br><span class="line">                                &lt;key&gt;BraveWebDiscoveryEnabled&lt;/key&gt;</span><br><span class="line">                                &lt;<span class="literal">false</span>/&gt;</span><br><span class="line">                                &lt;key&gt;UrlKeyedAnonymizedDataCollectionEnabled&lt;/key&gt;</span><br><span class="line">                                &lt;<span class="literal">false</span>/&gt;</span><br><span class="line">                                &lt;key&gt;UserFeedbackAllowed&lt;/key&gt;</span><br><span class="line">                                &lt;<span class="literal">false</span>/&gt;</span><br><span class="line">                            &lt;/dict&gt;</span><br><span class="line">                        &lt;/dict&gt;</span><br><span class="line">                    &lt;/array&gt;</span><br><span class="line">                &lt;/dict&gt;</span><br><span class="line">            &lt;/dict&gt;</span><br><span class="line">            &lt;key&gt;PayloadEnabled&lt;/key&gt;</span><br><span class="line">            &lt;<span class="literal">true</span>/&gt;</span><br><span class="line">            &lt;key&gt;PayloadIdentifier&lt;/key&gt;</span><br><span class="line">            &lt;string&gt;com.apple.ManagedClient.preferences.Brave&lt;/string&gt;</span><br><span class="line">            &lt;key&gt;PayloadType&lt;/key&gt;</span><br><span class="line">            &lt;string&gt;com.apple.ManagedClient.preferences&lt;/string&gt;</span><br><span class="line">            &lt;key&gt;PayloadUUID&lt;/key&gt;</span><br><span class="line">            &lt;string&gt;98765432-ABCD-EF01-2345-6789ABCDEF01&lt;/string&gt;</span><br><span class="line">            &lt;key&gt;PayloadVersion&lt;/key&gt;</span><br><span class="line">            &lt;<span class="built_in">integer</span>&gt;1&lt;/integer&gt;</span><br><span class="line">        &lt;/dict&gt;</span><br><span class="line">    &lt;/array&gt;</span><br><span class="line">    &lt;key&gt;PayloadDescription&lt;/key&gt;</span><br><span class="line">    &lt;string&gt;Brave Debloat&lt;/string&gt;</span><br><span class="line">    &lt;key&gt;PayloadDisplayName&lt;/key&gt;</span><br><span class="line">    &lt;string&gt;Brave Debloat&lt;/string&gt;</span><br><span class="line">    &lt;key&gt;PayloadIdentifier&lt;/key&gt;</span><br><span class="line">    &lt;string&gt;com.brave.debloat.profile&lt;/string&gt;</span><br><span class="line">    &lt;key&gt;PayloadOrganization&lt;/key&gt;</span><br><span class="line">    &lt;string&gt;LocalAdmin&lt;/string&gt;</span><br><span class="line">    &lt;key&gt;PayloadRemovalDisallowed&lt;/key&gt;</span><br><span class="line">    &lt;<span class="literal">false</span>/&gt;</span><br><span class="line">    &lt;key&gt;PayloadScope&lt;/key&gt;</span><br><span class="line">    &lt;string&gt;System&lt;/string&gt;</span><br><span class="line">    &lt;key&gt;PayloadType&lt;/key&gt;</span><br><span class="line">    &lt;string&gt;Configuration&lt;/string&gt;</span><br><span class="line">    &lt;key&gt;PayloadUUID&lt;/key&gt;</span><br><span class="line">    &lt;string&gt;12345678-ABCD-EF01-2345-6789ABCDEF01&lt;/string&gt;</span><br><span class="line">    &lt;key&gt;PayloadVersion&lt;/key&gt;</span><br><span class="line">    &lt;<span class="built_in">integer</span>&gt;1&lt;/integer&gt;</span><br><span class="line">&lt;/dict&gt;</span><br><span class="line">&lt;/plist&gt;</span><br><span class="line">EOF</span><br></pre></td></tr></table></figure>
+    <title>电子扫盲｜显示器</title>
+    <url>/2025/02/12/tech-basics-display-technologies/</url>
+    <content><![CDATA[<p>先讲讲LCD显示器的基本原理。首先是一层液晶材料用来显示图像，但由于液晶材料本身不发光，所以再在它的底部加上一层背光板（发光的板子），这就构成了LCD屏。</p>
+<p>LCD的优点是延迟很低，价格也很便宜，很适合打fps游戏（first player shooting，第一人称射击游戏），因此大部分游戏笔记本都采用LCD屏。但是LCD屏有个缺点，就是对比度（明暗差异，对比度越高，色彩表现越好，画面越真实）很低。什么意思呢？比如你在LCD屏上打开一张纯黑的图片，然后你再把房间里的灯关掉，你就会发现屏幕居然在发光！这是因为LCD屏在打开的时候，下面的背光板是一直亮着的，所以即便黑色依然会发光。由此我们也可以推断出LCD屏会很耗电。<em>就我个人而言，我见过的对比度控制的比较好的LCD屏是iPad Pro 2020。</em> 而且LCD屏还有个缺点就是屏幕边缘会漏光。（如下图）</p>
+<p><figure class="article-image-figure"><img src="/image/2.webp" alt="一张图片" title="LCD漏光现象" loading="lazy" decoding="async"><figcaption class="image-caption">LCD漏光现象</figcaption></figure></p>
+<p>这时候有人就诞生了一个想法，如果说我把LCD的背光板切成很多小份，这些背光板上方如果显示的是黑色，我就把这个背光板关掉；如果显示的不是黑色，那就把背光板打开。这样不就实现了高对比度吗？这种<strong>分区背光</strong>的LCD屏就叫做<strong>miniLED</strong>，miniLED本质上讲依旧属于LCD屏，但显示效果要远远好于LCD。而且，miniLED的显示效果跟分区数（即背光板被切成的份数）是正相关的，分区数量越多，那明暗的差异自然越大，显示效果自然越好。</p>
+<p>但miniLED也有缺点。首先是光晕现象。比如一张纯黑的图片，正中间有一个杯子（如下图），那么杯子的周围就会形成一圈光晕。当然，如果分区数量够多，那光晕现象自然也会减小。</p>
+<p><figure class="article-image-figure"><img src="/image/1.webp" alt="一张图片" title="miniLED光晕现象" loading="lazy" decoding="async"><figcaption class="image-caption">miniLED光晕现象</figcaption></figure></p>
+]]></content>
+      <categories>
+        <category>FeeFee电子扫盲</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>Windows 11 优化方案</title>
+    <url>/2026/07/18/windows-11-optimization-guide/</url>
+    <content><![CDATA[<p>Windows 11 自带了大量臃肿功能和恼人的 UI 变动。以下是一套完整的优化方案，涵盖精简系统、还原经典界面、激活、禁用更新等。</p>
+<h2 id="精简系统镜像"><a href="#精简系统镜像" class="headerlink" title="精简系统镜像"></a>精简系统镜像</h2><p>与其装完再删，不如一开始就用精简版镜像。GitHub 上有两个知名项目：</p>
+<ul>
+<li><strong>Tiny11</strong> — 删除了大部分无用系统组件，保留核心功能，适合大多数人</li>
+<li><strong>nano11</strong> — 比 Tiny11 更激进的精简方案，适合追求极致精简的用户</li>
+</ul>
+<p>在 GitHub 搜索 <code>Tiny11</code> 或 <code>nano11</code> 即可找到。配合 <strong>Rufus</strong>（开源刷机工具）制作启动 U 盘进行安装。</p>
+<h2 id="还原经典开始菜单和任务栏"><a href="#还原经典开始菜单和任务栏" class="headerlink" title="还原经典开始菜单和任务栏"></a>还原经典开始菜单和任务栏</h2><p>Win11 的开始菜单和任务栏改动很大，如果你更习惯 Win10 的风格，可以使用 <strong>StartAllBack</strong> 一键还原。</p>
+<p>下载地址：<a href="https://www.ghxi.com/startallback.html">https://www.ghxi.com/startallback.html</a></p>
+<h2 id="还原经典右键菜单"><a href="#还原经典右键菜单" class="headerlink" title="还原经典右键菜单"></a>还原经典右键菜单</h2><p>Win11 的右键菜单默认只显示几个选项，完整菜单被折叠了。用以下方法可以恢复 Win10 样式的完整右键菜单。</p>
+<p>以<strong>管理员身份</strong>打开 CMD 或 PowerShell，输入：</p>
+<figure class="highlight powershell"><table><tr><td class="code"><pre><span class="line">reg add <span class="string">&quot;HKCU\Software\Classes\CLSID\&#123;86ca1aa0-34aa-4e8b-a509-50c905bae2a2&#125;\InprocServer32&quot;</span> /f /ve</span><br></pre></td></tr></table></figure>
 
-<h3 id="Step-2：安装配置描述文件"><a href="#Step-2：安装配置描述文件" class="headerlink" title="Step 2：安装配置描述文件"></a>Step 2：安装配置描述文件</h3><p>执行完成后，桌面会生成一个名为 <code>BraveDebloat.mobileconfig</code> 的文件。<strong>双击它</strong>，弹窗不用管，点 OK 即可。</p>
-<h3 id="Step-3：在系统设置中确认安装"><a href="#Step-3：在系统设置中确认安装" class="headerlink" title="Step 3：在系统设置中确认安装"></a>Step 3：在系统设置中确认安装</h3><p>打开 <strong>系统设置</strong>，搜索 <code>profiles</code>，进入 <strong>Device Management</strong> 界面。双击 <strong>Brave Debloat</strong>，然后点 <strong>Install</strong> 安装。</p>
-<p><figure class="article-image-figure"><img src="/image/brave-debloat-profiles.webp" alt="系统设置中的 Brave Debloat 描述文件" title="在 Device Management 中安装 Brave Debloat 描述文件" loading="lazy" decoding="async"><figcaption class="image-caption">在 Device Management 中安装 Brave Debloat 描述文件</figcaption></figure></p>
-<h3 id="Step-4：重启-Brave"><a href="#Step-4：重启-Brave" class="headerlink" title="Step 4：重启 Brave"></a>Step 4：重启 Brave</h3><p>重启 Brave 浏览器，此时那些没用的功能就全部消失了。</p>
-<h2 id="Windows"><a href="#Windows" class="headerlink" title="Windows"></a>Windows</h2><h3 id="Step-1：创建注册表文件"><a href="#Step-1：创建注册表文件" class="headerlink" title="Step 1：创建注册表文件"></a>Step 1：创建注册表文件</h3><p>在桌面新建一个<strong>文本文档</strong>，将以下内容粘贴进去：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">Windows Registry Editor Version 5.00</span><br><span class="line"></span><br><span class="line">[HKEY_LOCAL_MACHINE\SOFTWARE\Policies\BraveSoftware\Brave]</span><br><span class="line">&quot;BraveWalletDisabled&quot;=dword:00000001</span><br><span class="line">&quot;BraveAIChatEnabled&quot;=dword:00000000</span><br><span class="line">&quot;BraveVPNDisabled&quot;=dword:00000001</span><br><span class="line">&quot;BraveRewardsDisabled&quot;=dword:00000001</span><br><span class="line">&quot;BraveNewsDisabled&quot;=dword:00000001</span><br><span class="line">&quot;BraveP3AEnabled&quot;=dword:00000000</span><br><span class="line">&quot;BraveStatsPingEnabled&quot;=dword:00000000</span><br><span class="line">&quot;MetricsReportingEnabled&quot;=dword:00000000</span><br><span class="line">&quot;BraveWebDiscoveryEnabled&quot;=dword:00000000</span><br><span class="line">&quot;UrlKeyedAnonymizedDataCollectionEnabled&quot;=dword:00000000</span><br><span class="line">&quot;UserFeedbackAllowed&quot;=dword:00000000</span><br></pre></td></tr></table></figure>
+<p>然后重启资源管理器即可生效。</p>
+<p>如果想恢复回 Win11 默认右键菜单：</p>
+<figure class="highlight powershell"><table><tr><td class="code"><pre><span class="line">reg delete <span class="string">&quot;HKCU\Software\Classes\CLSID\&#123;86ca1aa0-34aa-4e8b-a509-50c905bae2a2&#125;&quot;</span> /f</span><br></pre></td></tr></table></figure>
 
-<h3 id="Step-2：修改后缀名并运行"><a href="#Step-2：修改后缀名并运行" class="headerlink" title="Step 2：修改后缀名并运行"></a>Step 2：修改后缀名并运行</h3><p>保存文件后，将后缀名从 <code>.txt</code> 改为 <code>.reg</code>（例如 <code>BraveDebloat.reg</code>）。<strong>双击运行</strong>，弹出的提示一路点「是」，允许写入注册表。</p>
-<h3 id="Step-3：重启-Brave"><a href="#Step-3：重启-Brave" class="headerlink" title="Step 3：重启 Brave"></a>Step 3：重启 Brave</h3><p>重启 Brave 浏览器，完成瘦身。</p>
+<h2 id="关闭动画和半透明效果"><a href="#关闭动画和半透明效果" class="headerlink" title="关闭动画和半透明效果"></a>关闭动画和半透明效果</h2><p>打开 <strong>设置 → 辅助功能 → 视觉效果</strong>，关闭以下两项：</p>
+<ul>
+<li><strong>动画效果</strong> — 关闭</li>
+<li><strong>透明效果</strong> — 关闭</li>
+</ul>
+<p>关闭后系统响应会更跟手，尤其对低配机器提升明显。</p>
+<h2 id="激活-Windows-和-Office"><a href="#激活-Windows-和-Office" class="headerlink" title="激活 Windows 和 Office"></a>激活 Windows 和 Office</h2><p>以<strong>管理员身份</strong>打开 CMD 或 PowerShell，输入：</p>
+<figure class="highlight powershell"><table><tr><td class="code"><pre><span class="line"><span class="built_in">irm</span> https://get.activated.win | <span class="built_in">iex</span></span><br></pre></td></tr></table></figure>
+
+<p>在弹出的菜单中选择：</p>
+<ul>
+<li><code>[1] HWID</code> — 永久激活 Windows（硬件数字许可证）</li>
+<li><code>[2] Ohook</code> — 永久激活 Office</li>
+</ul>
+<h2 id="永久禁止-Windows-更新"><a href="#永久禁止-Windows-更新" class="headerlink" title="永久禁止 Windows 更新"></a>永久禁止 Windows 更新</h2><p>使用 <strong>Windows Update Blocker</strong> 工具，一键永久禁止自动更新：</p>
+<p>下载地址：<a href="https://www.sordum.org/downloads/?st-windows-update-blocker">https://www.sordum.org/downloads/?st-windows-update-blocker</a></p>
+<h2 id="删除-禁用-Win11-无用功能"><a href="#删除-禁用-Win11-无用功能" class="headerlink" title="删除 &#x2F; 禁用 Win11 无用功能"></a>删除 &#x2F; 禁用 Win11 无用功能</h2><p><strong>Chris Titus Tech</strong> 的 Windows 工具箱，提供图形界面，一键删除或禁用各种臃肿功能。</p>
+<p>以<strong>管理员身份</strong>打开 CMD 或 PowerShell，输入：</p>
+<figure class="highlight powershell"><table><tr><td class="code"><pre><span class="line"><span class="built_in">irm</span> https://christitus.com/win | <span class="built_in">iex</span></span><br></pre></td></tr></table></figure>
+
+<p>GitHub 项目地址：<a href="https://github.com/ChrisTitusTech/winutil">https://github.com/ChrisTitusTech/winutil</a></p>
+<h2 id="系统汉化"><a href="#系统汉化" class="headerlink" title="系统汉化"></a>系统汉化</h2><p>如果安装的是英文版 Windows，参考以下教程进行汉化：</p>
+<p><a href="https://www.cnblogs.com/ACDIV/p/19156603">https://www.cnblogs.com/ACDIV/p/19156603</a></p>
+<h2 id="推荐软件"><a href="#推荐软件" class="headerlink" title="推荐软件"></a>推荐软件</h2><ul>
+<li><strong>Flow Launcher</strong> — 开源的快速启动器，类似 macOS 的 Spotlight，按快捷键即可搜索应用、文件、网页等</li>
+</ul>
 ]]></content>
       <categories>
         <category>实用技巧</category>
@@ -103,7 +168,7 @@
     <title>Ubuntu 26.04 (Apple Silicon / Parallels) 配置与优化记录</title>
     <url>/2026/08/26/ubuntu-26-04-parallels-optimization/</url>
     <content><![CDATA[<p>很久以前我装过一次 Ubuntu，当时各种依赖、字体和驱动配置实在太折腾，没用多久就放弃了。现在有了 AI Agent，很多底层的调试和脚本一句话就能搞定，整个折腾流程顺畅了许多。</p>
-<p>这篇文档是我在 Apple Silicon Mac 的 Parallels 虚拟机里调教 Ubuntu 26.04 的完整记录。内容涵盖了屏幕高刷锁定、GNOME 现代主题架构与深色模式避坑、全透明悬浮 Dock、输入法迁移、终端与浏览器调优、常用原生工具及系统底层服务，留作以后换机或在实体机上装 Linux 时的速查参考。</p>
+<p>这篇文档是我在 Apple Silicon Mac 的 Parallels 虚拟机里调教 Ubuntu 26.04 的完整记录。内容涵盖了屏幕高刷锁定、GNOME 现代主题架构与深色模式避坑、全透明悬浮 Dock、输入法迁移、终端与浏览器调优、系统深度瘦身与去遥测（彻底剥离 Snap、接入 Flatpak）、常用原生工具及系统底层服务，留作以后换机或在实体机上装 Linux 时的速查参考。</p>
 <h2 id="1-屏幕分辨率与高刷锁定（2560×1440-180Hz）"><a href="#1-屏幕分辨率与高刷锁定（2560×1440-180Hz）" class="headerlink" title="1. 屏幕分辨率与高刷锁定（2560×1440 @ 180Hz）"></a>1. 屏幕分辨率与高刷锁定（2560×1440 @ 180Hz）</h2><h3 id="遇到问题"><a href="#遇到问题" class="headerlink" title="遇到问题"></a>遇到问题</h3><ol>
 <li><strong>分辨率与刷新率缺失</strong>：系统初始缺少 2K 16:9（2560×1440）及 180Hz 高刷新率选项。</li>
 <li><strong>分辨率被动态重置</strong>：Parallels Tools 后台进程在拖动或缩放 Mac 窗口时会触发动态分辨率检测，将虚拟机强行改回当前窗口尺寸并将刷新率重置为 60Hz。</li>
@@ -241,20 +306,41 @@
 <li><strong>Brave colors</strong>：选择 <strong>Same as Linux</strong>（跟随系统）。</li>
 <li><strong>Dark Reader 扩展</strong>：移除了 GTK 的冲突信号后，Dark Reader 选择“跟随系统”即可正常工作，不再出现 2 秒后弹回浅色的问题。</li>
 </ul>
-<h2 id="7-系统底层与外设优化"><a href="#7-系统底层与外设优化" class="headerlink" title="7. 系统底层与外设优化"></a>7. 系统底层与外设优化</h2><h3 id="7-1-ZRAM-内存实时压缩"><a href="#7-1-ZRAM-内存实时压缩" class="headerlink" title="7.1 ZRAM 内存实时压缩"></a>7.1 ZRAM 内存实时压缩</h3><ul>
+<h2 id="7-系统瘦身、去遥测与包管理（剥离-Snap-接入-Flatpak）"><a href="#7-系统瘦身、去遥测与包管理（剥离-Snap-接入-Flatpak）" class="headerlink" title="7. 系统瘦身、去遥测与包管理（剥离 Snap &amp; 接入 Flatpak）"></a>7. 系统瘦身、去遥测与包管理（剥离 Snap &amp; 接入 Flatpak）</h2><p>Ubuntu 这几年把不少常用软件甚至底层运行时都硬塞进了 Snap。启动慢、吃磁盘不说，每次敲 <code>lsblk</code> 还会被一堆虚拟 loop 回环挂载点刷屏。把 Snap 彻底剥离并锁定 APT 规则，换用轻量规范的原生 GNOME 软件中心与 Flatpak，再顺手干掉系统报错弹窗与商业广告，系统会清爽很多。</p>
+<h3 id="7-1-彻底卸载-Snap-并锁定-APT-规则（防止静默带回）"><a href="#7-1-彻底卸载-Snap-并锁定-APT-规则（防止静默带回）" class="headerlink" title="7.1 彻底卸载 Snap 并锁定 APT 规则（防止静默带回）"></a>7.1 彻底卸载 Snap 并锁定 APT 规则（防止静默带回）</h3><ol>
+<li><strong>按依赖顺序卸载 Snap 应用与底层运行时</strong>：<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">sudo</span> snap remove --purge snap-store gnome-46-2404 gtk-common-themes mesa-2404 core24 bare snapd</span><br></pre></td></tr></table></figure></li>
+<li><strong>彻底清除 <code>snapd</code> 守护进程与残留缓存目录</strong>：<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">sudo</span> apt-get purge -y snapd</span><br><span class="line"><span class="built_in">sudo</span> <span class="built_in">rm</span> -rf ~/snap /var/cache/snapd /var/lib/snapd /snap /root/snap</span><br></pre></td></tr></table></figure></li>
+<li><strong>配置 APT Pinning 锁定规则</strong>：<br>Ubuntu 的部分 APT 命令（如 <code>apt install firefox</code>）默认会自动唤起 Snap。写入一条负优先级规则，彻底断掉系统自动把 Snap 装回来的后路：<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">sudo</span> bash -c <span class="string">&#x27;cat &lt;&lt;EOF &gt; /etc/apt/preferences.d/nosnap.pref</span></span><br><span class="line"><span class="string">Package: snapd</span></span><br><span class="line"><span class="string">Pin: release a=*</span></span><br><span class="line"><span class="string">Pin-Priority: -10</span></span><br><span class="line"><span class="string">EOF&#x27;</span></span><br></pre></td></tr></table></figure></li>
+</ol>
+<h3 id="7-2-原生-GNOME-软件中心与-Flatpak-Flathub-生态"><a href="#7-2-原生-GNOME-软件中心与-Flatpak-Flathub-生态" class="headerlink" title="7.2 原生 GNOME 软件中心与 Flatpak &#x2F; Flathub 生态"></a>7.2 原生 GNOME 软件中心与 Flatpak &#x2F; Flathub 生态</h3><p>移除 Snap 之后，换上原生轻量的 GNOME 软件中心，并接入 Flatpak 生态管理跨分发版应用：</p>
+<ol>
+<li><strong>安装原生软件中心与 Flatpak 插件</strong>：<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">sudo</span> apt-get update</span><br><span class="line"><span class="built_in">sudo</span> apt-get install -y flatpak gnome-software gnome-software-plugin-flatpak</span><br></pre></td></tr></table></figure></li>
+<li><strong>添加 Flathub 官方软件源</strong>：<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo</span><br></pre></td></tr></table></figure>
+如果官方源下载慢，可以切到国内镜像（如上海交大源）：<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">flatpak remote-modify flathub --url=https://mirror.sjtu.edu.cn/flathub</span><br></pre></td></tr></table></figure></li>
+</ol>
+<h3 id="7-3-关闭崩溃报错弹窗与遥测数据收集"><a href="#7-3-关闭崩溃报错弹窗与遥测数据收集" class="headerlink" title="7.3 关闭崩溃报错弹窗与遥测数据收集"></a>7.3 关闭崩溃报错弹窗与遥测数据收集</h3><p>平时用 Ubuntu 最烦时不时跳出“系统遇到内部错误”的弹窗。后台的 Apport、Whoopsie 和 Ubuntu Report 遥测还在默默吃 I&#x2F;O 记日志。关停服务并彻底清理：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 停止并禁用报错守护进程</span></span><br><span class="line"><span class="built_in">sudo</span> systemctl stop apport whoopsie 2&gt;/dev/null || <span class="literal">true</span></span><br><span class="line"><span class="built_in">sudo</span> systemctl <span class="built_in">disable</span> apport whoopsie 2&gt;/dev/null || <span class="literal">true</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 彻底卸载遥测与报错组件</span></span><br><span class="line"><span class="built_in">sudo</span> apt-get purge -y apport apport-gtk whoopsie ubuntu-report popularity-contest</span><br><span class="line"></span><br><span class="line"><span class="comment"># 清空历史崩溃转储文件</span></span><br><span class="line"><span class="built_in">sudo</span> <span class="built_in">rm</span> -rf /var/crash/*</span><br></pre></td></tr></table></figure>
+
+<h3 id="7-4-屏蔽-Ubuntu-Pro-商业推广与-MOTD-登录新闻"><a href="#7-4-屏蔽-Ubuntu-Pro-商业推广与-MOTD-登录新闻" class="headerlink" title="7.4 屏蔽 Ubuntu Pro 商业推广与 MOTD 登录新闻"></a>7.4 屏蔽 Ubuntu Pro 商业推广与 MOTD 登录新闻</h3><p>每次在终端执行 <code>apt upgrade</code> 都会带出一段 Ubuntu Pro &#x2F; ESM 商业订阅提示，登录终端时还会有动态联网新闻轮播：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 移除 APT 中的 Ubuntu Pro 广告注入钩子</span></span><br><span class="line"><span class="built_in">sudo</span> <span class="built_in">rm</span> -f /etc/apt/apt.conf.d/20apt-esm-hook.conf</span><br><span class="line"></span><br><span class="line"><span class="comment"># 禁用登录终端时的 MOTD 联网新闻轮播</span></span><br><span class="line"><span class="built_in">sudo</span> sed -i <span class="string">&quot;s/ENABLED=1/ENABLED=0/&quot;</span> /etc/default/motd-news</span><br></pre></td></tr></table></figure>
+
+<h3 id="7-5-卸载预装游戏与清理孤立缓存"><a href="#7-5-卸载预装游戏与清理孤立缓存" class="headerlink" title="7.5 卸载预装游戏与清理孤立缓存"></a>7.5 卸载预装游戏与清理孤立缓存</h3><p>扫雷、数独、麻将、纸牌这些系统预装小游戏平时用不上，直接 purge 掉，再清理孤立依赖和包缓存：</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 卸载预装小游戏</span></span><br><span class="line"><span class="built_in">sudo</span> apt-get purge -y gnome-mines gnome-sudoku gnome-mahjongg aisleriot 2&gt;/dev/null || <span class="literal">true</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 自动清理孤立依赖库与残留配置</span></span><br><span class="line"><span class="built_in">sudo</span> apt-get autoremove -y --purge</span><br><span class="line"></span><br><span class="line"><span class="comment"># 清空 apt 安装包下载缓存释放空间</span></span><br><span class="line"><span class="built_in">sudo</span> apt-get clean</span><br></pre></td></tr></table></figure>
+
+<h2 id="8-系统底层与外设优化"><a href="#8-系统底层与外设优化" class="headerlink" title="8. 系统底层与外设优化"></a>8. 系统底层与外设优化</h2><h3 id="8-1-ZRAM-内存实时压缩"><a href="#8-1-ZRAM-内存实时压缩" class="headerlink" title="8.1 ZRAM 内存实时压缩"></a>8.1 ZRAM 内存实时压缩</h3><ul>
 <li>安装 <code>zram-tools</code> 并启用 <code>zramswap.service</code>。</li>
 <li>在 <code>/etc/default/zramswap</code> 中将压缩算法设为 <code>zstd</code>，容量上限设为 100% 物理内存（5.3GB），优先级设为 100。</li>
 <li><strong>效果</strong>：系统可用 Swap 扩充至 9.1GB，优先在内存中压缩暂存不活跃数据，避免因内存不足触发磁盘 I&#x2F;O 卡顿。</li>
 </ul>
-<h3 id="7-2-截图快捷键"><a href="#7-2-截图快捷键" class="headerlink" title="7.2 截图快捷键"></a>7.2 截图快捷键</h3><ul>
+<h3 id="8-2-截图快捷键"><a href="#8-2-截图快捷键" class="headerlink" title="8.2 截图快捷键"></a>8.2 截图快捷键</h3><ul>
 <li>将交互式截图工具快捷键绑定为 <code>Ctrl + Shift + S</code>：<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">gsettings <span class="built_in">set</span> org.gnome.shell.keybindings show-screenshot-ui <span class="string">&quot;[&#x27;Print&#x27;, &#x27;&lt;Control&gt;&lt;Shift&gt;s&#x27;, &#x27;&lt;Super&gt;&lt;Shift&gt;s&#x27;]&quot;</span></span><br></pre></td></tr></table></figure></li>
 <li>支持区域框选、窗口截图与屏幕录制，截图自动存入剪贴板并保存在 <code>~/Pictures/Screenshots</code>。</li>
 </ul>
-<h3 id="7-3-剪贴板与拖拽服务"><a href="#7-3-剪贴板与拖拽服务" class="headerlink" title="7.3 剪贴板与拖拽服务"></a>7.3 剪贴板与拖拽服务</h3><p>创建 Systemd 用户守护服务 <code>~/.config/systemd/user/parallels-tools-user.service</code> 并安装 <code>wl-clipboard</code> 与 <code>xclip</code>，确保登录后自动恢复与 Mac 宿主机的双向剪贴板和文件拖放支持。</p>
-<h3 id="7-4-系统监控与任务管理（Mission-Center）"><a href="#7-4-系统监控与任务管理（Mission-Center）" class="headerlink" title="7.4 系统监控与任务管理（Mission Center）"></a>7.4 系统监控与任务管理（Mission Center）</h3><ul>
+<h3 id="8-3-剪贴板与拖拽服务"><a href="#8-3-剪贴板与拖拽服务" class="headerlink" title="8.3 剪贴板与拖拽服务"></a>8.3 剪贴板与拖拽服务</h3><p>创建 Systemd 用户守护服务 <code>~/.config/systemd/user/parallels-tools-user.service</code> 并安装 <code>wl-clipboard</code> 与 <code>xclip</code>，确保登录后自动恢复与 Mac 宿主机的双向剪贴板和文件拖放支持。</p>
+<h3 id="8-4-系统监控与任务管理（Mission-Center）"><a href="#8-4-系统监控与任务管理（Mission-Center）" class="headerlink" title="8.4 系统监控与任务管理（Mission Center）"></a>8.4 系统监控与任务管理（Mission Center）</h3><ul>
 <li>安装了 <strong>Mission Center</strong>，界面风格和交互逻辑几乎是 Windows 任务管理器的翻版，支持直观监控 CPU、内存、磁盘 I&#x2F;O、网络利用率及细粒度进程管理，相比原生系统监视器更加直观好用。</li>
 </ul>
-<h3 id="7-5-Nautilus-一级右键菜单扩展（复制文件路径）"><a href="#7-5-Nautilus-一级右键菜单扩展（复制文件路径）" class="headerlink" title="7.5 Nautilus 一级右键菜单扩展（复制文件路径）"></a>7.5 Nautilus 一级右键菜单扩展（复制文件路径）</h3><p>为了彻底摆脱二级 <code>Scripts</code> 子菜单的繁琐操作，直接在文件管理器一级右键菜单中调用复制路径：</p>
+<h3 id="8-5-Nautilus-一级右键菜单扩展（复制文件路径）"><a href="#8-5-Nautilus-一级右键菜单扩展（复制文件路径）" class="headerlink" title="8.5 Nautilus 一级右键菜单扩展（复制文件路径）"></a>8.5 Nautilus 一级右键菜单扩展（复制文件路径）</h3><p>为了彻底摆脱二级 <code>Scripts</code> 子菜单的繁琐操作，直接在文件管理器一级右键菜单中调用复制路径：</p>
 <ol>
 <li><strong>安装 Python 扩展支持库</strong>：<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">sudo</span> apt install -y python3-nautilus</span><br></pre></td></tr></table></figure></li>
 <li><strong>安装 <code>nautilus-copy-path</code> 插件</strong>：<ul>
@@ -268,7 +354,7 @@
 </ul>
 </li>
 </ol>
-<h2 id="8-常用软件与-Antigravity-开发环境"><a href="#8-常用软件与-Antigravity-开发环境" class="headerlink" title="8. 常用软件与 Antigravity 开发环境"></a>8. 常用软件与 Antigravity 开发环境</h2><h3 id="8-1-原生-ARM64-常用生产力软件（LocalSend-PeaZip）"><a href="#8-1-原生-ARM64-常用生产力软件（LocalSend-PeaZip）" class="headerlink" title="8.1 原生 ARM64 常用生产力软件（LocalSend &amp; PeaZip）"></a>8.1 原生 ARM64 常用生产力软件（LocalSend &amp; PeaZip）</h3><ul>
+<h2 id="9-常用软件与-Antigravity-开发环境"><a href="#9-常用软件与-Antigravity-开发环境" class="headerlink" title="9. 常用软件与 Antigravity 开发环境"></a>9. 常用软件与 Antigravity 开发环境</h2><h3 id="9-1-原生-ARM64-常用生产力软件（LocalSend-PeaZip）"><a href="#9-1-原生-ARM64-常用生产力软件（LocalSend-PeaZip）" class="headerlink" title="9.1 原生 ARM64 常用生产力软件（LocalSend &amp; PeaZip）"></a>9.1 原生 ARM64 常用生产力软件（LocalSend &amp; PeaZip）</h3><ul>
 <li><strong>LocalSend（局域网跨平台隔空互传）</strong>：<ul>
 <li>官方 Linux aarch64 原生 Flutter 构建，安装于 <code>~/.local/share/localsend</code>，支持桌面图标点击与终端 <code>localsend</code> 命令启动。</li>
 </ul>
@@ -278,7 +364,7 @@
 </ul>
 </li>
 </ul>
-<h3 id="8-2-Antigravity-部署、补丁与深浅模式自动同步"><a href="#8-2-Antigravity-部署、补丁与深浅模式自动同步" class="headerlink" title="8.2 Antigravity 部署、补丁与深浅模式自动同步"></a>8.2 Antigravity 部署、补丁与深浅模式自动同步</h3><ul>
+<h3 id="9-2-Antigravity-部署、补丁与深浅模式自动同步"><a href="#9-2-Antigravity-部署、补丁与深浅模式自动同步" class="headerlink" title="9.2 Antigravity 部署、补丁与深浅模式自动同步"></a>9.2 Antigravity 部署、补丁与深浅模式自动同步</h3><ul>
 <li><strong>部署与权限</strong>：安装于 <code>/opt/antigravity</code>，修复 <code>chrome-sandbox</code> 权限，生成 <code>/usr/local/bin/antigravity</code> 全局命令与桌面图标。</li>
 <li><strong>标题栏色差与窗口唤醒修复</strong>：<ul>
 <li>修改 <code>dist/ipcHandlers.js</code>，将主题同步平台判断放宽至非 macOS 系统，使 Linux 下窗口按钮区域颜色与主题实时匹配。</li>
@@ -288,11 +374,11 @@
 <li><strong>自动打补丁脚本</strong>：编写 <code>/opt/antigravity/patch-linux-fixes.js</code> 并在启动脚本中调用，确保应用自动更新后补丁依然生效。</li>
 <li><strong>跟随系统自动切换深浅主题</strong>：<br>在 Antigravity &#x2F; VS Code 中按 <kbd>Ctrl</kbd> + <kbd>,</kbd> 打开设置，搜索并勾选 <code>Auto Detect Color Scheme</code>，或在 <code>settings.json</code> 中配置：<figure class="highlight json"><table><tr><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">  <span class="attr">&quot;window.autoDetectColorScheme&quot;</span><span class="punctuation">:</span> <span class="literal"><span class="keyword">true</span></span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;workbench.preferredLightColorTheme&quot;</span><span class="punctuation">:</span> <span class="string">&quot;Default Light Modern&quot;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;workbench.preferredDarkColorTheme&quot;</span><span class="punctuation">:</span> <span class="string">&quot;Default Dark Modern&quot;</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure></li>
 </ul>
-<h3 id="8-3-现代开发工具"><a href="#8-3-现代开发工具" class="headerlink" title="8.3 现代开发工具"></a>8.3 现代开发工具</h3><ul>
+<h3 id="9-3-现代开发工具"><a href="#9-3-现代开发工具" class="headerlink" title="9.3 现代开发工具"></a>9.3 现代开发工具</h3><ul>
 <li><strong>uv</strong>：安装于 <code>/usr/local/bin/uv</code>，用于 Python 环境隔离和包管理。</li>
 <li><strong>OpenCLI</strong>：全局安装 <code>@jackwener/opencli</code>，并部署相关 skills 到 <code>~/.gemini/config/skills/</code>。</li>
 </ul>
-<h3 id="8-4-Web-开发中的深浅模式落地（防闪白与工程实践）"><a href="#8-4-Web-开发中的深浅模式落地（防闪白与工程实践）" class="headerlink" title="8.4 Web 开发中的深浅模式落地（防闪白与工程实践）"></a>8.4 Web 开发中的深浅模式落地（防闪白与工程实践）</h3><p>在开发网站或前端项目时，实现一个体验完善的深浅模式切换需要兼顾系统偏好、手动覆盖和防白屏闪烁（Anti-FOUC）。</p>
+<h3 id="9-4-Web-开发中的深浅模式落地（防闪白与工程实践）"><a href="#9-4-Web-开发中的深浅模式落地（防闪白与工程实践）" class="headerlink" title="9.4 Web 开发中的深浅模式落地（防闪白与工程实践）"></a>9.4 Web 开发中的深浅模式落地（防闪白与工程实践）</h3><p>在开发网站或前端项目时，实现一个体验完善的深浅模式切换需要兼顾系统偏好、手动覆盖和防白屏闪烁（Anti-FOUC）。</p>
 <h4 id="1-核心架构：CSS-变量与-Class-切换"><a href="#1-核心架构：CSS-变量与-Class-切换" class="headerlink" title="1. 核心架构：CSS 变量与 Class 切换"></a>1. 核心架构：CSS 变量与 Class 切换</h4><p>生产环境通常在 <code>&lt;html&gt;</code> 标签上挂载 <code>.dark</code> 类，通过 CSS 变量统一管理色彩：</p>
 <figure class="highlight css"><table><tr><td class="code"><pre><span class="line"><span class="selector-pseudo">:root</span> &#123;</span><br><span class="line">  <span class="attr">--bg</span>: <span class="number">#ffffff</span>;</span><br><span class="line">  <span class="attr">--text</span>: <span class="number">#111111</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="selector-tag">html</span><span class="selector-class">.dark</span> &#123;</span><br><span class="line">  <span class="attr">--bg</span>: <span class="number">#121212</span>;</span><br><span class="line">  <span class="attr">--text</span>: <span class="number">#f5f5f5</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="selector-tag">body</span> &#123;</span><br><span class="line">  <span class="attribute">background-color</span>: <span class="built_in">var</span>(--bg);</span><br><span class="line">  <span class="attribute">color</span>: <span class="built_in">var</span>(--text);</span><br><span class="line">  <span class="attribute">transition</span>: background-color <span class="number">0.2s</span> ease, color <span class="number">0.2s</span> ease;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
@@ -309,7 +395,7 @@
 <li><strong>React &#x2F; Next.js</strong>：直接使用社区标配 <a href="https://github.com/pacocoursey/next-themes"><code>next-themes</code></a>，内置了 SSR 防闪烁与三态管理。</li>
 <li><strong>Vue &#x2F; Nuxt</strong>：使用 <a href="https://vueuse.org/core/useDark/"><code>@vueuse/core</code></a> 的 <code>useDark()</code> 与 <code>useColorMode()</code>。</li>
 </ul>
-<h2 id="9-核心维护与排错命令速查"><a href="#9-核心维护与排错命令速查" class="headerlink" title="9. 核心维护与排错命令速查"></a>9. 核心维护与排错命令速查</h2><p>平时调试深浅色和主题状态时，可以直接用这些命令查询：</p>
+<h2 id="10-核心维护与排错命令速查"><a href="#10-核心维护与排错命令速查" class="headerlink" title="10. 核心维护与排错命令速查"></a>10. 核心维护与排错命令速查</h2><p>平时调试深浅色、主题状态或包管理时，可以直接用这些命令查询：</p>
 <table>
 <thead>
 <tr>
@@ -345,6 +431,14 @@
 <td align="left"><strong>查询 D-Bus Portal 真实广播值</strong></td>
 <td align="left"><code>dbus-send --session --print-reply=literal --dest=org.freedesktop.portal.Desktop /org/freedesktop/portal/desktop org.freedesktop.portal.Settings.Read string:org.freedesktop.appearance string:color-scheme</code></td>
 </tr>
+<tr>
+<td align="left"><strong>更新所有 Flatpak 应用</strong></td>
+<td align="left"><code>flatpak update</code></td>
+</tr>
+<tr>
+<td align="left"><strong>清理未使用的 Flatpak 运行时</strong></td>
+<td align="left"><code>flatpak uninstall --unused</code></td>
+</tr>
 </tbody></table>
 ]]></content>
       <categories>
@@ -358,57 +452,6 @@
         <tag>生产力</tag>
         <tag>桌面美化</tag>
       </tags>
-  </entry>
-  <entry>
-    <title>Windows 11 优化方案</title>
-    <url>/2026/07/18/windows-11-optimization-guide/</url>
-    <content><![CDATA[<p>Windows 11 自带了大量臃肿功能和恼人的 UI 变动。以下是一套完整的优化方案，涵盖精简系统、还原经典界面、激活、禁用更新等。</p>
-<h2 id="精简系统镜像"><a href="#精简系统镜像" class="headerlink" title="精简系统镜像"></a>精简系统镜像</h2><p>与其装完再删，不如一开始就用精简版镜像。GitHub 上有两个知名项目：</p>
-<ul>
-<li><strong>Tiny11</strong> — 删除了大部分无用系统组件，保留核心功能，适合大多数人</li>
-<li><strong>nano11</strong> — 比 Tiny11 更激进的精简方案，适合追求极致精简的用户</li>
-</ul>
-<p>在 GitHub 搜索 <code>Tiny11</code> 或 <code>nano11</code> 即可找到。配合 <strong>Rufus</strong>（开源刷机工具）制作启动 U 盘进行安装。</p>
-<h2 id="还原经典开始菜单和任务栏"><a href="#还原经典开始菜单和任务栏" class="headerlink" title="还原经典开始菜单和任务栏"></a>还原经典开始菜单和任务栏</h2><p>Win11 的开始菜单和任务栏改动很大，如果你更习惯 Win10 的风格，可以使用 <strong>StartAllBack</strong> 一键还原。</p>
-<p>下载地址：<a href="https://www.ghxi.com/startallback.html">https://www.ghxi.com/startallback.html</a></p>
-<h2 id="还原经典右键菜单"><a href="#还原经典右键菜单" class="headerlink" title="还原经典右键菜单"></a>还原经典右键菜单</h2><p>Win11 的右键菜单默认只显示几个选项，完整菜单被折叠了。用以下方法可以恢复 Win10 样式的完整右键菜单。</p>
-<p>以<strong>管理员身份</strong>打开 CMD 或 PowerShell，输入：</p>
-<figure class="highlight powershell"><table><tr><td class="code"><pre><span class="line">reg add <span class="string">&quot;HKCU\Software\Classes\CLSID\&#123;86ca1aa0-34aa-4e8b-a509-50c905bae2a2&#125;\InprocServer32&quot;</span> /f /ve</span><br></pre></td></tr></table></figure>
-
-<p>然后重启资源管理器即可生效。</p>
-<p>如果想恢复回 Win11 默认右键菜单：</p>
-<figure class="highlight powershell"><table><tr><td class="code"><pre><span class="line">reg delete <span class="string">&quot;HKCU\Software\Classes\CLSID\&#123;86ca1aa0-34aa-4e8b-a509-50c905bae2a2&#125;&quot;</span> /f</span><br></pre></td></tr></table></figure>
-
-<h2 id="关闭动画和半透明效果"><a href="#关闭动画和半透明效果" class="headerlink" title="关闭动画和半透明效果"></a>关闭动画和半透明效果</h2><p>打开 <strong>设置 → 辅助功能 → 视觉效果</strong>，关闭以下两项：</p>
-<ul>
-<li><strong>动画效果</strong> — 关闭</li>
-<li><strong>透明效果</strong> — 关闭</li>
-</ul>
-<p>关闭后系统响应会更跟手，尤其对低配机器提升明显。</p>
-<h2 id="激活-Windows-和-Office"><a href="#激活-Windows-和-Office" class="headerlink" title="激活 Windows 和 Office"></a>激活 Windows 和 Office</h2><p>以<strong>管理员身份</strong>打开 CMD 或 PowerShell，输入：</p>
-<figure class="highlight powershell"><table><tr><td class="code"><pre><span class="line"><span class="built_in">irm</span> https://get.activated.win | <span class="built_in">iex</span></span><br></pre></td></tr></table></figure>
-
-<p>在弹出的菜单中选择：</p>
-<ul>
-<li><code>[1] HWID</code> — 永久激活 Windows（硬件数字许可证）</li>
-<li><code>[2] Ohook</code> — 永久激活 Office</li>
-</ul>
-<h2 id="永久禁止-Windows-更新"><a href="#永久禁止-Windows-更新" class="headerlink" title="永久禁止 Windows 更新"></a>永久禁止 Windows 更新</h2><p>使用 <strong>Windows Update Blocker</strong> 工具，一键永久禁止自动更新：</p>
-<p>下载地址：<a href="https://www.sordum.org/downloads/?st-windows-update-blocker">https://www.sordum.org/downloads/?st-windows-update-blocker</a></p>
-<h2 id="删除-禁用-Win11-无用功能"><a href="#删除-禁用-Win11-无用功能" class="headerlink" title="删除 &#x2F; 禁用 Win11 无用功能"></a>删除 &#x2F; 禁用 Win11 无用功能</h2><p><strong>Chris Titus Tech</strong> 的 Windows 工具箱，提供图形界面，一键删除或禁用各种臃肿功能。</p>
-<p>以<strong>管理员身份</strong>打开 CMD 或 PowerShell，输入：</p>
-<figure class="highlight powershell"><table><tr><td class="code"><pre><span class="line"><span class="built_in">irm</span> https://christitus.com/win | <span class="built_in">iex</span></span><br></pre></td></tr></table></figure>
-
-<p>GitHub 项目地址：<a href="https://github.com/ChrisTitusTech/winutil">https://github.com/ChrisTitusTech/winutil</a></p>
-<h2 id="系统汉化"><a href="#系统汉化" class="headerlink" title="系统汉化"></a>系统汉化</h2><p>如果安装的是英文版 Windows，参考以下教程进行汉化：</p>
-<p><a href="https://www.cnblogs.com/ACDIV/p/19156603">https://www.cnblogs.com/ACDIV/p/19156603</a></p>
-<h2 id="推荐软件"><a href="#推荐软件" class="headerlink" title="推荐软件"></a>推荐软件</h2><ul>
-<li><strong>Flow Launcher</strong> — 开源的快速启动器，类似 macOS 的 Spotlight，按快捷键即可搜索应用、文件、网页等</li>
-</ul>
-]]></content>
-      <categories>
-        <category>实用技巧</category>
-      </categories>
   </entry>
   <entry>
     <title>电子扫盲｜写在前面</title>
@@ -426,24 +469,14 @@
       </categories>
   </entry>
   <entry>
-    <title>电子扫盲｜显示器</title>
-    <url>/2025/02/12/tech-basics-display-technologies/</url>
-    <content><![CDATA[<p>先讲讲LCD显示器的基本原理。首先是一层液晶材料用来显示图像，但由于液晶材料本身不发光，所以再在它的底部加上一层背光板（发光的板子），这就构成了LCD屏。</p>
-<p>LCD的优点是延迟很低，价格也很便宜，很适合打fps游戏（first player shooting，第一人称射击游戏），因此大部分游戏笔记本都采用LCD屏。但是LCD屏有个缺点，就是对比度（明暗差异，对比度越高，色彩表现越好，画面越真实）很低。什么意思呢？比如你在LCD屏上打开一张纯黑的图片，然后你再把房间里的灯关掉，你就会发现屏幕居然在发光！这是因为LCD屏在打开的时候，下面的背光板是一直亮着的，所以即便黑色依然会发光。由此我们也可以推断出LCD屏会很耗电。<em>就我个人而言，我见过的对比度控制的比较好的LCD屏是iPad Pro 2020。</em> 而且LCD屏还有个缺点就是屏幕边缘会漏光。（如下图）</p>
-<p><figure class="article-image-figure"><img src="/image/2.webp" alt="一张图片" title="LCD漏光现象" loading="lazy" decoding="async"><figcaption class="image-caption">LCD漏光现象</figcaption></figure></p>
-<p>这时候有人就诞生了一个想法，如果说我把LCD的背光板切成很多小份，这些背光板上方如果显示的是黑色，我就把这个背光板关掉；如果显示的不是黑色，那就把背光板打开。这样不就实现了高对比度吗？这种<strong>分区背光</strong>的LCD屏就叫做<strong>miniLED</strong>，miniLED本质上讲依旧属于LCD屏，但显示效果要远远好于LCD。而且，miniLED的显示效果跟分区数（即背光板被切成的份数）是正相关的，分区数量越多，那明暗的差异自然越大，显示效果自然越好。</p>
-<p>但miniLED也有缺点。首先是光晕现象。比如一张纯黑的图片，正中间有一个杯子（如下图），那么杯子的周围就会形成一圈光晕。当然，如果分区数量够多，那光晕现象自然也会减小。</p>
-<p><figure class="article-image-figure"><img src="/image/1.webp" alt="一张图片" title="miniLED光晕现象" loading="lazy" decoding="async"><figcaption class="image-caption">miniLED光晕现象</figcaption></figure></p>
-]]></content>
-      <categories>
-        <category>FeeFee电子扫盲</category>
-      </categories>
-  </entry>
-  <entry>
-    <title>电子扫盲｜操作系统</title>
-    <url>/2025/02/20/tech-basics-operating-systems/</url>
-    <content><![CDATA[<p>电脑、手机都有操作系统（Operating System，简称OS），常见的电脑操作系统有<strong>Windows，Linux和macOS</strong>，常见的手机操作系统有<strong>安卓（Android）和iOS</strong>。<br>不同的操作系统之间是不能互通的！比如，当你发现老师发来的软件是.exe格式，而你正在使用macOS，那你就该知道这个软件我装不了，因为.exe是windows上才有的格式。</p>
-<p>先来说说电脑系统：<br>1、Windows是最常见的电脑操作系统，它是微软公司（Microsoft）开发的，<strong>跟安卓系统半毛钱关系没有！！</strong> 总有人会有类似这样的发言：“你的电脑是安卓还是苹果？”这是严重的笑话。<br>2、macOS是苹果的电脑系统，不要叫它iOS！！iOS指的是苹果的<strong>手机</strong>系统。<br>3、Linux是著名的开源系统（开源的意思是源代码公开），一般只有程序员会使用。<br>4、其他系统，如ChromeOS、Unix等，不需要了解。</p>
+    <title>电子扫盲｜超分与补帧</title>
+    <url>/2025/03/13/tech-basics-upscaling-frame-generation/</url>
+    <content><![CDATA[<p>我们在[[分辨率]]这篇文章里提到过，如果我们玩游戏时想获得清晰的画面，就要拉高分辨率，而拉高分辨率的后果就是帧数降低。那有没有什么办法，能让我们在<strong>不手动拉高分辨率</strong>的情况下，画面也能变清晰呢？</p>
+<p>答案是有的。这就是<strong>超分辨率技术（super resolution）</strong>，俗称超分。超分就是利用一定的算法或者是AI技术，来将原本低分辨率的画面变成高分辨率的画面。比如你用DLSS将1K的画面超分到4K，此时你看到的是4K的画面，但是电脑实际上只渲染的是1K，所以压力大大减小，帧数因此也就提高了。</p>
+<p>另外一种技术是补帧，也叫<strong>帧生成（frame generation）</strong>，或者叫插帧也行。从名字来看就很好理解，就是用算法或者ai来添加额外的帧，从而使画面变得流畅。但是由于插帧一般的原理是<strong>根据两个帧补出它们中间的帧</strong>，所以需要等待下一帧出现才能补出上一帧，从而造成了延迟。原始帧越低，那么补帧延迟越高，效果越差。比如你将30帧补成120帧就没有将60帧补成120帧的效果好。</p>
+<p>在游戏画面越来越爆炸的今天，显卡的性能已经逐渐跟不上游戏的发展，因此超分与补帧几乎成为了刚需。各家都有各自的超分与补帧技术。下面简单的介绍一下。</p>
+<p><strong>DLSS（Deep Learning Super Sampling，深度学习超级采样）</strong>，俗称“大力水手”，是n卡（英伟达的显卡）才有的功能，包含了超分和插帧（插帧只有DLSS3才有，而DLSS3只有40系n卡才能开）。目前最新版本是DLSS4。</p>
+<p><strong>FSR（FidelityFX Super Resolution）</strong></p>
 ]]></content>
       <categories>
         <category>FeeFee电子扫盲</category>
@@ -531,14 +564,10 @@
       </tags>
   </entry>
   <entry>
-    <title>电子扫盲｜超分与补帧</title>
-    <url>/2025/03/13/tech-basics-upscaling-frame-generation/</url>
-    <content><![CDATA[<p>我们在[[分辨率]]这篇文章里提到过，如果我们玩游戏时想获得清晰的画面，就要拉高分辨率，而拉高分辨率的后果就是帧数降低。那有没有什么办法，能让我们在<strong>不手动拉高分辨率</strong>的情况下，画面也能变清晰呢？</p>
-<p>答案是有的。这就是<strong>超分辨率技术（super resolution）</strong>，俗称超分。超分就是利用一定的算法或者是AI技术，来将原本低分辨率的画面变成高分辨率的画面。比如你用DLSS将1K的画面超分到4K，此时你看到的是4K的画面，但是电脑实际上只渲染的是1K，所以压力大大减小，帧数因此也就提高了。</p>
-<p>另外一种技术是补帧，也叫<strong>帧生成（frame generation）</strong>，或者叫插帧也行。从名字来看就很好理解，就是用算法或者ai来添加额外的帧，从而使画面变得流畅。但是由于插帧一般的原理是<strong>根据两个帧补出它们中间的帧</strong>，所以需要等待下一帧出现才能补出上一帧，从而造成了延迟。原始帧越低，那么补帧延迟越高，效果越差。比如你将30帧补成120帧就没有将60帧补成120帧的效果好。</p>
-<p>在游戏画面越来越爆炸的今天，显卡的性能已经逐渐跟不上游戏的发展，因此超分与补帧几乎成为了刚需。各家都有各自的超分与补帧技术。下面简单的介绍一下。</p>
-<p><strong>DLSS（Deep Learning Super Sampling，深度学习超级采样）</strong>，俗称“大力水手”，是n卡（英伟达的显卡）才有的功能，包含了超分和插帧（插帧只有DLSS3才有，而DLSS3只有40系n卡才能开）。目前最新版本是DLSS4。</p>
-<p><strong>FSR（FidelityFX Super Resolution）</strong></p>
+    <title>电子扫盲｜操作系统</title>
+    <url>/2025/02/20/tech-basics-operating-systems/</url>
+    <content><![CDATA[<p>电脑、手机都有操作系统（Operating System，简称OS），常见的电脑操作系统有<strong>Windows，Linux和macOS</strong>，常见的手机操作系统有<strong>安卓（Android）和iOS</strong>。<br>不同的操作系统之间是不能互通的！比如，当你发现老师发来的软件是.exe格式，而你正在使用macOS，那你就该知道这个软件我装不了，因为.exe是windows上才有的格式。</p>
+<p>先来说说电脑系统：<br>1、Windows是最常见的电脑操作系统，它是微软公司（Microsoft）开发的，<strong>跟安卓系统半毛钱关系没有！！</strong> 总有人会有类似这样的发言：“你的电脑是安卓还是苹果？”这是严重的笑话。<br>2、macOS是苹果的电脑系统，不要叫它iOS！！iOS指的是苹果的<strong>手机</strong>系统。<br>3、Linux是著名的开源系统（开源的意思是源代码公开），一般只有程序员会使用。<br>4、其他系统，如ChromeOS、Unix等，不需要了解。</p>
 ]]></content>
       <categories>
         <category>FeeFee电子扫盲</category>
