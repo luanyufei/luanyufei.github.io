@@ -50,7 +50,9 @@ function parseFile(raw, fallbackTitle) {
   } catch (error) {
     data = { title: fallbackTitle };
   }
+  const originalDate = data.date;
   data.date = normalizeDate(data.date);
+  data._rawDate = originalDate;
   if (Array.isArray(data.categories)) data.categories = data.categories.map(String);
   if (typeof data.categories === 'string') data.categories = data.categories;
   if (Array.isArray(data.tags)) data.tags = data.tags.map(String);
@@ -61,10 +63,12 @@ function parseFile(raw, fallbackTitle) {
 
 function stringify(data, content) {
   const clean = { ...data };
-  if (clean.date && clean.date.length === 10) {
-    clean.date = clean.date;
-  } else if (clean.date) {
-    clean.date = normalizeDate(clean.date);
+  delete clean._rawDate;
+  if (clean.date instanceof Date) {
+    const iso = clean.date.toISOString();
+    if (iso.endsWith('T00:00:00.000Z')) {
+      clean.date = iso.slice(0, 10);
+    }
   }
   const out = matter.stringify((content || '').replace(/\s+$/, '') + '\n', clean);
   return out;
@@ -138,12 +142,22 @@ async function savePost(filename, type, patch) {
   const filePath = resolvePost(filename, type);
   const current = await getPost(filename, type);
   const data = { ...current.data };
+  const rawDate = current.data._rawDate;
+  delete data._rawDate;
+
   if (patch.data) {
     for (const key of ['title', 'date', 'categories', 'tags']) {
       if (Object.prototype.hasOwnProperty.call(patch.data, key)) {
         const value = patch.data[key];
-        if (key === 'date') data.date = value ? String(value).slice(0, 10) : todayStr();
-        else if (key === 'tags') data.tags = Array.isArray(value) ? value.map((t) => String(t).trim()).filter(Boolean) : [];
+        if (key === 'date') {
+          const formDateStr = value ? String(value).slice(0, 10) : todayStr();
+          const currentDayStr = normalizeDate(rawDate || current.data.date);
+          if (formDateStr === currentDayStr && rawDate) {
+            data.date = rawDate;
+          } else {
+            data.date = formDateStr;
+          }
+        } else if (key === 'tags') data.tags = Array.isArray(value) ? value.map((t) => String(t).trim()).filter(Boolean) : [];
         else if (key === 'categories') {
           const cats = Array.isArray(value) ? value.map((c) => String(c).trim()).filter(Boolean) : [];
           data.categories = cats.length === 1 ? cats[0] : cats;
