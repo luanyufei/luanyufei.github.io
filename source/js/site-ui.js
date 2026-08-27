@@ -442,6 +442,25 @@
     const toc = document.querySelector('#card-toc .toc-content');
     if (!toc) return;
 
+    // Decouple TOC container scrolling from page scroll:
+    // Block programmatic auto-scrolls so TOC container remains static at the user's manual scroll position
+    const originalScrollTop = Object.getOwnPropertyDescriptor(Element.prototype, 'scrollTop');
+    if (originalScrollTop) {
+      Object.defineProperty(toc, 'scrollTop', {
+        get() {
+          return originalScrollTop.get.call(this);
+        },
+        set(val) {
+          // Block automatic programmatic scrolls from background scroll spies
+          return val;
+        },
+        configurable: true
+      });
+    }
+    toc.scrollTo = () => {};
+    toc.scroll = () => {};
+    toc.scrollBy = () => {};
+
     // Deduplicate and complete TOC numbering:
     // If the heading text itself already starts with a recognized index/number, remove redundant toc-number.
     toc.querySelectorAll('.toc-link').forEach((link) => {
@@ -577,19 +596,6 @@
             // update active link state immediately
             cardToc.querySelectorAll('.toc-link').forEach((l) => l.classList.remove('active'));
             link.classList.add('active');
-
-            // On desktop, smoothly center the active TOC link in the TOC container
-            const tocContent = cardToc.querySelector('.toc-content');
-            if (tocContent && window.innerWidth > 900) {
-              const containerRect = tocContent.getBoundingClientRect();
-              const linkRect = link.getBoundingClientRect();
-              const relativeTop = linkRect.top - containerRect.top + tocContent.scrollTop;
-              const targetScroll = relativeTop - (containerRect.height - linkRect.height) / 2;
-              tocContent.scrollTo({
-                top: Math.max(0, targetScroll),
-                behavior: 'smooth'
-              });
-            }
 
             if (history.pushState) {
               history.pushState(null, '', href);
