@@ -14,7 +14,7 @@ tags:
 
 很久以前我装过一次 Ubuntu，当时各种依赖、字体和驱动配置实在太折腾，没用多久就放弃了。现在有了 AI Agent，很多底层的调试和脚本一句话就能搞定，整个折腾流程顺畅了许多。
 
-这篇文档是我在 Apple Silicon Mac 的 Parallels 虚拟机里调教 Ubuntu 26.04 的完整记录。内容涵盖了屏幕高刷锁定、GNOME 现代主题架构与深色模式避坑、全透明悬浮 Dock、输入法迁移、终端与浏览器调优、常用原生工具及系统底层服务，留作以后换机或在实体机上装 Linux 时的速查参考。
+这篇文档是我在 Apple Silicon Mac 的 Parallels 虚拟机里调教 Ubuntu 26.04 的完整记录。内容涵盖了屏幕高刷锁定、GNOME 现代主题架构与深色模式避坑、全透明悬浮 Dock、输入法迁移、终端与浏览器调优、系统深度瘦身与去遥测（彻底剥离 Snap、接入 Flatpak）、常用原生工具及系统底层服务，留作以后换机或在实体机上装 Linux 时的速查参考。
 
 ## 1. 屏幕分辨率与高刷锁定（2560×1440 @ 180Hz）
 
@@ -397,27 +397,113 @@ rm -rf ~/snap/firefox ~/.mozilla
 * **Brave colors**：选择 **Same as Linux**（跟随系统）。
 * **Dark Reader 扩展**：移除了 GTK 的冲突信号后，Dark Reader 选择“跟随系统”即可正常工作，不再出现 2 秒后弹回浅色的问题。
 
-## 7. 系统底层与外设优化
+## 7. 系统瘦身、去遥测与包管理（剥离 Snap & 接入 Flatpak）
 
-### 7.1 ZRAM 内存实时压缩
+Ubuntu 这几年把不少常用软件甚至底层运行时都硬塞进了 Snap。启动慢、吃磁盘不说，每次敲 `lsblk` 还会被一堆虚拟 loop 回环挂载点刷屏。把 Snap 彻底剥离并锁定 APT 规则，换用轻量规范的原生 GNOME 软件中心与 Flatpak，再顺手干掉系统报错弹窗与商业广告，系统会清爽很多。
+
+### 7.1 彻底卸载 Snap 并锁定 APT 规则（防止静默带回）
+
+1. **按依赖顺序卸载 Snap 应用与底层运行时**：
+   ```bash
+   sudo snap remove --purge snap-store gnome-46-2404 gtk-common-themes mesa-2404 core24 bare snapd
+   ```
+2. **彻底清除 `snapd` 守护进程与残留缓存目录**：
+   ```bash
+   sudo apt-get purge -y snapd
+   sudo rm -rf ~/snap /var/cache/snapd /var/lib/snapd /snap /root/snap
+   ```
+3. **配置 APT Pinning 锁定规则**：
+   Ubuntu 的部分 APT 命令（如 `apt install firefox`）默认会自动唤起 Snap。写入一条负优先级规则，彻底断掉系统自动把 Snap 装回来的后路：
+   ```bash
+   sudo bash -c 'cat <<EOF > /etc/apt/preferences.d/nosnap.pref
+   Package: snapd
+   Pin: release a=*
+   Pin-Priority: -10
+   EOF'
+   ```
+
+### 7.2 原生 GNOME 软件中心与 Flatpak / Flathub 生态
+
+移除 Snap 之后，换上原生轻量的 GNOME 软件中心，并接入 Flatpak 生态管理跨分发版应用：
+
+1. **安装原生软件中心与 Flatpak 插件**：
+   ```bash
+   sudo apt-get update
+   sudo apt-get install -y flatpak gnome-software gnome-software-plugin-flatpak
+   ```
+2. **添加 Flathub 官方软件源**：
+   ```bash
+   flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+   ```
+   如果官方源下载慢，可以切到国内镜像（如上海交大源）：
+   ```bash
+   flatpak remote-modify flathub --url=https://mirror.sjtu.edu.cn/flathub
+   ```
+
+### 7.3 关闭崩溃报错弹窗与遥测数据收集
+
+平时用 Ubuntu 最烦时不时跳出“系统遇到内部错误”的弹窗。后台的 Apport、Whoopsie 和 Ubuntu Report 遥测还在默默吃 I/O 记日志。关停服务并彻底清理：
+
+```bash
+# 停止并禁用报错守护进程
+sudo systemctl stop apport whoopsie 2>/dev/null || true
+sudo systemctl disable apport whoopsie 2>/dev/null || true
+
+# 彻底卸载遥测与报错组件
+sudo apt-get purge -y apport apport-gtk whoopsie ubuntu-report popularity-contest
+
+# 清空历史崩溃转储文件
+sudo rm -rf /var/crash/*
+```
+
+### 7.4 屏蔽 Ubuntu Pro 商业推广与 MOTD 登录新闻
+
+每次在终端执行 `apt upgrade` 都会带出一段 Ubuntu Pro / ESM 商业订阅提示，登录终端时还会有动态联网新闻轮播：
+
+```bash
+# 移除 APT 中的 Ubuntu Pro 广告注入钩子
+sudo rm -f /etc/apt/apt.conf.d/20apt-esm-hook.conf
+
+# 禁用登录终端时的 MOTD 联网新闻轮播
+sudo sed -i "s/ENABLED=1/ENABLED=0/" /etc/default/motd-news
+```
+
+### 7.5 卸载预装游戏与清理孤立缓存
+
+扫雷、数独、麻将、纸牌这些系统预装小游戏平时用不上，直接 purge 掉，再清理孤立依赖和包缓存：
+
+```bash
+# 卸载预装小游戏
+sudo apt-get purge -y gnome-mines gnome-sudoku gnome-mahjongg aisleriot 2>/dev/null || true
+
+# 自动清理孤立依赖库与残留配置
+sudo apt-get autoremove -y --purge
+
+# 清空 apt 安装包下载缓存释放空间
+sudo apt-get clean
+```
+
+## 8. 系统底层与外设优化
+
+### 8.1 ZRAM 内存实时压缩
 * 安装 `zram-tools` 并启用 `zramswap.service`。
 * 在 `/etc/default/zramswap` 中将压缩算法设为 `zstd`，容量上限设为 100% 物理内存（5.3GB），优先级设为 100。
 * **效果**：系统可用 Swap 扩充至 9.1GB，优先在内存中压缩暂存不活跃数据，避免因内存不足触发磁盘 I/O 卡顿。
 
-### 7.2 截图快捷键
+### 8.2 截图快捷键
 * 将交互式截图工具快捷键绑定为 `Ctrl + Shift + S`：
   ```bash
   gsettings set org.gnome.shell.keybindings show-screenshot-ui "['Print', '<Control><Shift>s', '<Super><Shift>s']"
   ```
 * 支持区域框选、窗口截图与屏幕录制，截图自动存入剪贴板并保存在 `~/Pictures/Screenshots`。
 
-### 7.3 剪贴板与拖拽服务
+### 8.3 剪贴板与拖拽服务
 创建 Systemd 用户守护服务 `~/.config/systemd/user/parallels-tools-user.service` 并安装 `wl-clipboard` 与 `xclip`，确保登录后自动恢复与 Mac 宿主机的双向剪贴板和文件拖放支持。
 
-### 7.4 系统监控与任务管理（Mission Center）
+### 8.4 系统监控与任务管理（Mission Center）
 * 安装了 **Mission Center**，界面风格和交互逻辑几乎是 Windows 任务管理器的翻版，支持直观监控 CPU、内存、磁盘 I/O、网络利用率及细粒度进程管理，相比原生系统监视器更加直观好用。
 
-### 7.5 Nautilus 一级右键菜单扩展（复制文件路径）
+### 8.5 Nautilus 一级右键菜单扩展（复制文件路径）
 为了彻底摆脱二级 `Scripts` 子菜单的繁琐操作，直接在文件管理器一级右键菜单中调用复制路径：
 1. **安装 Python 扩展支持库**：
    ```bash
@@ -430,15 +516,15 @@ rm -rf ~/snap/firefox ~/.mozilla
    * 在文件管理器中右键任意文件，一级菜单直接提供 **`Copy Path`**（复制完整路径）与 **`Copy Name`**（复制文件名）；
    * 支持快捷键：选中文件直接按 **`Ctrl + Shift + C`** 瞬间复制完整路径。
 
-## 8. 常用软件与 Antigravity 开发环境
+## 9. 常用软件与 Antigravity 开发环境
 
-### 8.1 原生 ARM64 常用生产力软件（LocalSend & PeaZip）
+### 9.1 原生 ARM64 常用生产力软件（LocalSend & PeaZip）
 * **LocalSend（局域网跨平台隔空互传）**：
   * 官方 Linux aarch64 原生 Flutter 构建，安装于 `~/.local/share/localsend`，支持桌面图标点击与终端 `localsend` 命令启动。
 * **PeaZip（7-Zip 核心专业图形化压缩/解压管理器）**：
   * 官方 7-Zip 原生 Linux 版仅有 CLI 命令行工具（`7zz`），PeaZip 是 Linux 下成熟强大的 7-Zip 图形化管理工具，支持多标签页、密码加密、分卷压缩，并已关联为系统中 `.7z`、`.zip`、`.rar`、`.tar.gz` 等所有常见压缩格式的默认打开程序。
 
-### 8.2 Antigravity 部署、补丁与深浅模式自动同步
+### 9.2 Antigravity 部署、补丁与深浅模式自动同步
 * **部署与权限**：安装于 `/opt/antigravity`，修复 `chrome-sandbox` 权限，生成 `/usr/local/bin/antigravity` 全局命令与桌面图标。
 * **标题栏色差与窗口唤醒修复**：
   * 修改 `dist/ipcHandlers.js`，将主题同步平台判断放宽至非 macOS 系统，使 Linux 下窗口按钮区域颜色与主题实时匹配。
@@ -454,11 +540,11 @@ rm -rf ~/snap/firefox ~/.mozilla
   }
   ```
 
-### 8.3 现代开发工具
+### 9.3 现代开发工具
 * **uv**：安装于 `/usr/local/bin/uv`，用于 Python 环境隔离和包管理。
 * **OpenCLI**：全局安装 `@jackwener/opencli`，并部署相关 skills 到 `~/.gemini/config/skills/`。
 
-### 8.4 Web 开发中的深浅模式落地（防闪白与工程实践）
+### 9.4 Web 开发中的深浅模式落地（防闪白与工程实践）
 
 在开发网站或前端项目时，实现一个体验完善的深浅模式切换需要兼顾系统偏好、手动覆盖和防白屏闪烁（Anti-FOUC）。
 
@@ -545,9 +631,9 @@ window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () 
 * **React / Next.js**：直接使用社区标配 [`next-themes`](https://github.com/pacocoursey/next-themes)，内置了 SSR 防闪烁与三态管理。
 * **Vue / Nuxt**：使用 [`@vueuse/core`](https://vueuse.org/core/useDark/) 的 `useDark()` 与 `useColorMode()`。
 
-## 9. 核心维护与排错命令速查
+## 10. 核心维护与排错命令速查
 
-平时调试深浅色和主题状态时，可以直接用这些命令查询：
+平时调试深浅色、主题状态或包管理时，可以直接用这些命令查询：
 
 | 查询 / 操作目的 | 终端命令 |
 | :--- | :--- |
@@ -558,4 +644,6 @@ window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () 
 | **切换为深色模式** | `gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark'` |
 | **切换为浅色模式** | `gsettings set org.gnome.desktop.interface color-scheme 'default'` |
 | **查询 D-Bus Portal 真实广播值** | `dbus-send --session --print-reply=literal --dest=org.freedesktop.portal.Desktop /org/freedesktop/portal/desktop org.freedesktop.portal.Settings.Read string:org.freedesktop.appearance string:color-scheme` |
+| **更新所有 Flatpak 应用** | `flatpak update` |
+| **清理未使用的 Flatpak 运行时** | `flatpak uninstall --unused` |
 
