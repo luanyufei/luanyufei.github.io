@@ -1400,12 +1400,9 @@ body.fs-lightbox-dragging *,
   list-style-type: none !important;
 }
 
-#card-toc .toc-percentage {
-  font-family: var(--fs-mono) !important;
-  font-size: 0.75rem !important;
-  color: var(--fs-text-3) !important;
-  margin-left: auto !important;
-  margin-right: 6px !important;
+#card-toc .toc-percentage,
+.toc-percentage {
+  display: none !important;
 }
 
 #aside-content .item-headline,
