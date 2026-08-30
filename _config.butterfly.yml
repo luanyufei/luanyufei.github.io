@@ -83,11 +83,19 @@ inject:
   head:
     - >-
       <script>(function(){try{localStorage.removeItem('theme');var raw=sessionStorage.getItem('theme');var saved;if(raw){try{var parsed=JSON.parse(raw);saved=parsed.value}catch(e){saved=raw}}var mode=saved==='light'||saved==='dark'?saved:(window.matchMedia&&window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',mode);document.documentElement.classList.add('js');var m=document.querySelector('meta[name="theme-color"]');if(m){m.setAttribute('content',mode==='dark'?'#0f1111':'#f3f6f2')}}catch(e){document.documentElement.setAttribute('data-theme','light')}})();</script>
-    - <link rel="stylesheet" href="/css/cyber-background.css?v=20260827_v10">
+    - <link rel="stylesheet" href="/css/cyber-background.css?v=20260830_v1">
     - <link rel="stylesheet" href="/css/footer-brand.css?v=20260815_v3">
   bottom:
     - <script src="/js/site-ui.js?v=20260827_v10" defer></script>
     - <script src="/js/footer-brand.js?v=20260815_v3" defer></script>
+
+CDN:
+  option:
+    fontawesome: /css/vendor/fontawesome/css/all.min.css
+    fancybox_css: /css/vendor/fancybox.min.css
+    fancybox: /js/vendor/fancybox.umd.min.js
+    lazyload: /js/vendor/lazyload.iife.min.js
+    egjs_infinitegrid: /js/vendor/infinitegrid.min.js
 
 translate:
   enable: false

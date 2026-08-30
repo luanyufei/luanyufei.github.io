@@ -1,6 +1,6 @@
 const HOME_HERO = `
 <div id="site-info" class="feespace-hero">
-  <script type="importmap" id="feespace-three-importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.min.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
+  <script type="importmap" id="feespace-three-importmap">{"imports":{"three":"/js/vendor/three/three.module.min.js","three/addons/":"/js/vendor/three/addons/"}}</script>
   <canvas id="feespace-hero-canvas" aria-hidden="true"></canvas>
   <div class="hero-grid-lines" aria-hidden="true">
     <div class="grid-line line-h-top"></div>
