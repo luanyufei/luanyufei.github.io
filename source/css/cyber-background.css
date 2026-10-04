@@ -52,6 +52,9 @@
   --hl-tools-bg: var(--fs-code-header);
   --hl-tools-color: var(--fs-code-header-text);
   --hl-scrollbar: #d0d7cf;
+  --scrollbar-color: #c4cbd4;
+  --fs-code-scrollbar: #c4cbd4;
+  --fs-code-scrollbar-hover: #9ca3af;
 }
 
 html[data-theme="dark"] {
@@ -88,6 +91,9 @@ html[data-theme="dark"] {
   --hl-tools-bg: var(--fs-code-header);
   --hl-tools-color: var(--fs-code-header-text);
   --hl-scrollbar: #27272a;
+  --scrollbar-color: #3f3f46;
+  --fs-code-scrollbar: #3f3f46;
+  --fs-code-scrollbar-hover: #52525b;
 }
 
 *,
@@ -1252,6 +1258,36 @@ body.fs-lightbox-dragging *,
 
 #article-container figure.highlight br {
   display: none !important;
+}
+
+/* ── Code Block Scrollbars (Soft Gray, Light/Dark adaptive) ── */
+#article-container figure.highlight pre,
+#article-container figure.highlight td.code,
+#article-container figure.highlight td.code pre,
+#article-container figure.highlight table {
+  scrollbar-color: var(--fs-code-scrollbar) transparent !important;
+}
+
+#article-container figure.highlight *::-webkit-scrollbar,
+#article-container figure.highlight::-webkit-scrollbar {
+  width: 5px !important;
+  height: 5px !important;
+}
+
+#article-container figure.highlight *::-webkit-scrollbar-thumb,
+#article-container figure.highlight::-webkit-scrollbar-thumb {
+  background: var(--fs-code-scrollbar) !important;
+  border-radius: 4px !important;
+}
+
+#article-container figure.highlight *::-webkit-scrollbar-thumb:hover,
+#article-container figure.highlight::-webkit-scrollbar-thumb:hover {
+  background: var(--fs-code-scrollbar-hover) !important;
+}
+
+#article-container figure.highlight *::-webkit-scrollbar-track,
+#article-container figure.highlight::-webkit-scrollbar-track {
+  background: transparent !important;
 }
 
 /* Code table structure: block wrapper to enable touch horizontal scroll */

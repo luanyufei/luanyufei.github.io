@@ -37,7 +37,8 @@ IINA 插件 API 的回调参数里自带了 `data.isRepeat`，只要判断为重
 
 ```javascript
 input.onKeyDown("RIGHT", (data) => {
-  if (data?.isRepeat || rightDown) return true;
+  if (data && data.isRepeat) return true; // 直接拦截，忽略后续连发
+  if (rightDown) return true;
   rightDown = true;
   // ...
   return true;
@@ -98,11 +99,17 @@ IINA 自带的快捷键预设优先级很高，会抢在插件前把左右键给
   "identifier": "com.antigravity.iina-arrow-speed",
   "version": "1.0.1",
   "description": "Hold Right Arrow to speed up, Left Arrow to slow down, release to restore original speed. Tap for seek.",
-  "author": { "name": "Antigravity" },
+  "author": {
+    "name": "Antigravity",
+    "email": "",
+    "url": ""
+  },
   "entry": "main.js",
   "minApiVersion": "1.1",
   "minIINAVersion": "1.4.0",
-  "permissions": ["show-osd"],
+  "permissions": [
+    "show-osd"
+  ],
   "preferencesPage": "preferences.html",
   "preferenceDefaults": {
     "fastSpeed": 2.0,
@@ -117,142 +124,247 @@ IINA 自带的快捷键预设优先级很高，会抢在插件前把左右键给
 ### 2. main.js（核心业务脚本）
 
 ```javascript
+// Arrow Key Speed Control — IINA Plugin
+// Hold Right = Speed Up, Hold Left = Slow Down. Release = Restore Speed. Tap = Seek.
+
 const { core, input, mpv, event, menu, console: log } = iina;
 
-const getFastSpeed = () => Number(iina.preferences.get("fastSpeed")) || 2.0;
-const getSlowSpeed = () => Number(iina.preferences.get("slowSpeed")) || 0.5;
-const getHoldDelay = () => Number(iina.preferences.get("holdDelay") ?? 250);
-const getSeekStep  = () => Number(iina.preferences.get("seekStep") ?? 5);
-const getTapSeek   = () => Boolean(iina.preferences.get("enableTapSeek") ?? true);
+// 读取用户偏好配置（含严格兜底）
+const getFastSpeed = () => {
+  const val = iina.preferences.get("fastSpeed");
+  return val != null && !isNaN(val) ? Number(val) : 2.0;
+};
+const getSlowSpeed = () => {
+  const val = iina.preferences.get("slowSpeed");
+  return val != null && !isNaN(val) ? Number(val) : 0.5;
+};
+const getHoldDelay = () => {
+  const val = iina.preferences.get("holdDelay");
+  return val != null && !isNaN(val) ? Number(val) : 250;
+};
+const getSeekStep = () => {
+  const val = iina.preferences.get("seekStep");
+  return val != null && !isNaN(val) ? Number(val) : 5;
+};
+const getTapSeek = () => {
+  const val = iina.preferences.get("enableTapSeek");
+  return val != null ? Boolean(val) : true;
+};
 
-let rightTimer = null, leftTimer = null;
-let isHoldingRight = false, isHoldingLeft = false;
-let rightDown = false, leftDown = false;
-let savedSpeed = 1.0, wasPausedRight = false, wasPausedLeft = false;
+// 运行时状态
+let rightTimer = null;
+let leftTimer = null;
+let isHoldingRight = false;
+let isHoldingLeft = false;
+let rightDown = false;
+let leftDown = false;
+let savedSpeed = 1.0;
+let wasPausedRight = false;
+let wasPausedLeft = false;
 
+// 跟踪文件加载与播放基础速度
 event.on("iina.file-loaded", () => {
   savedSpeed = mpv.getNumber("speed") || 1.0;
 });
 
 function restoreSpeed() {
-  mpv.set("speed", savedSpeed);
-  core.osd(`▶  恢复 ${savedSpeed}× 正常速度`);
+  try {
+    mpv.set("speed", savedSpeed);
+    core.osd(`▶  恢复 ${savedSpeed}× 正常速度`);
+    log.log(`[arrow-speed] restored speed to ${savedSpeed}×`);
+  } catch (e) {
+    log.log("[arrow-speed] restoreSpeed error: " + e);
+  }
 }
 
-// 右键：长按加速 / 短按快进
-input.onKeyDown("RIGHT", (data) => {
-  if (data?.isRepeat || rightDown) return true;
+// ──────────────────────────────────────────────
+// 右方向键 (Right Arrow) -> 加速 / 快进
+// ──────────────────────────────────────────────
+function handleRightDown(data) {
+  if (data && data.isRepeat) return true; // 拦截系统重复触发，防止抖动
+  if (rightDown) return true;
+
   rightDown = true;
   isHoldingRight = false;
+
+  // 记录按下前的真实速度（若未处于左键慢放中）
   if (!isHoldingLeft) {
     savedSpeed = mpv.getNumber("speed") || 1.0;
     wasPausedRight = mpv.getFlag("pause");
   }
+
   const delay = getHoldDelay();
   if (delay <= 0) {
+    // 零延迟模式：立即加速
     isHoldingRight = true;
+    const speed = getFastSpeed();
     if (wasPausedRight) mpv.set("pause", false);
-    mpv.set("speed", getFastSpeed());
-    core.osd(`▶▶  ${getFastSpeed()}× 加速播放`);
+    mpv.set("speed", speed);
+    core.osd(`▶▶  ${speed}× 加速播放`);
+    log.log(`[arrow-speed] boost to ${speed}× (zero delay)`);
   } else {
+    // 延迟判定：超过阈值视为长按加速
     rightTimer = setTimeout(() => {
       if (!rightDown) return;
       isHoldingRight = true;
+      const speed = getFastSpeed();
       if (wasPausedRight) mpv.set("pause", false);
-      mpv.set("speed", getFastSpeed());
-      core.osd(`▶▶  ${getFastSpeed()}× 加速播放`);
+      mpv.set("speed", speed);
+      core.osd(`▶▶  ${speed}× 加速播放`);
+      log.log(`[arrow-speed] hold detected -> boost to ${speed}×`);
     }, delay);
   }
-  return true;
-}, input.PRIORITY_HIGH);
 
-input.onKeyUp("RIGHT", () => {
+  return true;
+}
+
+function handleRightUp() {
   rightDown = false;
-  if (rightTimer) { clearTimeout(rightTimer); rightTimer = null; }
+
+  if (rightTimer !== null) {
+    clearTimeout(rightTimer);
+    rightTimer = null;
+  }
+
   if (isHoldingRight) {
+    // 结束长按，恢复原本速度与暂停状态
     restoreSpeed();
-    if (wasPausedRight) mpv.set("pause", true);
+    if (wasPausedRight) {
+      mpv.set("pause", true);
+    }
     isHoldingRight = false;
   } else if (getTapSeek()) {
+    // 短按：快进对应步长（严格传递字符串数组）
     const step = getSeekStep();
-    mpv.command("seek", [String(step), "relative"]);
-    core.osd(`▶▶ 快进 +${step}s`);
+    try {
+      mpv.command("seek", [String(step), "relative"]);
+      core.osd(`▶▶ 快进 +${step}s`);
+      log.log(`[arrow-speed] tap seek executed: +${step}s`);
+    } catch (e) {
+      log.log(`[arrow-speed] tap seek failed: ` + e);
+    }
   }
-  return true;
-}, input.PRIORITY_HIGH);
 
-// 左键：长按慢放 / 短按快退
-input.onKeyDown("LEFT", (data) => {
-  if (data?.isRepeat || leftDown) return true;
+  return true;
+}
+
+// ──────────────────────────────────────────────
+// 左方向键 (Left Arrow) -> 慢放 / 快退
+// ──────────────────────────────────────────────
+function handleLeftDown(data) {
+  if (data && data.isRepeat) return true;
+  if (leftDown) return true;
+
   leftDown = true;
   isHoldingLeft = false;
+
   if (!isHoldingRight) {
     savedSpeed = mpv.getNumber("speed") || 1.0;
     wasPausedLeft = mpv.getFlag("pause");
   }
+
   const delay = getHoldDelay();
   if (delay <= 0) {
     isHoldingLeft = true;
+    const speed = getSlowSpeed();
     if (wasPausedLeft) mpv.set("pause", false);
-    mpv.set("speed", getSlowSpeed());
-    core.osd(`◀◀  ${getSlowSpeed()}× 慢放播放`);
+    mpv.set("speed", speed);
+    core.osd(`◀◀  ${speed}× 慢放播放`);
+    log.log(`[arrow-speed] slow down to ${speed}× (zero delay)`);
   } else {
     leftTimer = setTimeout(() => {
       if (!leftDown) return;
       isHoldingLeft = true;
+      const speed = getSlowSpeed();
       if (wasPausedLeft) mpv.set("pause", false);
-      mpv.set("speed", getSlowSpeed());
-      core.osd(`◀◀  ${getSlowSpeed()}× 慢放播放`);
+      mpv.set("speed", speed);
+      core.osd(`◀◀  ${speed}× 慢放播放`);
+      log.log(`[arrow-speed] hold detected -> slow down to ${speed}×`);
     }, delay);
   }
-  return true;
-}, input.PRIORITY_HIGH);
 
-input.onKeyUp("LEFT", () => {
+  return true;
+}
+
+function handleLeftUp() {
   leftDown = false;
-  if (leftTimer) { clearTimeout(leftTimer); leftTimer = null; }
+
+  if (leftTimer !== null) {
+    clearTimeout(leftTimer);
+    leftTimer = null;
+  }
+
   if (isHoldingLeft) {
     restoreSpeed();
-    if (wasPausedLeft) mpv.set("pause", true);
+    if (wasPausedLeft) {
+      mpv.set("pause", true);
+    }
     isHoldingLeft = false;
   } else if (getTapSeek()) {
     const step = getSeekStep();
-    mpv.command("seek", [`-${step}`, "relative"]);
-    core.osd(`◀◀ 快退 -${step}s`);
+    try {
+      mpv.command("seek", [`-${step}`, "relative"]);
+      core.osd(`◀◀ 快退 -${step}s`);
+      log.log(`[arrow-speed] tap seek executed: -${step}s`);
+    } catch (e) {
+      log.log(`[arrow-speed] tap seek failed: ` + e);
+    }
   }
-  return true;
-}, input.PRIORITY_HIGH);
 
-// 快捷菜单栏
+  return true;
+}
+
+// 注册监听器（大写 mpv key code，高优先级拦截）
+input.onKeyDown("RIGHT", handleRightDown, input.PRIORITY_HIGH);
+input.onKeyUp("RIGHT", handleRightUp, input.PRIORITY_HIGH);
+
+input.onKeyDown("LEFT", handleLeftDown, input.PRIORITY_HIGH);
+input.onKeyUp("LEFT", handleLeftUp, input.PRIORITY_HIGH);
+
+// ──────────────────────────────────────────────
+// 快捷菜单栏支持（在播放中方便随时切换常用倍速）
+// ──────────────────────────────────────────────
+const FAST_SPEED_OPTIONS = [1.5, 2.0, 2.5, 3.0, 4.0];
+const SLOW_SPEED_OPTIONS = [0.25, 0.5, 0.75];
+
 function buildPluginMenu() {
   try {
     menu.removeAllItems();
-    const fastMenu = menu.item(`右键加速 (${getFastSpeed()}×)`, null);
-    [1.5, 2.0, 2.5, 3.0, 4.0].forEach((spd) => {
-      fastMenu.addSubMenuItem(menu.item(`${spd}×`, () => {
-        iina.preferences.set("fastSpeed", spd);
-        iina.preferences.persist();
-        core.osd(`右键加速已设为: ${spd}×`);
-        buildPluginMenu();
-      }, { selected: spd === getFastSpeed() }));
+    const currentFast = getFastSpeed();
+    const currentSlow = getSlowSpeed();
+
+    const fastMenu = menu.item(`右键加速 (${currentFast}×)`, null);
+    FAST_SPEED_OPTIONS.forEach((spd) => {
+      fastMenu.addSubMenuItem(
+        menu.item(`${spd}×`, () => {
+          iina.preferences.set("fastSpeed", spd);
+          iina.preferences.persist();
+          core.osd(`右键加速已设为: ${spd}×`);
+          buildPluginMenu();
+        }, { selected: spd === currentFast })
+      );
     });
     menu.addItem(fastMenu);
 
-    const slowMenu = menu.item(`左键慢放 (${getSlowSpeed()}×)`, null);
-    [0.25, 0.5, 0.75].forEach((spd) => {
-      slowMenu.addSubMenuItem(menu.item(`${spd}×`, () => {
-        iina.preferences.set("slowSpeed", spd);
-        iina.preferences.persist();
-        core.osd(`左键慢放已设为: ${spd}×`);
-        buildPluginMenu();
-      }, { selected: spd === getSlowSpeed() }));
+    const slowMenu = menu.item(`左键慢放 (${currentSlow}×)`, null);
+    SLOW_SPEED_OPTIONS.forEach((spd) => {
+      slowMenu.addSubMenuItem(
+        menu.item(`${spd}×`, () => {
+          iina.preferences.set("slowSpeed", spd);
+          iina.preferences.persist();
+          core.osd(`左键慢放已设为: ${spd}×`);
+          buildPluginMenu();
+        }, { selected: spd === currentSlow })
+      );
     });
     menu.addItem(slowMenu);
   } catch (err) {
     log.log("[arrow-speed] build menu error: " + err);
   }
 }
+
 buildPluginMenu();
+log.log("[arrow-speed] plugin loaded and listeners initialized");
 ```
 
 ### 3. preferences.html（偏好设置面板）
@@ -265,25 +377,72 @@ buildPluginMenu();
 <head>
   <meta charset="UTF-8" />
   <style>
-    :root { color-scheme: light dark; }
-    body { padding: 18px 24px; font-size: 13px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; color: -apple-system-label; margin: 0; user-select: none; }
-    .group-title { font-weight: 600; margin-bottom: 12px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; opacity: 0.7; }
-    .row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
-    label { width: 170px; flex-shrink: 0; }
-    input[type="range"] { flex: 1; margin: 0 12px; }
-    .val { width: 60px; text-align: right; font-weight: 600; font-variant-numeric: tabular-nums; }
-    .check-row { display: flex; align-items: center; margin: 12px 0 14px; }
-    .check-row input { margin-right: 8px; }
-    .hint { font-size: 11px; opacity: 0.65; line-height: 1.4; margin-top: 14px; padding-top: 10px; border-top: 1px solid rgba(128,128,128,0.2); }
+    :root {
+      color-scheme: light dark;
+    }
+    body {
+      padding: 18px 24px;
+      font-size: 13px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      color: -apple-system-label;
+      margin: 0;
+      user-select: none;
+    }
+    .group-title {
+      font-weight: 600;
+      margin-bottom: 12px;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      opacity: 0.7;
+    }
+    .row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+    label {
+      width: 170px;
+      flex-shrink: 0;
+    }
+    input[type="range"] {
+      flex: 1;
+      margin: 0 12px;
+    }
+    .val {
+      width: 60px;
+      text-align: right;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+    }
+    .check-row {
+      display: flex;
+      align-items: center;
+      margin: 12px 0 14px;
+    }
+    .check-row input {
+      margin-right: 8px;
+    }
+    .hint {
+      font-size: 11px;
+      opacity: 0.65;
+      line-height: 1.4;
+      margin-top: 14px;
+      padding-top: 10px;
+      border-top: 1px solid rgba(128, 128, 128, 0.2);
+    }
   </style>
 </head>
 <body>
   <div class="group-title">长按速度控制</div>
+
   <div class="row">
     <label for="fastSpeed">右键长按加速倍速：</label>
     <input type="range" id="fastSpeed" min="1.25" max="5.0" step="0.25" value="2.0" />
     <span class="val" id="fastSpeedDisplay">2.0×</span>
   </div>
+
   <div class="row">
     <label for="slowSpeed">左键长按慢放倍速：</label>
     <input type="range" id="slowSpeed" min="0.1" max="0.9" step="0.05" value="0.5" />
@@ -291,30 +450,38 @@ buildPluginMenu();
   </div>
 
   <div class="group-title" style="margin-top: 18px;">触发与短按行为</div>
+
   <div class="row">
     <label for="holdDelay">长按判定延迟 (ms)：</label>
     <input type="range" id="holdDelay" min="0" max="600" step="25" value="250" />
     <span class="val" id="holdDelayDisplay">250ms</span>
   </div>
+
   <div class="row">
     <label for="seekStep">短按快进/快退步长 (秒)：</label>
     <input type="range" id="seekStep" min="1" max="30" step="1" value="5" />
     <span class="val" id="seekStepDisplay">5s</span>
   </div>
+
   <div class="check-row">
     <input type="checkbox" id="enableTapSeek" checked />
     <label for="enableTapSeek" style="width: auto;">短按轻点保留快进/快退功能</label>
   </div>
+
   <div class="hint">
     💡 提示：按住右键加速、按住左键慢放，松手立即恢复原速。轻敲方向键则快进/快退 5 秒。若想纯按住加速（无快进延迟），可将判定延迟拉至 0ms。
   </div>
 
   <script>
     const prefs = (window.iina || iina)?.preferences;
-    const fastSpeed = document.getElementById("fastSpeed"), fastDisp = document.getElementById("fastSpeedDisplay");
-    const slowSpeed = document.getElementById("slowSpeed"), slowDisp = document.getElementById("slowSpeedDisplay");
-    const holdDelay = document.getElementById("holdDelay"), holdDisp = document.getElementById("holdDelayDisplay");
-    const seekStep = document.getElementById("seekStep"), seekDisp = document.getElementById("seekStepDisplay");
+    const fastSpeed = document.getElementById("fastSpeed");
+    const fastDisp = document.getElementById("fastSpeedDisplay");
+    const slowSpeed = document.getElementById("slowSpeed");
+    const slowDisp = document.getElementById("slowSpeedDisplay");
+    const holdDelay = document.getElementById("holdDelay");
+    const holdDisp = document.getElementById("holdDelayDisplay");
+    const seekStep = document.getElementById("seekStep");
+    const seekDisp = document.getElementById("seekStepDisplay");
     const enableTapSeek = document.getElementById("enableTapSeek");
 
     function update() {
@@ -326,22 +493,47 @@ buildPluginMenu();
 
     try {
       if (prefs) {
-        const fs = prefs.get("fastSpeed"), ss = prefs.get("slowSpeed"), hd = prefs.get("holdDelay"), st = prefs.get("seekStep"), et = prefs.get("enableTapSeek");
+        const fs = prefs.get("fastSpeed");
+        const ss = prefs.get("slowSpeed");
+        const hd = prefs.get("holdDelay");
+        const st = prefs.get("seekStep");
+        const et = prefs.get("enableTapSeek");
+
         if (fs != null) fastSpeed.value = fs;
         if (ss != null) slowSpeed.value = ss;
         if (hd != null) holdDelay.value = hd;
         if (st != null) seekStep.value = st;
         if (et != null) enableTapSeek.checked = Boolean(et);
       }
-    } catch(e) {}
+    } catch (e) {}
     update();
 
-    function save(key, val) { try { prefs?.set(key, val); prefs?.persist(); } catch(e) {} }
-    fastSpeed.addEventListener("input", () => { update(); save("fastSpeed", parseFloat(fastSpeed.value)); });
-    slowSpeed.addEventListener("input", () => { update(); save("slowSpeed", parseFloat(slowSpeed.value)); });
-    holdDelay.addEventListener("input", () => { update(); save("holdDelay", parseInt(holdDelay.value)); });
-    seekStep.addEventListener("input", () => { update(); save("seekStep", parseInt(seekStep.value)); });
-    enableTapSeek.addEventListener("change", () => { save("enableTapSeek", enableTapSeek.checked); });
+    function save(key, val) {
+      try {
+        prefs?.set(key, val);
+        prefs?.persist();
+      } catch (e) {}
+    }
+
+    fastSpeed.addEventListener("input", () => {
+      update();
+      save("fastSpeed", parseFloat(fastSpeed.value));
+    });
+    slowSpeed.addEventListener("input", () => {
+      update();
+      save("slowSpeed", parseFloat(slowSpeed.value));
+    });
+    holdDelay.addEventListener("input", () => {
+      update();
+      save("holdDelay", parseInt(holdDelay.value));
+    });
+    seekStep.addEventListener("input", () => {
+      update();
+      save("seekStep", parseInt(seekStep.value));
+    });
+    enableTapSeek.addEventListener("change", () => {
+      save("enableTapSeek", enableTapSeek.checked);
+    });
   </script>
 </body>
 </html>
