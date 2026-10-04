@@ -1243,10 +1243,15 @@ body.fs-lightbox-dragging *,
 
 #article-container figure.highlight .line {
   display: block !important;
+  min-height: 1.5em !important;
   text-align: left !important;
   white-space: pre !important;
   word-wrap: normal !important;
   word-break: normal !important;
+}
+
+#article-container figure.highlight br {
+  display: none !important;
 }
 
 /* Code table structure: block wrapper to enable touch horizontal scroll */
