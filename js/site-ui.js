@@ -1,21 +1,19 @@
 (() => {
-  const THEME_KEY = 'theme';
+  const THEME_KEY = 'fs-theme';
   const THEME_TTL_DAYS = 365;
+  const THEME_TTL_MS = THEME_TTL_DAYS * 24 * 60 * 60 * 1000;
 
   const normalizeThemeMode = (value) =>
     value === 'light' || value === 'dark' || value === 'system' ? value : undefined;
 
   const readThemeMode = () => {
     try {
-      const raw = sessionStorage.getItem(THEME_KEY);
+      const raw = localStorage.getItem(THEME_KEY);
       if (!raw) return 'system';
 
-      try {
-        const parsed = JSON.parse(raw);
-        return normalizeThemeMode(parsed.value) || 'system';
-      } catch (error) {
-        return normalizeThemeMode(raw) || 'system';
-      }
+      const saved = JSON.parse(raw);
+      if (!saved || Date.now() - (saved.t || 0) > THEME_TTL_MS) return 'system';
+      return normalizeThemeMode(saved.v) || 'system';
     } catch (error) {
       return 'system';
     }
@@ -23,12 +21,11 @@
 
   const saveThemeMode = (mode) => {
     try {
-      localStorage.removeItem(THEME_KEY);
-
-      sessionStorage.setItem(
+      localStorage.setItem(
         THEME_KEY,
         JSON.stringify({
-          value: mode,
+          v: mode,
+          t: Date.now(),
         })
       );
     } catch (error) {
@@ -369,75 +366,6 @@
     update();
   };
 
-  const hasHeadingIndex = (rawText) => {
-    if (!rawText) return false;
-    const text = String(rawText)
-      .replace(/&amp;/g, '&')
-      .replace(/&lt;/g, '<')
-      .replace(/&gt;/g, '>')
-      .replace(/&quot;/g, '"')
-      .replace(/&#39;/g, "'")
-      .replace(/&nbsp;/g, ' ')
-      .trim();
-    if (!text) return false;
-
-    // 1. Chinese section/step prefixes: 第一章, 第1节, 第 2 部分, 步骤 1, 步骤一, 篇一, 其一
-    if (/^(?:第\s*[0-9一二三四五六七八九十百千]+\s*[章节部分篇点条步次项]|步骤\s*[0-9一二三四五六七八九十]+|篇\s*[0-9一二三四五六七八九十]+|其\s*[一二三四五六七八九十]+)/i.test(text)) {
-      return true;
-    }
-
-    // 2. English step/part/case/section prefixes: Step 1, Step 01, Part 1, Case 1, Section 1
-    if (/^(?:Step|Part|Case|Section|Item|Phase)\s*[0-9]+[.:：、\s]/i.test(text)) {
-      return true;
-    }
-
-    // 3. Chinese numerals with brackets or pause mark/dot/colon: 一、, 一., （一）, (一), 【一】, [一]
-    if (/^[（(【\[]\s*[一二三四五六七八九十]+\s*[）)】\]]/.test(text)) {
-      return true;
-    }
-    if (/^[一二三四五六七八九十百千万]+[、.．:：\s]/.test(text)) {
-      return true;
-    }
-
-    // 4. Bracketed digits/letters/Roman: (1), （1）, [1], 【1】, (1.1), (A), [IV]
-    if (/^[（(【\[]\s*(?:[0-9]+(?:\.[0-9]+)*|[a-zA-Z]|[ivxIVX]+)\s*[）)】\]][、.．:：\s]?/.test(text)) {
-      return true;
-    }
-
-    // 5. Circled numbers: ①, ②, ⑴, ⒈
-    if (/^[①②③④⑤⑥⑦⑧⑨⑩⑴⑵⑶⑷⑸⑹⑺⑻⑼⑽⒈⒉⒊⒋⒌]/.test(text)) {
-      return true;
-    }
-
-    // 6. Roman numerals with delimiter: I., II., III., IV., i.
-    if (/^(?:[IVXLCDMivxlcdm]+)[.、．:：]\s+/.test(text)) {
-      return true;
-    }
-
-    // 7. Single letter with delimiter: A., B., A、, a.
-    if (/^[A-Za-z][.、．:：]\s+/.test(text)) {
-      return true;
-    }
-
-    // 8. Hierarchical decimal numbers: 1.1, 1.1.1, 2.4.1 (must NOT be followed by units/words like %, K, M, G, px)
-    if (/^[0-9]+(?:\.[0-9]+)+[.、．:：\s]/.test(text)) {
-      return true;
-    }
-    if (/^[0-9]+(?:\.[0-9]+)+$/.test(text)) {
-      return true;
-    }
-
-    // 9. Single integer with delimiter: 1., 1、, 1:, 1 - (must NOT be 100%, 2K, 3D, 1080P, etc.)
-    if (/^[0-9]+[、.．:：]\s*/.test(text)) {
-      return true;
-    }
-    if (/^[0-9]+\s*-\s*[0-9]+/.test(text)) {
-      return true;
-    }
-
-    return false;
-  };
-
   const initTocCollapsing = () => {
     const toc = document.querySelector('#card-toc .toc-content');
     if (!toc) return;
@@ -460,21 +388,6 @@
     toc.scrollTo = () => {};
     toc.scroll = () => {};
     toc.scrollBy = () => {};
-
-    // Deduplicate and complete TOC numbering:
-    // If the heading text itself already starts with a recognized index/number, remove redundant toc-number.
-    toc.querySelectorAll('.toc-link').forEach((link) => {
-      const numberSpan = link.querySelector('.toc-number');
-      const textSpan = link.querySelector('.toc-text');
-      if (!textSpan) return;
-
-      const rawText = textSpan.textContent || '';
-      if (hasHeadingIndex(rawText)) {
-        if (numberSpan) {
-          numberSpan.remove();
-        }
-      }
-    });
 
     toc.classList.add('is-expand', 'is-user-collapsible');
 
@@ -1795,13 +1708,6 @@
     };
 
     bind();
-    if (window.lazyLoadInstance) {
-      const origUpdate = window.lazyLoadInstance.update.bind(window.lazyLoadInstance);
-      window.lazyLoadInstance.update = (...args) => {
-        origUpdate(...args);
-        setTimeout(bind, 200);
-      };
-    }
   };
 
 
