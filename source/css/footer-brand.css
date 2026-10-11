@@ -1,4 +1,19 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@800;900&display=swap');
+/* 与主题字体栈分离的展示字体，本地化以避免 @import 串起一条外链阻塞请求 */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url('/font/inter-latin-800-900.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 900;
+  font-display: swap;
+  src: url('/font/inter-latin-800-900.woff2') format('woff2');
+}
 
 /* ============================================================
    Footer Brand Text – "FeeFeeNOON"

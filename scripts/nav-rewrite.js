@@ -36,6 +36,17 @@ const COLLECTION_HEAD = `
   <a href="/archives/">全部文章 <span aria-hidden="true">↗</span></a>
 </header>`;
 
+const NOT_FOUND = `
+<div class="error-content fs-not-found">
+  <p class="fs-hero-tag">ERROR / 404</p>
+  <p class="fs-not-found-code">404</p>
+  <p class="fs-not-found-desc">这个地址还没有内容，可能是链接失效或已经被改过。</p>
+  <div class="fs-not-found-actions">
+    <a class="fs-not-found-btn" href="/">返回首页 <span aria-hidden="true">↗</span></a>
+    <a class="fs-not-found-btn ghost" href="/archives/">全部文章 <span aria-hidden="true">↗</span></a>
+  </div>
+</div>`;
+
 const SITE_NAV = `
 <nav id="nav" class="feespace-nav">
   <a class="site-wordmark" href="/" aria-label="Fee Space 首页"><span>Fee Space</span><small>©2026</small></a>
@@ -60,7 +71,7 @@ const SITE_NAV = `
   </div>
 </nav>`;
 
-hexo.extend.filter.register('after_render:html', (html) => {
+hexo.extend.filter.register('after_render:html', (html, data) => {
   if (!html || typeof html !== 'string') return html;
 
   let output = html;
@@ -78,21 +89,34 @@ hexo.extend.filter.register('after_render:html', (html) => {
   output = output.replace(/<div id="toggle-menu">[\s\S]*?<\/div>/, '');
 
   // Lazy-load content images; strip lazy attrs from above-the-fold post covers.
-  output = output.replace(/<img (?![^>]*loading=)/g, '<img loading="lazy" decoding="async" ');
+  output = output.replace(/<img (?![^>]*loading=)(?![^>]*class="[^"]*\bno-lazy\b)/g, '<img loading="lazy" decoding="async" ');
   output = output.replace(
     /(<div id="post-cover">[\s\S]*?<\/div>)/g,
     (cover) => cover.replace(/ loading="lazy" decoding="async"/g, '')
   );
 
+  // A pager that only shows the current page number is noise.
+  output = output.replace(/<nav id="pagination">[\s\S]*?<\/nav>/g, (pager) =>
+    pager.includes('<a ') ? pager : ''
+  );
+
+  output = output.replace(
+    /(<time class="shuoshuo-date"[^>]*>)(\d{4}-\d{2}-\d{2} \d{2}:\d{2}):\d{2}(<\/time>)/g,
+    '$1$2$3'
+  );
+
   // Unwrap <p> around <figure> to keep HTML semantic and clean
   output = output.replace(/<p>\s*(<figure[\s\S]*?<\/figure>)\s*<\/p>/g, '$1');
 
-  if (output.includes('<header class="full_page fixed" id="page-header"')) {
+  if (data && data.path === '404.html') {
     output = output.replace(
-      /<head>/,
-      '<head><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&text=Welcom%20tFESPAC!Ns%2Cbrvain%26Ddgh&display=swap" rel="stylesheet">'
+      /<title>[\s\S]*?<\/title>/,
+      '<title>404 · 页面走丢了 | Fee Space</title>'
     );
+    return output.replace(/<div class="error-content">[\s\S]*?<\/div><\/div><\/div>/, NOT_FOUND);
+  }
 
+  if (output.includes('<header class="full_page fixed" id="page-header"')) {
     output = output.replace(
       /<div id="site-info">[\s\S]*?<div id="scroll-down">[\s\S]*?<\/div>/,
       HOME_HERO
@@ -135,7 +159,7 @@ hexo.extend.filter.register('after_render:html', (html) => {
     output = output.replace(
       /<div id="post-info">[\s\S]*?<h1 class="post-title">([\s\S]*?)<\/h1>/,
       (match, title) => {
-        return `<div id="post-info"><div class="fs-unified-hero"><span class="fs-hero-tag">NOTE &amp; ARTICLE</span><h1 class="post-title">${title.trim()}</h1>`;
+        return `<div id="post-info"><div class="fs-unified-hero"><span class="fs-hero-tag">NOTE &amp; ARTICLE</span><h1 class="post-title">${title.trim()}</h1></div>`;
       }
     );
   }

@@ -43,6 +43,21 @@ code_blocks:
   shrink: none
   fullpage: false
 
+# 文章页图片灯箱由 source/js/site-ui.js 自研实现，主题的 fancybox 从未生效
+lightbox:
+
+# 懒加载统一由 scripts/nav-rewrite.js 注入原生 loading="lazy"，不引入主题的占位图方案
+lazyload:
+  enable: false
+
+index_post_content:
+  method: 3
+  length: 180
+
+error_404:
+  enable: true
+  subtitle: '这个地址还没有内容'
+
 
 aside:
   enable: true
@@ -82,19 +97,16 @@ search:
 inject:
   head:
     - >-
-      <script>(function(){try{localStorage.removeItem('theme');var u=new URLSearchParams(location.search).get('theme');if(u==='light'||u==='dark'){try{sessionStorage.setItem('theme',JSON.stringify({value:u}))}catch(e){}}var raw=sessionStorage.getItem('theme');var saved;if(raw){try{var parsed=JSON.parse(raw);saved=parsed.value}catch(e){saved=raw}}var mode=(u==='light'||u==='dark')?u:(saved==='light'||saved==='dark'?saved:(window.matchMedia&&window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light'));document.documentElement.setAttribute('data-theme',mode);document.documentElement.classList.add('js');var m=document.querySelector('meta[name="theme-color"]');if(m){m.setAttribute('content',mode==='dark'?'#0f1111':'#f3f6f2')}}catch(e){document.documentElement.setAttribute('data-theme','light')}})();</script>
-    - <link rel="stylesheet" href="/css/cyber-background.css?v=20261004_v2">
-    - <link rel="stylesheet" href="/css/footer-brand.css?v=20260815_v3">
+      <script>(function(){try{var K='fs-theme',saved=null;try{var raw=localStorage.getItem(K);if(raw){var o=JSON.parse(raw);if(o&&o.v&&(Date.now()-(o.t||0))<365*864e5)saved=o.v}}catch(e){}var u=new URLSearchParams(location.search).get('theme');var mode=(u==='light'||u==='dark')?u:(saved==='light'||saved==='dark'?saved:(window.matchMedia&&window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light'));document.documentElement.setAttribute('data-theme',mode);document.documentElement.classList.add('js');var m=document.querySelector('meta[name="theme-color"]');if(m){m.setAttribute('content',mode==='dark'?'#0f1111':'#f3f6f2')}}catch(e){document.documentElement.setAttribute('data-theme','light')}})();</script>
+    - <link rel="stylesheet" href="/css/cyber-background.css?v=20261011_v1">
+    - <link rel="stylesheet" href="/css/footer-brand.css?v=20261011_v1">
   bottom:
-    - <script src="/js/site-ui.js?v=20260827_v10" defer></script>
-    - <script src="/js/footer-brand.js?v=20260815_v3" defer></script>
+    - <script src="/js/site-ui.js?v=20261011_v1" defer></script>
+    - <script src="/js/footer-brand.js?v=20261011_v1" defer></script>
 
 CDN:
   option:
     fontawesome: /css/vendor/fontawesome/css/all.min.css
-    fancybox_css: /css/vendor/fancybox.min.css
-    fancybox: /js/vendor/fancybox.umd.min.js
-    lazyload: /js/vendor/lazyload.iife.min.js
     egjs_infinitegrid: /js/vendor/infinitegrid.min.js
 
 translate:

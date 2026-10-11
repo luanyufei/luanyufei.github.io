@@ -1,3 +1,12 @@
+/* 仅 Hero 像素小字使用，本地子集避免外链字体在弱网下阻塞首屏 */
+@font-face {
+  font-family: "Press Start 2P";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/font/press-start-2p-latin-400.woff2") format("woff2");
+}
+
 :root {
   color-scheme: light;
   --fs-bg: #f3f6f2;
@@ -3558,8 +3567,13 @@ html.search-open body {
     display: block !important;
     right: 6%;
     bottom: 20%;
-    font-size: clamp(0.68rem, 3.2vw, 0.95rem);
+    max-width: min(78vw, 30ch);
+    font-size: clamp(0.62rem, 2.6vw, 0.8rem);
+    line-height: 1.45;
+    text-align: right;
     text-shadow: 1.5px 1.5px 0 rgba(0, 0, 0, 0.7);
+    white-space: normal;
+    transform-origin: right center;
   }
 
   .feespace-hero {
@@ -4284,3 +4298,71 @@ html.search-open body {
 
 
 
+
+/* ===== 404 ===== */
+
+.fs-not-found {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.1rem;
+  padding: clamp(4rem, 14vh, 8rem) 1.5rem 5rem;
+  text-align: center;
+}
+
+.fs-not-found-code {
+  margin: 0;
+  color: var(--fs-text);
+  font-size: clamp(4.5rem, 16vw, 9rem);
+  font-weight: 760;
+  letter-spacing: -0.04em;
+  line-height: 0.9;
+}
+
+.fs-not-found-desc {
+  max-width: 34ch;
+  margin: 0;
+  color: var(--fs-text-2);
+  font-size: 0.95rem;
+  line-height: 1.7;
+}
+
+.fs-not-found-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.7rem;
+  margin-top: 0.6rem;
+}
+
+.fs-not-found-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.72rem 1.35rem;
+  border: 1px solid var(--fs-text);
+  border-radius: var(--fs-radius);
+  background: var(--fs-text);
+  color: var(--fs-bg) !important;
+  font-family: var(--fs-mono);
+  font-size: 0.76rem;
+  letter-spacing: 0.06em;
+  text-decoration: none;
+  transition: background-color 160ms var(--fs-ease), border-color 160ms var(--fs-ease), color 160ms var(--fs-ease);
+}
+
+.fs-not-found-btn:hover {
+  background: var(--fs-accent);
+  border-color: var(--fs-accent);
+  color: #0b0d0b !important;
+}
+
+.fs-not-found-btn.ghost {
+  background: transparent;
+  color: var(--fs-text) !important;
+}
+
+.fs-not-found-btn.ghost:hover {
+  background: var(--fs-text);
+  color: var(--fs-bg) !important;
+}

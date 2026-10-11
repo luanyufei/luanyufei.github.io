@@ -8,7 +8,7 @@ date: 2025-02-12 21:20:42
 <header class="resume-hero">
 <div class="resume-avatar-side">
 <div class="resume-avatar-frame">
-<img class="resume-avatar no-lightbox" src="/img/touxiang.webp" alt="栾宇飞">
+<img class="resume-avatar no-lightbox no-lazy" src="/img/touxiang.webp" alt="栾宇飞">
 <div class="resume-avatar-badge">PORTRAIT / RESUME</div>
 </div>
 </div>

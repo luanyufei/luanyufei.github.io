@@ -135,7 +135,7 @@ date: 2025-02-12 21:20:42
 <header class="resume-hero">
 <div class="resume-avatar-side">
 <div class="resume-avatar-frame">
-<img class="resume-avatar no-lightbox" src="${esc(basic.avatar || '/img/touxiang.webp')}" alt="${esc(basic.name)}">
+<img class="resume-avatar no-lightbox no-lazy" src="${esc(basic.avatar || '/img/touxiang.webp')}" alt="${esc(basic.name)}">
 <div class="resume-avatar-badge">PORTRAIT / RESUME</div>
 </div>
 </div>
