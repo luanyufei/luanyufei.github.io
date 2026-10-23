@@ -6,7 +6,18 @@
   const normalizeThemeMode = (value) =>
     value === 'light' || value === 'dark' || value === 'system' ? value : undefined;
 
+  const getUrlThemeOverride = () => {
+    try {
+      const value = new URLSearchParams(window.location.search).get('theme');
+      if (value === 'dark' || value === 'light') return value;
+    } catch (error) {}
+    return null;
+  };
+
   const readThemeMode = () => {
+    const urlOverride = getUrlThemeOverride();
+    if (urlOverride) return urlOverride;
+
     try {
       const raw = localStorage.getItem(THEME_KEY);
       if (!raw) return 'system';
@@ -79,12 +90,13 @@
     const validMode = normalizeThemeMode(mode) || 'system';
     const actualTheme = resolveTheme(validMode);
 
+    document.documentElement.dataset.theme = actualTheme;
+    document.documentElement.setAttribute('data-theme', actualTheme);
+
     if (actualTheme === 'dark' && window.btf?.activateDarkMode) {
       window.btf.activateDarkMode();
     } else if (actualTheme === 'light' && window.btf?.activateLightMode) {
       window.btf.activateLightMode();
-    } else {
-      document.documentElement.dataset.theme = actualTheme;
     }
 
     if (persist) saveThemeMode(validMode);
@@ -106,7 +118,7 @@
     button.className = 'site-theme-toggle';
     document.body.appendChild(button);
 
-    applyThemeMode(currentMode);
+    applyThemeMode(currentMode, false);
 
     button.addEventListener('click', () => {
       currentMode = getNextThemeMode(currentMode);
@@ -114,7 +126,7 @@
     });
 
     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
-      if (currentMode === 'system') {
+      if (currentMode === 'system' && !getUrlThemeOverride()) {
         applyThemeMode('system');
       }
     });
@@ -238,6 +250,9 @@
     const status = dialog.querySelector('.search-status');
     let entries = null;
     let loadingPromise = null;
+    let debounceTimer = null;
+    let isComposing = false;
+    let selectedIndex = -1;
 
     const loadEntries = () => {
       if (entries) return Promise.resolve(entries);
@@ -268,9 +283,49 @@
       return loadingPromise;
     };
 
+    const highlightMatches = (text, terms) => {
+      if (!terms || !terms.length) return document.createTextNode(text);
+      const escaped = terms.map((t) => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).filter(Boolean).join('|');
+      if (!escaped) return document.createTextNode(text);
+      const regex = new RegExp(`(${escaped})`, 'gi');
+      const frag = document.createDocumentFragment();
+      const parts = text.split(regex);
+      parts.forEach((part) => {
+        if (!part) return;
+        if (terms.some((t) => t.toLowerCase() === part.toLowerCase())) {
+          const mark = document.createElement('mark');
+          mark.className = 'search-highlight';
+          mark.textContent = part;
+          frag.appendChild(mark);
+        } else {
+          frag.appendChild(document.createTextNode(part));
+        }
+      });
+      return frag;
+    };
+
+    const updateSelection = (newIndex) => {
+      const items = Array.from(results.querySelectorAll('a'));
+      if (!items.length) {
+        selectedIndex = -1;
+        return;
+      }
+      if (newIndex < 0) newIndex = items.length - 1;
+      if (newIndex >= items.length) newIndex = 0;
+      selectedIndex = newIndex;
+      items.forEach((item, idx) => {
+        const isSel = idx === selectedIndex;
+        item.classList.toggle('is-selected', isSel);
+        if (isSel) {
+          item.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+        }
+      });
+    };
+
     const renderResults = (query) => {
       const normalizedQuery = query.trim().toLocaleLowerCase();
       results.replaceChildren();
+      selectedIndex = -1;
       if (!normalizedQuery || !entries) {
         status.textContent = '';
         return;
@@ -298,13 +353,39 @@
         number.className = 'search-result-number';
         number.textContent = String(index + 1).padStart(2, '0');
         copy.className = 'search-result-copy';
-        title.textContent = entry.title;
-        excerpt.textContent = entry.content.slice(0, 96);
+
+        title.appendChild(highlightMatches(entry.title, terms));
+
+        // Locate keyword context window
+        let snippet = '';
+        const contentLower = entry.content.toLocaleLowerCase();
+        const firstHit = terms.reduce((min, term) => {
+          const pos = contentLower.indexOf(term);
+          return pos !== -1 && (min === -1 || pos < min) ? pos : min;
+        }, -1);
+
+        if (firstHit !== -1) {
+          const start = Math.max(0, firstHit - 36);
+          const end = Math.min(entry.content.length, firstHit + 60);
+          snippet = (start > 0 ? '…' : '') + entry.content.slice(start, end).trim() + (end < entry.content.length ? '…' : '');
+        } else {
+          snippet = entry.content.slice(0, 96).trim() + (entry.content.length > 96 ? '…' : '');
+        }
+
+        excerpt.appendChild(highlightMatches(snippet, terms));
+
         copy.append(title, excerpt);
         link.append(number, copy);
         item.appendChild(link);
         results.appendChild(item);
       });
+    };
+
+    const scheduleRender = () => {
+      if (debounceTimer) clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => {
+        renderResults(input.value);
+      }, 120);
     };
 
     const openSearch = () => {
@@ -325,7 +406,31 @@
       if (event.target === dialog) closeSearch();
     });
     dialog.addEventListener('close', () => document.documentElement.classList.remove('search-open'));
-    input.addEventListener('input', () => renderResults(input.value));
+
+    input.addEventListener('compositionstart', () => { isComposing = true; });
+    input.addEventListener('compositionend', () => {
+      isComposing = false;
+      scheduleRender();
+    });
+    input.addEventListener('input', () => {
+      if (!isComposing) scheduleRender();
+    });
+
+    dialog.addEventListener('keydown', (event) => {
+      if (event.key === 'ArrowDown') {
+        event.preventDefault();
+        updateSelection(selectedIndex + 1);
+      } else if (event.key === 'ArrowUp') {
+        event.preventDefault();
+        updateSelection(selectedIndex - 1);
+      } else if (event.key === 'Enter') {
+        const items = results.querySelectorAll('a');
+        if (selectedIndex >= 0 && items[selectedIndex]) {
+          event.preventDefault();
+          items[selectedIndex].click();
+        }
+      }
+    });
 
     document.addEventListener('keydown', (event) => {
       const target = event.target;
@@ -370,8 +475,9 @@
     const toc = document.querySelector('#card-toc .toc-content');
     if (!toc) return;
 
-    // Decouple TOC container scrolling from page scroll:
-    // Block programmatic auto-scrolls so TOC container remains static at the user's manual scroll position
+    // Boundary auto-scroll for TOC container:
+    // Only adjust scroll when the active heading is near (< 36px) or outside the container viewport,
+    // avoiding Butterfly's jittery mid-screen auto-centering while preventing headings from scrolling out of view.
     const originalScrollTop = Object.getOwnPropertyDescriptor(Element.prototype, 'scrollTop');
     if (originalScrollTop) {
       Object.defineProperty(toc, 'scrollTop', {
@@ -379,15 +485,26 @@
           return originalScrollTop.get.call(this);
         },
         set(val) {
-          // Block automatic programmatic scrolls from background scroll spies
+          const active = toc.querySelector('.toc-link.active');
+          if (!active) return val;
+          const sidebarHeight = toc.clientHeight;
+          if (sidebarHeight <= 0) return val;
+          const currentScroll = originalScrollTop.get.call(this);
+          const activeOffsetTop = active.offsetTop;
+          const activeHeight = active.clientHeight;
+          const relTop = activeOffsetTop - currentScroll;
+          const relBottom = relTop + activeHeight;
+          const buffer = 36;
+          if (relTop < buffer) {
+            originalScrollTop.set.call(this, Math.max(0, activeOffsetTop - buffer));
+          } else if (relBottom > sidebarHeight - buffer) {
+            originalScrollTop.set.call(this, activeOffsetTop + activeHeight - sidebarHeight + buffer);
+          }
           return val;
         },
         configurable: true
       });
     }
-    toc.scrollTo = () => {};
-    toc.scroll = () => {};
-    toc.scrollBy = () => {};
 
     toc.classList.add('is-expand', 'is-user-collapsible');
 
@@ -712,7 +829,7 @@
       scene.add(new THREE.HemisphereLight(0xffffff, 0x2c322f, 0.4));
 
       const updateTheme = () => {
-        const dark = document.documentElement.dataset.theme === 'dark';
+        const dark = document.documentElement.getAttribute('data-theme') === 'dark' || document.documentElement.dataset.theme === 'dark';
         textMaterial.color.setHex(dark ? 0xaab3b0 : 0x9aa3a0);
         textMaterial.envMapIntensity = dark ? 0.8 : 0.95;
         renderer.toneMappingExposure = dark ? 1.05 : 1.22;
@@ -755,6 +872,10 @@
       const ptRight = new THREE.Vector3();
       const ptBottom = new THREE.Vector3();
       const ptTop = new THREE.Vector3();
+      const scratchNdc = new THREE.Vector2();
+      const scratchNormal = new THREE.Vector3(0, 0, 1);
+      const scratchPlane = new THREE.Plane();
+      const scratchLocalTarget = new THREE.Vector3();
 
       const getPointerNdc = (eventOrTouch) => ({
         x: (eventOrTouch.clientX / window.innerWidth) * 2 - 1,
@@ -763,7 +884,8 @@
 
       const raycastLetters = (ndcX, ndcY) => {
         if (!entranceDone) return null;
-        raycaster.setFromCamera(new THREE.Vector2(ndcX, ndcY), camera);
+        scratchNdc.set(ndcX, ndcY);
+        raycaster.setFromCamera(scratchNdc, camera);
         const hits = raycaster.intersectObjects(letterMeshes, false);
         return hits.length ? hits[0].object : null;
       };
@@ -792,7 +914,7 @@
         titleGroup.position.y = layoutBaseY + Math.sin(seconds * 0.7) * 0.03;
         titleGroup.updateMatrixWorld();
 
-        const titlePlane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0).applyMatrix4(titleGroup.matrixWorld);
+        scratchPlane.set(scratchNormal, 0).applyMatrix4(titleGroup.matrixWorld);
 
         letterMeshes.forEach((mesh, index) => {
           const data = mesh.userData;
@@ -800,28 +922,33 @@
           const eased = easeOutBack(entrance);
 
           if (mesh === draggingLetter) {
-            raycaster.setFromCamera(new THREE.Vector2(dragNdcX, dragNdcY), camera);
-            if (raycaster.ray.intersectPlane(titlePlane, dragPoint)) {
-              const localTarget = dragPoint.clone();
-              titleGroup.worldToLocal(localTarget);
-              localTarget.x += grabOffsetLocalX;
-              localTarget.y += grabOffsetLocalY;
+            scratchNdc.set(dragNdcX, dragNdcY);
+            raycaster.setFromCamera(scratchNdc, camera);
+            if (raycaster.ray.intersectPlane(scratchPlane, dragPoint)) {
+              scratchLocalTarget.copy(dragPoint);
+              titleGroup.worldToLocal(scratchLocalTarget);
+              scratchLocalTarget.x += grabOffsetLocalX;
+              scratchLocalTarget.y += grabOffsetLocalY;
 
               // Calculate visible viewport boundary on the title's 3D plane
-              edgeRaycaster.setFromCamera(new THREE.Vector2(-1.0, dragNdcY), camera);
-              edgeRaycaster.ray.intersectPlane(titlePlane, ptLeft);
+              scratchNdc.set(-1.0, dragNdcY);
+              edgeRaycaster.setFromCamera(scratchNdc, camera);
+              edgeRaycaster.ray.intersectPlane(scratchPlane, ptLeft);
               titleGroup.worldToLocal(ptLeft);
 
-              edgeRaycaster.setFromCamera(new THREE.Vector2(1.0, dragNdcY), camera);
-              edgeRaycaster.ray.intersectPlane(titlePlane, ptRight);
+              scratchNdc.set(1.0, dragNdcY);
+              edgeRaycaster.setFromCamera(scratchNdc, camera);
+              edgeRaycaster.ray.intersectPlane(scratchPlane, ptRight);
               titleGroup.worldToLocal(ptRight);
 
-              edgeRaycaster.setFromCamera(new THREE.Vector2(dragNdcX, -1.0), camera);
-              edgeRaycaster.ray.intersectPlane(titlePlane, ptBottom);
+              scratchNdc.set(dragNdcX, -1.0);
+              edgeRaycaster.setFromCamera(scratchNdc, camera);
+              edgeRaycaster.ray.intersectPlane(scratchPlane, ptBottom);
               titleGroup.worldToLocal(ptBottom);
 
-              edgeRaycaster.setFromCamera(new THREE.Vector2(dragNdcX, 1.0), camera);
-              edgeRaycaster.ray.intersectPlane(titlePlane, ptTop);
+              scratchNdc.set(dragNdcX, 1.0);
+              edgeRaycaster.setFromCamera(scratchNdc, camera);
+              edgeRaycaster.ray.intersectPlane(scratchPlane, ptTop);
               titleGroup.worldToLocal(ptTop);
 
               const box = mesh.geometry.boundingBox;
@@ -835,8 +962,8 @@
               const minY = Math.min(ptBottom.y, ptTop.y) - boxMinY;
               const maxY = Math.max(ptBottom.y, ptTop.y) - boxMaxY;
 
-              const clampedX = Math.max(minX, Math.min(maxX, localTarget.x));
-              const clampedY = Math.max(minY, Math.min(maxY, localTarget.y));
+              const clampedX = Math.max(minX, Math.min(maxX, scratchLocalTarget.x));
+              const clampedY = Math.max(minY, Math.min(maxY, scratchLocalTarget.y));
 
               data.layoutX = clampedX;
               data.layoutY = clampedY;
@@ -932,13 +1059,14 @@
         hit.scale.setScalar(1);
 
         titleGroup.updateMatrixWorld();
-        const titlePlane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0).applyMatrix4(titleGroup.matrixWorld);
-        raycaster.setFromCamera(new THREE.Vector2(ndc.x, ndc.y), camera);
-        if (raycaster.ray.intersectPlane(titlePlane, dragPoint)) {
-          const localHit = dragPoint.clone();
-          titleGroup.worldToLocal(localHit);
-          grabOffsetLocalX = hit.position.x - localHit.x;
-          grabOffsetLocalY = hit.position.y - localHit.y;
+        scratchPlane.set(scratchNormal, 0).applyMatrix4(titleGroup.matrixWorld);
+        scratchNdc.set(ndc.x, ndc.y);
+        raycaster.setFromCamera(scratchNdc, camera);
+        if (raycaster.ray.intersectPlane(scratchPlane, dragPoint)) {
+          scratchLocalTarget.copy(dragPoint);
+          titleGroup.worldToLocal(scratchLocalTarget);
+          grabOffsetLocalX = hit.position.x - scratchLocalTarget.x;
+          grabOffsetLocalY = hit.position.y - scratchLocalTarget.y;
         } else {
           grabOffsetLocalX = 0;
           grabOffsetLocalY = 0;
@@ -951,6 +1079,7 @@
         requestRender();
       };
 
+      let hoverCheckScheduled = false;
       const onPointerMove = (event) => {
         const ndc = getPointerNdc(event);
         targetX = (event.clientX / window.innerWidth) * 2 - 1;
@@ -962,14 +1091,28 @@
           }
           dragNdcX = ndc.x;
           dragNdcY = ndc.y;
+          requestRender();
         } else if (!draggingLetter && event.pointerType === 'mouse') {
-          if (visible && entranceDone && raycastLetters(ndc.x, ndc.y)) {
-            setGlobalCursor('grab');
-          } else {
-            setGlobalCursor('');
+          if (!hoverCheckScheduled) {
+            hoverCheckScheduled = true;
+            window.requestAnimationFrame(() => {
+              hoverCheckScheduled = false;
+              if (!visible || !entranceDone) {
+                setGlobalCursor('');
+                return;
+              }
+              // Only raycast when cursor is in Hero area
+              if (event.clientY <= window.innerHeight * 0.95 && raycastLetters(ndc.x, ndc.y)) {
+                setGlobalCursor('grab');
+              } else {
+                setGlobalCursor('');
+              }
+            });
           }
+          requestRender();
+        } else {
+          requestRender();
         }
-        requestRender();
       };
 
       const endDrag = (event) => {
@@ -1003,13 +1146,14 @@
           hit.scale.setScalar(1);
 
           titleGroup.updateMatrixWorld();
-          const titlePlane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0).applyMatrix4(titleGroup.matrixWorld);
-          raycaster.setFromCamera(new THREE.Vector2(ndc.x, ndc.y), camera);
-          if (raycaster.ray.intersectPlane(titlePlane, dragPoint)) {
-            const localHit = dragPoint.clone();
-            titleGroup.worldToLocal(localHit);
-            grabOffsetLocalX = hit.position.x - localHit.x;
-            grabOffsetLocalY = hit.position.y - localHit.y;
+          scratchPlane.set(scratchNormal, 0).applyMatrix4(titleGroup.matrixWorld);
+          scratchNdc.set(ndc.x, ndc.y);
+          raycaster.setFromCamera(scratchNdc, camera);
+          if (raycaster.ray.intersectPlane(scratchPlane, dragPoint)) {
+            scratchLocalTarget.copy(dragPoint);
+            titleGroup.worldToLocal(scratchLocalTarget);
+            grabOffsetLocalX = hit.position.x - scratchLocalTarget.x;
+            grabOffsetLocalY = hit.position.y - scratchLocalTarget.y;
           } else {
             grabOffsetLocalX = 0;
             grabOffsetLocalY = 0;
@@ -1056,10 +1200,13 @@
       window.addEventListener('pointercancel', endDrag);
       window.addEventListener('blur', endDrag);
 
-      window.addEventListener('touchstart', onTouchStart, { passive: false });
-      window.addEventListener('touchmove', onTouchMove, { passive: false });
-      window.addEventListener('touchend', endDrag, { passive: true });
-      window.addEventListener('touchcancel', endDrag, { passive: true });
+      const hasNativePointer = 'PointerEvent' in window;
+      if (!hasNativePointer) {
+        window.addEventListener('touchstart', onTouchStart, { passive: false });
+        window.addEventListener('touchmove', onTouchMove, { passive: false });
+        window.addEventListener('touchend', endDrag, { passive: true });
+        window.addEventListener('touchcancel', endDrag, { passive: true });
+      }
 
       window.addEventListener('resize', resize, { passive: true });
       observer.observe(hero);
@@ -1081,10 +1228,12 @@
         window.removeEventListener('pointercancel', endDrag);
         window.removeEventListener('blur', endDrag);
 
-        window.removeEventListener('touchstart', onTouchStart);
-        window.removeEventListener('touchmove', onTouchMove);
-        window.removeEventListener('touchend', endDrag);
-        window.removeEventListener('touchcancel', endDrag);
+        if (!hasNativePointer) {
+          window.removeEventListener('touchstart', onTouchStart);
+          window.removeEventListener('touchmove', onTouchMove);
+          window.removeEventListener('touchend', endDrag);
+          window.removeEventListener('touchcancel', endDrag);
+        }
 
         window.removeEventListener('resize', resize);
         observer.disconnect();
@@ -1306,74 +1455,13 @@
   };
 
   const initPageHero = () => {
-    const path = window.location.pathname.replace(/\/$/, '') || '/';
-    let tag = '';
-    let title = '';
-
-    if (path.startsWith('/trend')) {
-      tag = 'MOMENTS & SHORTS';
-      title = 'FeeFee动态';
-      document.body.classList.add('is-trend-page');
-    } else if (path.startsWith('/link')) {
-      tag = 'LINK DIRECTORY';
-      title = '狒狒导航';
-      document.body.classList.add('is-link-page');
-    } else if (path.startsWith('/projects')) {
-      tag = 'PORTFOLIO & SHOWCASE';
-      title = '项目';
-      document.body.classList.add('is-projects-page');
-    } else if (path.startsWith('/about')) {
-      tag = 'CURRICULUM VITAE';
-      title = '个人履历';
-      document.body.classList.add('is-about-page');
-    } else if (path.startsWith('/music')) {
-      tag = 'MUSIC & SOUNDTRACKS';
-      title = '狒狒音乐盒';
-      document.body.classList.add('is-music-page');
-    } else if (path.startsWith('/archives')) {
-      tag = 'ARCHIVES / COLLECTION';
-      title = '全部文章';
-    } else if (path.startsWith('/categories')) {
-      tag = 'CATEGORIES / INDEX';
-      title = '分类';
-    } else if (path.startsWith('/tags')) {
-      tag = 'TAGS / INDEX';
-      title = '标签';
-    }
-
+    // If post info has no kicker tag, ensure standard tag is present
     const postInfo = document.getElementById('post-info');
-    if (postInfo) {
-      if (!postInfo.querySelector('.fs-hero-tag')) {
-        const tagSpan = document.createElement('span');
-        tagSpan.className = 'fs-hero-tag';
-        tagSpan.textContent = 'NOTE & ARTICLE';
-        postInfo.insertBefore(tagSpan, postInfo.firstChild);
-      }
-      return;
-    }
-
-    const hero = document.getElementById('page-site-info');
-    if (!hero) return;
-
-    if (hero.querySelector('.fs-unified-hero')) return;
-
-    if (tag && title) {
-      hero.innerHTML = `
-        <div class="fs-unified-hero">
-          <span class="fs-hero-tag">${tag}</span>
-          <h1 class="fs-hero-title">${title}</h1>
-        </div>
-      `;
-    } else {
-      const siteTitle = hero.querySelector('#site-title, .fs-hero-title');
-      if (siteTitle) {
-        hero.innerHTML = `
-          <div class="fs-unified-hero">
-            <span class="fs-hero-tag">INDEX / COLLECTION</span>
-            <h1 class="fs-hero-title">${siteTitle.textContent.trim()}</h1>
-          </div>
-        `;
-      }
+    if (postInfo && !postInfo.querySelector('.fs-hero-tag')) {
+      const tagSpan = document.createElement('span');
+      tagSpan.className = 'fs-hero-tag';
+      tagSpan.textContent = 'NOTE & ARTICLE';
+      postInfo.insertBefore(tagSpan, postInfo.firstChild);
     }
   };
 
