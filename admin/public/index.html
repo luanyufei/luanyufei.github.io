@@ -7,6 +7,19 @@
   <link rel="icon" type="image/svg+xml" href="/icon.svg">
   <link rel="stylesheet" href="/vendor/prism/themes/prism-tomorrow.css">
   <link rel="stylesheet" href="/app.css">
+  <script>
+    (function() {
+      try {
+        var raw = localStorage.getItem('fs-theme');
+        if (raw) {
+          var parsed = JSON.parse(raw);
+          var mode = parsed && parsed.v;
+          var theme = mode === 'dark' || mode === 'light' ? mode : (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+          document.documentElement.dataset.theme = theme;
+        }
+      } catch (e) {}
+    })();
+  </script>
 </head>
 <body>
   <div class="app-layout">

@@ -108,6 +108,25 @@ hexo.extend.filter.register('after_render:html', (html, data) => {
   // Unwrap <p> around <figure> to keep HTML semantic and clean
   output = output.replace(/<p>\s*(<figure[\s\S]*?<\/figure>)\s*<\/p>/g, '$1');
 
+  // Inject route-specific body classes statically at build time
+  if (data && data.path) {
+    let bodyClass = '';
+    if (data.path.startsWith('trend/')) bodyClass = 'is-trend-page';
+    else if (data.path.startsWith('link/')) bodyClass = 'is-link-page';
+    else if (data.path.startsWith('projects/')) bodyClass = 'is-projects-page';
+    else if (data.path.startsWith('about/')) bodyClass = 'is-about-page';
+    else if (data.path.startsWith('music/')) bodyClass = 'is-music-page';
+
+    if (bodyClass) {
+      output = output.replace(/<body([^>]*)>/, (m, attrs) => {
+        if (/class="([^"]*)"/.test(attrs)) {
+          return `<body${attrs.replace(/class="([^"]*)"/, `class="$1 ${bodyClass}"`)}>`;
+        }
+        return `<body${attrs} class="${bodyClass}">`;
+      });
+    }
+  }
+
   if (data && data.path === '404.html') {
     output = output.replace(
       /<title>[\s\S]*?<\/title>/,

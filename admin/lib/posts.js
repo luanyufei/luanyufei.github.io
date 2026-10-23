@@ -2,6 +2,7 @@ const fs = require('fs');
 const fsp = fs.promises;
 const path = require('path');
 const matter = require('gray-matter');
+const yaml = require('js-yaml');
 
 const ROOT = path.resolve(__dirname, '..', '..');
 const POSTS_DIR = path.join(ROOT, 'source', '_posts');
@@ -62,8 +63,18 @@ function parseFile(raw, fallbackTitle) {
 }
 
 function stringify(data, content) {
-  const clean = { ...data };
-  delete clean._rawDate;
+  const clean = {};
+  const orderedKeys = ['title', 'slug', 'date', 'categories', 'tags'];
+  for (const k of orderedKeys) {
+    if (data[k] !== undefined && data[k] !== '') {
+      clean[k] = data[k];
+    }
+  }
+  for (const k of Object.keys(data)) {
+    if (!orderedKeys.includes(k) && k !== '_rawDate') {
+      clean[k] = data[k];
+    }
+  }
   if (clean.date instanceof Date) {
     const iso = clean.date.toISOString();
     if (iso.endsWith('T00:00:00.000Z')) {
@@ -91,6 +102,7 @@ async function readPosts(dir) {
       posts.push({
         filename: name,
         title: data.title || name.replace(/\.md$/, ''),
+        slug: data.slug || '',
         date: data.date || '',
         categories: data.categories ?? [],
         tags: data.tags || [],
@@ -102,6 +114,7 @@ async function readPosts(dir) {
       posts.push({
         filename: name,
         title: name.replace(/\.md$/, ''),
+        slug: '',
         date: '',
         categories: [],
         tags: [],
@@ -146,10 +159,12 @@ async function savePost(filename, type, patch) {
   delete data._rawDate;
 
   if (patch.data) {
-    for (const key of ['title', 'date', 'categories', 'tags']) {
+    for (const key of ['title', 'slug', 'date', 'categories', 'tags']) {
       if (Object.prototype.hasOwnProperty.call(patch.data, key)) {
         const value = patch.data[key];
-        if (key === 'date') {
+        if (key === 'slug') {
+          data.slug = String(value || '').trim();
+        } else if (key === 'date') {
           const formDateStr = value ? String(value).slice(0, 10) : todayStr();
           const currentDayStr = normalizeDate(rawDate || current.data.date);
           if (formDateStr === currentDayStr && rawDate) {
@@ -177,8 +192,10 @@ async function savePost(filename, type, patch) {
 async function createPost(patch) {
   const title = String(patch.title || '').trim() || '未命名文章';
   const filename = `${sanitizeFilename(title)}.md`;
+  const slug = String(patch.slug || '').trim() || sanitizeFilename(title).toLowerCase().replace(/[^a-z0-9_-]+/g, '-').replace(/^-+|-+$/g, '');
   const data = {
     title,
+    slug,
     date: String(patch.date || todayStr()).slice(0, 10),
   };
   const cats = Array.isArray(patch.categories) ? patch.categories.map(String).filter(Boolean) : [];
@@ -222,8 +239,11 @@ async function movePost(filename, fromType, toType, options = {}) {
   const from = resolvePost(filename, fromType);
   const to = resolvePost(filename, toType);
   const { data, content } = parseFile(await fsp.readFile(from, 'utf8'), filename);
-  if (toType === 'post' && (!data.date || options.refreshDate)) {
-    data.date = todayStr();
+  if (toType === 'post') {
+    if (!data.date || options.refreshDate) data.date = todayStr();
+    if (!data.slug) {
+      data.slug = sanitizeFilename(filename.replace(/\.md$/, '')).toLowerCase().replace(/[^a-z0-9_-]+/g, '-').replace(/^-+|-+$/g, '');
+    }
   }
   await backupFile(from, fromType);
   await fsp.writeFile(to, stringify(data, content), 'utf8');
@@ -373,8 +393,8 @@ async function getActivityStats() {
   let shuoshuoList = [];
   try {
     const raw = await fsp.readFile(path.join(ROOT, 'source', '_data', 'shuoshuo.yml'), 'utf8');
-    const parsed = matter(raw);
-    shuoshuoList = Array.isArray(parsed.data) ? parsed.data : (Array.isArray(matter(raw)) ? matter(raw) : []);
+    const parsed = yaml.load(raw);
+    shuoshuoList = Array.isArray(parsed) ? parsed : [];
   } catch (e) {}
 
   const dateMap = {};

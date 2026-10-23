@@ -107,7 +107,15 @@ inject:
 CDN:
   option:
     fontawesome: /css/vendor/fontawesome/css/all.min.css
-    egjs_infinitegrid: /js/vendor/infinitegrid.min.js
+
+share:
+  use:
+
+reward:
+  enable: false
+
+related_post:
+  enable: false
 
 translate:
   enable: false

@@ -90,8 +90,8 @@ async function collectTextFiles() {
 
 function replaceReferences(text, fromName, toName) {
   const from = fromName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  const re = new RegExp(from, 'g');
-  return text.replace(re, toName);
+  const re = new RegExp(`([/("'\`\\s]|^)${from}`, 'g');
+  return text.replace(re, `$1${toName}`);
 }
 
 async function convertImages(selectedNames) {

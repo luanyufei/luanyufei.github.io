@@ -772,6 +772,10 @@
         <label>文章标题 (将自动生成文件名)</label>
         <input type="text" id="np-title" placeholder="输入文章标题…" autofocus>
       </div>
+      <div class="fm-field" style="margin-bottom:12px">
+        <label>固定链接 Slug (强制小写连字符，如 my-post-name)</label>
+        <input type="text" id="np-slug" placeholder="例如：my-post-name (留空则根据标题生成)">
+      </div>
       <div class="fm-grid" style="margin-bottom:12px">
         <div class="fm-field">
           <label>发布日期</label>
@@ -806,6 +810,7 @@
           method: 'POST',
           body: {
             title,
+            slug: $('#np-slug').value.trim(),
             date: $('#np-date').value,
             categories: $('#np-categories').value.split(/[,，]/).map((s) => s.trim()).filter(Boolean),
             tags: $('#np-tags').value.split(/[,，]/).map((s) => s.trim()).filter(Boolean),
@@ -891,6 +896,10 @@
                     <input type="text" id="ed-title" value="${esc(post.data.title || '')}" placeholder="文章主标题">
                   </div>
                   <div class="fm-field">
+                    <label>固定链接 Slug (永久标识)</label>
+                    <input type="text" id="ed-slug" value="${esc(post.data.slug || '')}" placeholder="kebab-case，如 ubuntu-optimization">
+                  </div>
+                  <div class="fm-field">
                     <label>
                       <span>日期 Date</span>
                       <span class="quick-now-btn" id="btn-set-today">设为今天</span>
@@ -901,7 +910,7 @@
                     <label>分类 Categories</label>
                     <input type="text" id="ed-categories" value="${esc(cats)}" placeholder="逗号分隔，如：技术, 教程">
                   </div>
-                  <div class="fm-field full-width">
+                  <div class="fm-field">
                     <label>标签 Tags</label>
                     <input type="text" id="ed-tags" value="${esc(tags)}" placeholder="逗号分隔，如：Linux, Hexo" list="tag-options">
                     <datalist id="tag-options"></datalist>
@@ -968,6 +977,10 @@
       titleInput.addEventListener('input', () => {
         $('#ed-display-title').textContent = titleInput.value || '未命名文章';
         markDirty();
+      });
+
+      ['#ed-slug', '#ed-date', '#ed-categories', '#ed-tags'].forEach((sel) => {
+        $(sel)?.addEventListener('input', markDirty);
       });
 
       const updatePreview = () => {
@@ -1159,7 +1172,19 @@
             } else if (act === 'preview') {
               const idx = Number(btn.dataset.revIdx);
               const r = revs[idx];
-              alert(`【历史版本正文预览 - ${new Date(r.timestamp).toLocaleString()}】\n\n` + r.content.slice(0, 1000) + (r.content.length > 1000 ? '\n\n...(内容较长已截断)' : ''));
+              openModal(`
+                <h2>历史版本正文预览</h2>
+                <div style="margin-bottom:12px;font-size:12px;color:var(--text-secondary)">
+                  快照时间：${new Date(r.timestamp).toLocaleString()} · 大小：${fmtBytes(r.size)} · ${r.wordCount} 字
+                </div>
+                <pre style="max-height:55vh;overflow:auto;padding:14px;background:var(--bg-subtle);border:1px solid var(--border-subtle);border-radius:6px;font-family:var(--font-mono);font-size:12px;line-height:1.6;white-space:pre-wrap;word-break:break-all;">${esc(r.content)}</pre>
+                <div class="modal-actions" style="margin-top:14px">
+                  <button class="btn" id="rev-prev-back">返回版本列表</button>
+                </div>
+              `);
+              $('#rev-prev-back')?.addEventListener('click', () => {
+                $('#ed-revisions')?.click();
+              });
             }
           }));
         } catch (e) { toast(e.message, true); }
@@ -1210,6 +1235,7 @@
               type: state.editing.type,
               data: {
                 title: $('#ed-title').value,
+                slug: $('#ed-slug').value.trim(),
                 date: $('#ed-date').value,
                 categories: $('#ed-categories').value.split(/[,，]/).map((s) => s.trim()).filter(Boolean),
                 tags: $('#ed-tags').value.split(/[,，]/).map((s) => s.trim()).filter(Boolean),
@@ -3126,18 +3152,21 @@
   })();
 
   // ==================== 主题切换 (复用 Fee Space 逻辑) ====================
-  const THEME_KEY = 'theme';
+  const THEME_KEY = 'fs-theme';
+  const THEME_TTL_DAYS = 365;
+  const THEME_TTL_MS = THEME_TTL_DAYS * 24 * 60 * 60 * 1000;
 
   const normalizeThemeMode = (value) =>
     value === 'light' || value === 'dark' || value === 'system' ? value : undefined;
 
   const readThemeMode = () => {
     try {
-      const raw = sessionStorage.getItem(THEME_KEY);
+      const raw = localStorage.getItem(THEME_KEY);
       if (!raw) return 'system';
       try {
         const parsed = JSON.parse(raw);
-        return normalizeThemeMode(parsed.value) || 'system';
+        if (!parsed || Date.now() - (parsed.t || 0) > THEME_TTL_MS) return 'system';
+        return normalizeThemeMode(parsed.v || parsed.value) || 'system';
       } catch (error) {
         return normalizeThemeMode(raw) || 'system';
       }
@@ -3148,8 +3177,7 @@
 
   const saveThemeMode = (mode) => {
     try {
-      localStorage.removeItem(THEME_KEY);
-      sessionStorage.setItem(THEME_KEY, JSON.stringify({ value: mode }));
+      localStorage.setItem(THEME_KEY, JSON.stringify({ v: mode, t: Date.now() }));
     } catch (error) {}
   };
 
